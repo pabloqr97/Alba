@@ -3,57 +3,61 @@
 // ============================================================
 
 // Objetos con los que Alba puede hablar para desbloquear un recuerdo
-// (sin pista de regalo). Varios tienen texto PLACEHOLDER.
+// (sin pista de regalo). Los que no tienen "sprite" muestran un marcador
+// neutro (sin emoji) hasta que tengan arte propio.
 const OBJECT_MEMORIES = [
-  { id: 'mecedora', col: 5, row: 4, emoji: '🪑', label: 'La mecedora del porche',
+  { id: 'mecedora', col: 5, row: 4, label: 'La mecedora del porche',
     text: 'La mecedora del porche, testigo de tardes enteras.\n(Recuerdo por escribir.)' },
-  { id: 'mortero', col: 8, row: 3, emoji: '🥣', label: 'El mortero',
+  { id: 'mortero', col: 8, row: 3, label: 'El mortero',
     text: 'Ese mortero de siempre.\nHay una foto suya de pequeña con él en las manos — icónica.' },
-  { id: 'madrono', col: 4, row: 7, emoji: '🌳', label: 'El madroño',
+  { id: 'madrono', col: 4, row: 7, sprite: 'madroño_title', tree: true, label: 'El madroño',
     text: 'El madroño de la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'limonero', col: 2, row: 19, emoji: '🍋', label: 'El limonero',
+  { id: 'limonero', col: 3, row: 21, label: 'El limonero',
     text: 'El limonero de la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'gallinero', col: 8, row: 21, emoji: '🐔', label: 'El gallinero',
+  { id: 'gallinero', col: 6, row: 23, label: 'El gallinero',
     text: 'El gallinero de toda la vida.\n(Recuerdo por escribir.)' },
 ];
 
 // Personas de la familia: cada una da un recuerdo profundo Y una pista de
-// regalo ("Pablo me dijo que estaba pensando regalarte..."). Cuando Alba
-// haya hablado con TODAS (incluida la del invernadero), la casa se abre.
-// sprite: null → todavía no hay arte (se usa emoji de sustitución).
+// regalo ("Pablo me dijo que estaba pensando regalarte..."). Repartidas
+// por la parcela (no todas junto a la casa). Cuando Alba haya hablado con
+// TODAS (incluida la del invernadero), la casa se abre.
 const HUMAN_CHARACTERS = [
-  { id: 'padre', col: 2, row: 2, sprite: 'padre_down', label: 'Papá',
+  { id: 'padre', col: 8, row: 9, sprite: 'padre_down', label: 'Papá',
     text: '(Diálogo profundo por escribir.)',
-    clue: '🧦 Pablo me dijo que estaba pensando regalarte unos calcetines a juego con la casa.' },
-  { id: 'madre', col: 10, row: 2, sprite: 'madre_down', label: 'Mamá',
+    clue: 'Pablo me dijo que estaba pensando regalarte unos calcetines a juego con la casa.' },
+  { id: 'madre', col: 3, row: 13, sprite: 'madre_down', label: 'Mamá',
     text: '(Diálogo profundo por escribir.)',
-    clue: '🍓 Pablo me dijo que estaba pensando regalarte fresas infinitas para la granja.' },
+    clue: 'Pablo me dijo que estaba pensando regalarte fresas infinitas para la granja.' },
   { id: 'abuela2', col: 2, row: 3, sprite: 'abuela2_down', label: 'La abuela',
     text: '(Diálogo profundo por escribir.)',
-    clue: '🛋️ Pablo me dijo que estaba pensando regalarte un vale para redecorar el salón (otra vez).' },
-  { id: 'abuelo2', col: 10, row: 3, sprite: 'abuelo2_down', label: 'El abuelo',
+    clue: 'Pablo me dijo que estaba pensando regalarte un vale para redecorar el salón (otra vez).' },
+  { id: 'abuelo2', col: 7, row: 6, sprite: 'abuelo2_down', label: 'El abuelo',
     text: '(Diálogo profundo por escribir.)',
-    clue: '🎬 Pablo me dijo que estaba pensando regalarte una noche de cine en casa.' },
-  { id: 'hermana', col: 9, row: 1, sprite: null, emoji: '👧', label: 'Tu hermana',
-    text: '(Diálogo profundo por escribir. Nota: el sprite de tu hermana salió con un error — pídele a Pablo que lo regenere.)',
-    clue: '🏡 Pablo me dijo que estaba pensando regalarte una tarde entera decorando la parcela.' },
+    clue: 'Pablo me dijo que estaba pensando regalarte una noche de cine en casa.' },
+  { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Tu hermana',
+    text: '(Diálogo profundo por escribir.)',
+    clue: 'Pablo me dijo que estaba pensando regalarte una tarde entera decorando la parcela.' },
 ];
 
 // El abuelo que murió: vive dentro del invernadero, junto a Sando. Su
 // "pista" cuenta igual para desbloquear la casa. Sin arte propio todavía.
 const GREENHOUSE_ABUELO = {
-  id: 'abuelo', label: 'El abuelo', emoji: '👴',
+  id: 'abuelo', label: 'El abuelo',
   text: 'En el huerto, donde siempre estaba tu abuelo.\nSigue aquí, en cada rincón de la parcela.',
-  clue: '🎫 Pablo me dijo que tenía algo que ver con música... o un concierto. No quiso decir más.',
+  clue: 'Pablo me dijo que tenía algo que ver con música... o un concierto. No quiso decir más.',
   isKarolG: true,
 };
-const GREENHOUSE_SANDO_TEXT = 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, correteando por el invernadero.';
+const GREENHOUSE_SANDO = {
+  id: 'sando', label: 'Sando', sprite: 'sando_down',
+  text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, correteando por el invernadero.',
+};
 
 // Perros de la familia: solo recuerdo, sin pista de regalo.
 const DOG_MEMORIES = [
-  { id: 'turka', col: 3, row: 6, sprite: 'turka_down', label: 'Turka',
+  { id: 'turka', col: 4, row: 12, sprite: 'turka_down', label: 'Turka',
     text: 'Turka, siempre atenta a todo lo que pasa en la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'nuka', col: 8, row: 6, sprite: 'nuka_down', label: 'Nuka',
+  { id: 'nuka', col: 2, row: 5, sprite: 'nuka_down', label: 'Nuka',
     text: 'Nuka, la otra perrita de la familia.\n(Recuerdo por escribir.)' },
 ];
 
@@ -63,6 +67,8 @@ const MAP_COLS = 13;
 const MAP_ROWS = 26;
 const VIEW_COLS = 8;
 const VIEW_ROWS = 9;
+const HOUSE_DOOR_KEY = '6,3';
+const GREENHOUSE_DOOR_KEY = '9,15';
 
 // ============================================================
 // NAVEGACIÓN ENTRE ESCENAS
@@ -119,68 +125,184 @@ function runBoot() {
 }
 
 // ============================================================
-// LA PARCELA — mapa, personajes, colisiones e interacción
+// LA PARCELA — mapa principal
 // ============================================================
 
-// Plano calcado del boceto real de Pablo (estilizado, no una recreación
-// literal por satélite). De arriba abajo: casa con porche y escaleras,
-// caseta de barbacoa+alacena (+madroño al lado), piscina, zona de perros
-// vallada, invernadero y campos de cultivo. El camino largo baja por la
-// derecha desde la entrada (abajo) hasta la casa (el fondo).
-function buildGrid() {
-  const g = Array.from({ length: MAP_ROWS }, () => Array(MAP_COLS).fill('.'));
-  for (let c = 0; c < MAP_COLS; c++) { g[0][c] = '#'; g[MAP_ROWS - 1][c] = '#'; }
-  for (let r = 0; r < MAP_ROWS; r++) { g[r][0] = '#'; g[r][MAP_COLS - 1] = '#'; }
-  g[MAP_ROWS - 1][11] = 'P'; // puerta de entrada, abajo
+// Plano calcado del boceto real de Pablo (estilizado). De arriba abajo:
+// casa con porche y escaleras, caseta de barbacoa+alacena (+madroño al
+// lado), piscina, zona de perros vallada, invernadero y campos de
+// cultivo. El camino largo (asfalto) baja por la derecha desde la
+// entrada (abajo, verja metálica de 2 casillas) hasta la casa (el
+// fondo), bordeado por vallas con parra/arizónica. Todo el suelo es
+// asfalto salvo: alrededores de la piscina, laterales del camino y la
+// zona de cultivo (césped/tierra), y una franja de tierra-plantas justo
+// dentro de las vallas laterales.
+function buildMainGrid() {
+  const cols = MAP_COLS, rows = MAP_ROWS;
+  const g = Array.from({ length: rows }, () => Array(cols).fill('.'));
 
-  // Casa (la imagen real se dibuja encima; esto solo marca la colisión):
-  // rows1-3 = cuerpo de la casa, row4 = porche transitable con la puerta
-  // (objeto interactivo "house-door" en col6,row4), row5 = escalón de bajada.
+  // Bordes: murito de piedra arriba/abajo, valla con arizónica a la
+  // izquierda, valla con parra a la derecha.
+  for (let c = 0; c < cols; c++) { g[0][c] = 'S'; g[rows - 1][c] = 'S'; }
+  for (let r = 0; r < rows; r++) { g[r][0] = 'X'; g[r][cols - 1] = 'Y'; }
+
+  // Franjas de césped/tierra alrededor de la piscina y zona de cultivo
+  for (let c = 3; c <= 8; c++) { g[7][c] = 'G'; g[8][c] = 'G'; }
+  for (let c = 7; c <= 8; c++) { g[9][c] = 'G'; g[10][c] = 'G'; g[11][c] = 'G'; g[12][c] = 'G'; }
+  for (let c = 1; c <= 9; c++) { g[13][c] = 'G'; g[18][c] = 'G'; }
+  for (let c = 1; c <= 8; c++) for (let r = 19; r <= 24; r++) g[r][c] = 'C';
+
+  // Casa: cuerpo (imagen real encima), porche transitable, escaleras y
+  // puerta (casilla especial que teletransporta al interior)
   for (let r = 1; r <= 3; r++) for (let c = 4; c <= 8; c++) g[r][c] = 'H';
   for (let c = 4; c <= 8; c++) g[4][c] = 'T';
   g[5][6] = 'E';
+  g[3][6] = 'O';
 
-  // Caseta de barbacoa + alacena
-  for (let c = 1; c <= 2; c++) g[7][c] = 'K';
-  for (let r = 8; r <= 11; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'B';
+  // Caseta de barbacoa + alacena (una sola estructura, imagen real encima)
+  for (let r = 7; r <= 11; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
 
-  // Piscina: borde transitable ("Y") con agua bloqueada en el centro ("W")
-  for (let c = 3; c <= 6; c++) { g[9][c] = 'Y'; g[11][c] = 'Y'; }
-  g[10][3] = 'Y'; g[10][4] = 'W'; g[10][5] = 'W'; g[10][6] = 'Y';
+  // Piscina: solo agua, sin bordillo
+  for (let r = 9; r <= 11; r++) for (let c = 3; c <= 6; c++) g[r][c] = 'W';
 
   // Zona de perros: al descubierto pero vallada (transitable)
   for (let c = 3; c <= 6; c++) g[12][c] = 'F';
 
-  // Invernadero (la imagen real se dibuja encima; esto marca la colisión)
-  for (let r = 13; r <= 16; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'I';
+  // Invernadero (imagen real encima); la puerta está en el lado derecho,
+  // se entra colisionando desde el camino hacia la izquierda
+  for (let r = 14; r <= 17; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'I';
+  g[15][9] = 'O';
 
-  // Campos de cultivo / huerto
-  for (let r = 18; r <= 23; r++) for (let c = 1; c <= 9; c++) g[r][c] = 'C';
+  // Camino largo (asfalto) a lo largo de todo el lateral derecho
+  for (let r = 1; r <= 24; r++) { g[r][10] = 'P'; g[r][11] = 'P'; }
 
-  // Camino largo por la derecha, con parras bordeándolo donde hay hueco
-  for (let r = 9; r <= 24; r++) { g[r][10] = 'P'; g[r][11] = 'P'; }
-  [7, 8, 12, 17].forEach(r => { g[r][9] = 'V'; });
+  // Franjas de tierra-plantas justo dentro de las vallas laterales
+  [1, 2, 3, 4, 5, 6, 12, 13, 14, 15, 16, 17, 18].forEach(r => { g[r][1] = 'D'; });
+  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].forEach(r => { g[r][9] = 'D'; });
+
+  // Bordillo entre la zona de cultivo y el camino
+  for (let r = 19; r <= 24; r++) g[r][9] = 'U';
+
+  // Entrada: verja metálica abierta de 2 casillas, abajo
+  g[rows - 1][10] = 'Z';
+  g[rows - 1][11] = 'Z';
 
   return g;
 }
 
-const grid = buildGrid();
-const OBSTACLE_TILES = new Set(['#', 'H', 'K', 'B', 'I', 'W']);
+function mainTileClass(type) {
+  switch (type) {
+    case 'S': return 'tile-stonewall';
+    case 'X': return 'tile-fence-hedge';
+    case 'Y': return 'tile-fence-vine';
+    case 'Z': return 'tile-gate';
+    case 'H': return 'tile-wall';
+    case 'T': return 'tile-terrace';
+    case 'E': return 'tile-steps';
+    case 'O': return 'tile-terrace';
+    case 'K': return 'tile-shed';
+    case 'I': return 'tile-greenhouse-floor';
+    case 'W': return 'tile-pool';
+    case 'F': return 'tile-dogyard';
+    case 'P': return 'tile-path';
+    case 'C': return 'tile-crop';
+    case 'G': return 'tile-grass';
+    case 'D': return 'tile-dirtplants';
+    case 'U': return 'tile-curb';
+    default: return 'tile-asphalt';
+  }
+}
 
+const MAIN_OBSTACLES = new Set(['H', 'K', 'I', 'W', 'S', 'X', 'Y']);
+
+function houseUnlocked() { return collectedClues.length >= TOTAL_CLUE_GIVERS; }
+
+function mainStructures() {
+  return [
+    { src: houseUnlocked() ? 'game/cropped/house_open.png' : 'game/cropped/house.png',
+      aspect: 1368 / 1776, colStart: 4, colEnd: 8, bottomRow: 5 },
+    { src: 'game/cropped/greenhouse_tile.png', aspect: 2646 / 1341,
+      colStart: 3, colEnd: 9, bottomRow: 18, matchWidth: true },
+    { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
+      colStart: 1, colEnd: 2, bottomRow: 12, matchWidth: true },
+  ];
+}
+
+function mainObjects() {
+  return [...OBJECT_MEMORIES, ...HUMAN_CHARACTERS, ...DOG_MEMORIES];
+}
+
+const MAIN_WARPS = {
+  [HOUSE_DOOR_KEY]: { area: 'house', enter: { col: 2, row: 3, facing: 'up' } },
+  [GREENHOUSE_DOOR_KEY]: { area: 'greenhouse', enter: { col: 4, row: 2, facing: 'left' } },
+};
+
+// ============================================================
+// INTERIORES (misma cámara/joystick, mapas diminutos)
+// ============================================================
+
+function buildHouseGrid() {
+  // 5x5. Fila 4 = pared sur con la puerta (col2) por la que se entra/sale.
+  const g = Array.from({ length: 5 }, () => Array(5).fill('.'));
+  for (let c = 0; c < 5; c++) { g[0][c] = '#'; }
+  for (let r = 0; r < 5; r++) { g[r][0] = '#'; g[r][4] = '#'; }
+  for (let c = 0; c < 5; c++) g[4][c] = '#';
+  g[4][2] = 'D';
+  return g;
+}
+
+function buildGreenhouseGrid() {
+  // 6x5. Pared este (col5) con la puerta (row2) por la que se entra/sale.
+  const g = Array.from({ length: 5 }, () => Array(6).fill('.'));
+  for (let c = 0; c < 6; c++) { g[0][c] = '#'; g[4][c] = '#'; }
+  for (let r = 0; r < 5; r++) g[r][0] = '#';
+  for (let r = 0; r < 5; r++) g[r][5] = '#';
+  g[2][5] = 'D';
+  return g;
+}
+
+const AREAS = {
+  main: {
+    cols: MAP_COLS, rows: MAP_ROWS,
+    grid: buildMainGrid(),
+    obstacles: MAIN_OBSTACLES,
+    tileClass: mainTileClass,
+    objects: mainObjects,
+    structures: mainStructures,
+    warps: MAIN_WARPS,
+  },
+  house: {
+    cols: 5, rows: 5,
+    grid: buildHouseGrid(),
+    obstacles: new Set(['#']),
+    tileClass: t => t === '#' ? 'tile-interior-wall' : (t === 'D' ? 'tile-door-warp' : 'tile-interior-floor'),
+    objects: () => [{ id: 'pablo', col: 2, row: 1, sprite: 'pablo_down', label: 'Pablo', pabloTrigger: true }],
+    structures: () => [],
+    warps: { '2,4': { area: 'main', enter: { col: 6, row: 4, facing: 'down' } } },
+  },
+  greenhouse: {
+    cols: 6, rows: 5,
+    grid: buildGreenhouseGrid(),
+    obstacles: new Set(['#']),
+    tileClass: t => t === '#' ? 'tile-interior-wall' : (t === 'D' ? 'tile-door-warp' : 'tile-interior-floor-crop'),
+    objects: () => [
+      { ...GREENHOUSE_ABUELO, col: 1, row: 2 },
+      { ...GREENHOUSE_SANDO, col: 2, row: 3 },
+    ],
+    structures: () => [],
+    warps: { '5,2': { area: 'main', enter: { col: 10, row: 15, facing: 'right' } } },
+  },
+};
+
+let currentArea = 'main';
 const player = { col: 11, row: 23, facing: 'up' };
-let currentTarget = null; // objeto con el que se puede interactuar ahora mismo
+let currentTarget = null;
 let pendingOverlayAction = null;
 
 let collectedClues = []; // { text, isKarolG }
-const talkedTo = new Set(); // ids de personas/animales/objetos ya hablados
+const talkedTo = new Set();
 
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+function area() { return AREAS[currentArea]; }
 
 function computeTileSize() {
   const viewportW = Math.min(window.innerWidth, 600);
@@ -189,82 +311,50 @@ function computeTileSize() {
 }
 
 function buildMapDOM() {
+  const a = area();
   const mapGrid = document.getElementById('map-grid');
-  mapGrid.style.setProperty('--map-cols', MAP_COLS);
-  mapGrid.style.setProperty('--map-rows', MAP_ROWS);
+  mapGrid.style.setProperty('--map-cols', a.cols);
+  mapGrid.style.setProperty('--map-rows', a.rows);
+  document.documentElement.style.setProperty('--map-cols', a.cols);
+  document.documentElement.style.setProperty('--map-rows', a.rows);
+  document.documentElement.style.setProperty('--view-cols', Math.min(VIEW_COLS, a.cols));
+  document.documentElement.style.setProperty('--view-rows', Math.min(VIEW_ROWS, a.rows));
   mapGrid.innerHTML = '';
-  for (let r = 0; r < MAP_ROWS; r++) {
-    for (let c = 0; c < MAP_COLS; c++) {
+  for (let r = 0; r < a.rows; r++) {
+    for (let c = 0; c < a.cols; c++) {
       const tile = document.createElement('div');
-      const type = grid[r][c];
-      let cls = 'tile ';
-      if (type === '#') cls += 'tile-fence';
-      else if (type === 'H') cls += 'tile-wall';
-      else if (type === 'T') cls += 'tile-terrace';
-      else if (type === 'E') cls += 'tile-steps';
-      else if (type === 'K') cls += 'tile-shed-roof';
-      else if (type === 'B') cls += 'tile-shed-wall';
-      else if (type === 'Y') cls += 'tile-pool-edge';
-      else if (type === 'W') cls += 'tile-pool';
-      else if (type === 'F') cls += 'tile-dogyard';
-      else if (type === 'P') cls += 'tile-path';
-      else if (type === 'V') cls += 'tile-vine';
-      else if (type === 'C') cls += 'tile-crop';
-      else if (type === 'I') cls += 'tile-greenhouse-floor';
-      else cls += 'tile-grass';
-      tile.className = cls;
+      tile.className = 'tile ' + a.tileClass(a.grid[r][c]);
       mapGrid.appendChild(tile);
     }
   }
-  document.documentElement.style.setProperty('--view-cols', VIEW_COLS);
-  document.documentElement.style.setProperty('--view-rows', VIEW_ROWS);
-
-  // Estructuras grandes (casa e invernadero) como imagen real
-  const structures = document.getElementById('map-structures');
-  structures.innerHTML = '';
-  addStructure(structures, 'game/cropped/house.png', 1.368 / 1.776, { colStart: 4, colEnd: 8, bottomRow: 5 });
-  addStructure(structures, 'game/cropped/greenhouse_tile.png', 2304 / 1106, { colStart: 3, colEnd: 9, bottomRow: 17 }, true);
+  renderStructures();
 }
 
-function addStructure(container, src, aspect, { colStart, colEnd, bottomRow }, matchWidth) {
+function renderStructures() {
   const tileSize = getTileSizePx();
-  const footprintWidth = (colEnd - colStart + 1) * tileSize;
-  const el = document.createElement('div');
-  el.className = 'map-structure';
-  let width, height;
-  if (matchWidth) {
-    width = footprintWidth * 1.18;
-    height = width / aspect;
-  } else {
-    width = footprintWidth;
-    height = width / aspect;
-  }
-  const centerCol = (colStart + colEnd + 1) / 2;
-  el.style.width = width + 'px';
-  el.style.height = height + 'px';
-  el.style.left = (centerCol * tileSize - width / 2) + 'px';
-  el.style.top = (bottomRow * tileSize - height) + 'px';
-  el.innerHTML = `<img src="${src}" alt="">`;
-  container.appendChild(el);
-}
-
-function allInteractables() {
-  const list = [
-    ...OBJECT_MEMORIES.map(m => ({ ...m, type: 'memory' })),
-    ...HUMAN_CHARACTERS.map(h => ({ ...h, type: 'human' })),
-    ...DOG_MEMORIES.map(d => ({ ...d, type: 'memory', sprite: d.sprite })),
-    { id: 'house-door', col: 6, row: 4, type: 'house', emoji: '🚪' },
-    { id: 'greenhouse-door', col: 6, row: 16, type: 'greenhouse', emoji: '🌿' },
-  ];
-  return list;
+  const container = document.getElementById('map-structures');
+  container.innerHTML = '';
+  area().structures().forEach(s => {
+    const footprintWidth = (s.colEnd - s.colStart + 1) * tileSize;
+    const width = s.matchWidth ? footprintWidth * 1.18 : footprintWidth;
+    const height = width / s.aspect;
+    const centerCol = (s.colStart + s.colEnd + 1) / 2;
+    const el = document.createElement('div');
+    el.className = 'map-structure';
+    el.style.width = width + 'px';
+    el.style.height = height + 'px';
+    el.style.left = (centerCol * tileSize - width / 2) + 'px';
+    el.style.top = (s.bottomRow * tileSize - height) + 'px';
+    el.innerHTML = `<img src="${s.src}" alt="">`;
+    container.appendChild(el);
+  });
 }
 
 function renderObjects() {
   const tileSize = getTileSizePx();
   const layer = document.getElementById('map-objects');
   layer.innerHTML = '';
-  allInteractables().forEach(obj => {
-    if (obj.type === 'house' || obj.type === 'greenhouse') return; // no se dibujan, son invisibles (la estructura ya se ve)
+  area().objects().forEach(obj => {
     const el = document.createElement('div');
     el.className = 'map-object';
     el.dataset.id = obj.id;
@@ -273,13 +363,14 @@ function renderObjects() {
 
     if (obj.sprite) {
       el.classList.add('character');
-      if (obj.type === 'memory') el.classList.add('small');
+      if (obj.tree) el.classList.add('tree');
+      else if (!HUMAN_CHARACTERS.includes(obj) && obj.id !== 'pablo') el.classList.add('small');
       const img = document.createElement('img');
       img.src = `game/cropped/${obj.sprite}.png`;
       img.alt = '';
       el.appendChild(img);
     } else {
-      el.textContent = obj.emoji;
+      el.classList.add('placeholder');
     }
     layer.appendChild(el);
   });
@@ -290,12 +381,13 @@ function getTileSizePx() {
 }
 
 function updateCamera() {
+  const a = area();
   const tileSize = getTileSizePx();
   const viewport = document.querySelector('.map-viewport');
   const camera = document.getElementById('map-camera');
   const viewportRect = viewport.getBoundingClientRect();
-  const mapW = MAP_COLS * tileSize;
-  const mapH = MAP_ROWS * tileSize;
+  const mapW = a.cols * tileSize;
+  const mapH = a.rows * tileSize;
   let camX = player.col * tileSize + tileSize / 2 - viewportRect.width / 2;
   let camY = player.row * tileSize + tileSize / 2 - viewportRect.height / 2;
   camX = Math.max(0, Math.min(camX, Math.max(0, mapW - viewportRect.width)));
@@ -308,40 +400,70 @@ function renderPlayerPosition() {
   const sprite = document.getElementById('player-sprite');
   sprite.style.left = player.col * tileSize + 'px';
   sprite.style.top = player.row * tileSize + 'px';
-  sprite.classList.toggle('face-left', player.facing === 'left');
   updateCamera();
 }
 
 function renderPlayerSprite() {
   const img = document.getElementById('player-img');
-  const dir = player.facing === 'left' ? 'left' : (player.facing === 'up' ? 'up' : 'down');
-  img.src = `game/cropped/player_${dir}.png`;
+  const sprite = document.getElementById('player-sprite');
+  if (player.facing === 'right') {
+    img.src = 'game/cropped/player_left.png';
+    sprite.classList.add('mirror');
+  } else {
+    img.src = `game/cropped/player_${player.facing}.png`;
+    sprite.classList.remove('mirror');
+  }
 }
 
 function isBlocked(col, row) {
-  if (col < 0 || row < 0 || col >= MAP_COLS || row >= MAP_ROWS) return true;
-  if (OBSTACLE_TILES.has(grid[row][col])) return true;
-  return allInteractables().some(o => o.col === col && o.row === row);
+  const a = area();
+  if (col < 0 || row < 0 || col >= a.cols || row >= a.rows) return true;
+  if (a.obstacles.has(a.grid[row][col])) return true;
+  return a.objects().some(o => o.col === col && o.row === row);
 }
 
-function tryMove(dx, dy) {
+function tryMove(dx, dy, forcedFacing) {
   const targetCol = player.col + dx;
   const targetRow = player.row + dy;
-  let facingChanged = false;
-  if (dx < 0 && player.facing !== 'left') { player.facing = 'left'; facingChanged = true; }
-  else if (dx > 0 && player.facing === 'left') { player.facing = 'right'; facingChanged = true; }
-  else if (dx > 0 && player.facing !== 'right') { player.facing = 'right'; facingChanged = true; }
-  else if (dy < 0 && player.facing !== 'up') { player.facing = 'up'; facingChanged = true; }
-  else if (dy > 0 && player.facing !== 'down') { player.facing = 'down'; facingChanged = true; }
-  if (facingChanged) renderPlayerSprite();
+  const newFacing = forcedFacing || (dx < 0 ? 'left' : dx > 0 ? 'right' : dy < 0 ? 'up' : 'down');
+  if (newFacing !== player.facing) {
+    player.facing = newFacing;
+    renderPlayerSprite();
+  }
+
+  const key = `${targetCol},${targetRow}`;
+  if (currentArea === 'main' && key === HOUSE_DOOR_KEY && !houseUnlocked()) {
+    openOverlay('!', `La casa está cerrada.\nVuelve cuando hayas hablado con toda la familia (${collectedClues.length}/${TOTAL_CLUE_GIVERS}).`, 'Vale');
+    return;
+  }
+
   if (!isBlocked(targetCol, targetRow)) {
     player.col = targetCol;
     player.row = targetRow;
     const sprite = document.getElementById('player-sprite');
     sprite.classList.remove('stepping');
-    void sprite.offsetWidth; // reinicia la animación aunque se repita el mismo movimiento
+    void sprite.offsetWidth;
     sprite.classList.add('stepping');
+
+    const warp = area().warps[key];
+    if (warp) {
+      renderPlayerPosition();
+      enterArea(warp.area, warp.enter);
+      return;
+    }
   }
+  renderPlayerPosition();
+  updateProximity();
+}
+
+function enterArea(name, enter) {
+  currentArea = name;
+  player.col = enter.col;
+  player.row = enter.row;
+  player.facing = enter.facing;
+  buildMapDOM();
+  renderObjects();
+  renderPlayerSprite();
   renderPlayerPosition();
   updateProximity();
 }
@@ -352,7 +474,7 @@ function updateProximity() {
     [player.col, player.row - 1], [player.col, player.row + 1],
     [player.col - 1, player.row], [player.col + 1, player.row],
   ];
-  const objects = allInteractables();
+  const objects = area().objects();
   let found = null;
   for (const [c, r] of neighbors) {
     const obj = objects.find(o => o.col === c && o.row === r);
@@ -363,25 +485,14 @@ function updateProximity() {
   const hint = document.getElementById('overworld-hint');
   if (!found) {
     btn.style.display = 'none';
-    hint.textContent = 'Muévete por la parcela y explora todo lo que puedas.';
+    hint.textContent = currentArea === 'main' ? 'Muévete por la parcela y explora todo lo que puedas.' : '';
     return;
   }
   const el = document.querySelector(`.map-object[data-id="${found.id}"]`);
   if (el) el.classList.add('near');
   btn.style.display = 'inline-block';
-  if (found.type === 'memory' || found.type === 'human') {
-    btn.textContent = 'Hablar';
-    hint.textContent = '✨ Hay algo aquí. Toca "Hablar".';
-  } else if (found.type === 'greenhouse') {
-    btn.textContent = 'Entrar';
-    hint.textContent = '✨ Puedes entrar al invernadero.';
-  } else if (found.type === 'house') {
-    const ready = collectedClues.length >= TOTAL_CLUE_GIVERS;
-    btn.textContent = ready ? 'Entrar' : 'Tocar';
-    hint.textContent = ready
-      ? '✨ ¡La casa está abierta!'
-      : `La casa está cerrada (${collectedClues.length}/${TOTAL_CLUE_GIVERS} pistas).`;
-  }
+  btn.textContent = 'Hablar';
+  hint.textContent = 'Hay alguien aquí. Toca "Hablar".';
 }
 
 function openOverlay(avatarHtml, text, closeLabel) {
@@ -406,11 +517,20 @@ document.getElementById('interaction-close').addEventListener('click', () => {
 });
 
 function avatarFor(obj) {
-  if (obj.sprite) return `<img src="game/cropped/${obj.sprite}.png" alt="" style="height:60px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))">`;
-  return obj.emoji || '💬';
+  if (obj.sprite) return `<img src="game/cropped/${obj.sprite}.png" alt="">`;
+  return '!';
 }
 
 function handleTalk(obj) {
+  if (obj.pabloTrigger) {
+    pendingOverlayAction = () => {
+      showScene('scene-wheel');
+      prepareWheelFromCollectedClues();
+    };
+    openOverlay(avatarFor(obj), 'Has hablado con toda la familia... ahora toca decidir.\nTira de la ruleta para ver qué regalo te llevas de verdad.', 'Girar la ruleta ▶');
+    return;
+  }
+
   const isNew = !talkedTo.has(obj.id);
   talkedTo.add(obj.id);
   document.getElementById('hud-memories').textContent = talkedTo.size;
@@ -418,33 +538,16 @@ function handleTalk(obj) {
   let text = `${obj.label}\n\n${obj.text}`;
   if (obj.clue) {
     if (isNew) collectedClues.push({ text: obj.clue, isKarolG: !!obj.isKarolG });
-    text += `\n\n💬 "${obj.clue}"`;
+    text += `\n\n"${obj.clue}"`;
     document.getElementById('hud-clues').textContent = collectedClues.length;
+    if (currentArea === 'main') renderStructures();
   }
   openOverlay(avatarFor(obj), text, 'Cerrar');
 }
 
 function handleInteract() {
   if (!currentTarget) return;
-  const obj = currentTarget;
-
-  if (obj.type === 'memory' || obj.type === 'human') {
-    handleTalk(obj);
-    return;
-  }
-
-  if (obj.type === 'greenhouse') {
-    showScene('scene-greenhouse');
-    return;
-  }
-
-  if (obj.type === 'house') {
-    if (collectedClues.length < TOTAL_CLUE_GIVERS) {
-      openOverlay('🔒', `La casa está cerrada.\nVuelve cuando hayas hablado con toda la familia (${collectedClues.length}/${TOTAL_CLUE_GIVERS}).`, 'Vale');
-      return;
-    }
-    showScene('scene-house-interior');
-  }
+  handleTalk(currentTarget);
 }
 
 document.getElementById('action-btn').addEventListener('click', handleInteract);
@@ -459,7 +562,11 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ------------------------------------------------------------
-// Joystick táctil (mantener pulsado y arrastrar para moverse)
+// Joystick táctil (mantener pulsado y arrastrar para moverse).
+// El movimiento sigue siendo de 4 direcciones (rejilla), pero la
+// orientación del personaje usa 8 sectores: si el joystick se inclina en
+// diagonal hacia arriba/abajo, el personaje se ve de lateral (no de
+// espaldas/frente), como en los juegos clásicos.
 // ------------------------------------------------------------
 
 const joystick = document.getElementById('joystick');
@@ -478,26 +585,34 @@ function setKnobPosition(x, y) {
 function resetKnob() {
   joystickKnob.style.transform = 'translate(-50%, -50%)';
 }
-function dirFromVector(dx, dy) {
-  if (Math.hypot(dx, dy) < JOYSTICK_DEADZONE) return null;
-  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+function moveDirFromAngle(angle) {
   if (angle > -45 && angle <= 45) return 'right';
   if (angle > 45 && angle <= 135) return 'down';
   if (angle > 135 || angle <= -135) return 'left';
   return 'up';
 }
-function moveForDir(dir) {
-  if (dir === 'up') tryMove(0, -1);
-  else if (dir === 'down') tryMove(0, 1);
-  else if (dir === 'left') tryMove(-1, 0);
-  else if (dir === 'right') tryMove(1, 0);
+function facingDirFromAngle(angle) {
+  if (angle > 67.5 && angle <= 112.5) return 'down';
+  if (angle > -112.5 && angle <= -67.5) return 'up';
+  if (angle > -22.5 && angle <= 22.5) return 'right';
+  if (angle > 157.5 || angle <= -157.5) return 'left';
+  if (angle > 22.5 && angle <= 67.5) return 'right';   // abajo-derecha -> lateral
+  if (angle > 112.5 && angle <= 157.5) return 'left';  // abajo-izquierda -> lateral
+  if (angle > -67.5 && angle <= -22.5) return 'right'; // arriba-derecha -> lateral
+  return 'left'; // arriba-izquierda -> lateral
 }
-function startMoveLoop(dir) {
+function moveForDir(dir, facing) {
+  if (dir === 'up') tryMove(0, -1, facing);
+  else if (dir === 'down') tryMove(0, 1, facing);
+  else if (dir === 'left') tryMove(-1, 0, facing);
+  else if (dir === 'right') tryMove(1, 0, facing);
+}
+function startMoveLoop(dir, facing) {
   if (currentDir === dir) return;
   currentDir = dir;
   clearInterval(moveInterval);
-  moveForDir(dir);
-  moveInterval = setInterval(() => moveForDir(dir), MOVE_REPEAT_MS);
+  moveForDir(dir, facing);
+  moveInterval = setInterval(() => moveForDir(dir, facing), MOVE_REPEAT_MS);
 }
 function stopMoveLoop() {
   clearInterval(moveInterval);
@@ -508,11 +623,10 @@ function handleJoystickPointer(e) {
   const dx = e.clientX - joystickCenter.x;
   const dy = e.clientY - joystickCenter.y;
   const dist = Math.min(JOYSTICK_MAX, Math.hypot(dx, dy));
-  const angle = Math.atan2(dy, dx);
-  setKnobPosition(Math.cos(angle) * dist, Math.sin(angle) * dist);
-  const dir = dirFromVector(dx, dy);
-  if (dir) startMoveLoop(dir);
-  else stopMoveLoop();
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+  setKnobPosition(Math.cos(angle * Math.PI / 180) * dist, Math.sin(angle * Math.PI / 180) * dist);
+  if (Math.hypot(dx, dy) < JOYSTICK_DEADZONE) { stopMoveLoop(); return; }
+  startMoveLoop(moveDirFromAngle(angle), facingDirFromAngle(angle));
 }
 function endJoystick() {
   joystickActive = false;
@@ -543,11 +657,14 @@ function initOverworld() {
 }
 
 function resetOverworld() {
+  currentArea = 'main';
   player.col = 11; player.row = 23; player.facing = 'up';
   collectedClues = [];
   talkedTo.clear();
   document.getElementById('hud-memories').textContent = '0';
   document.getElementById('hud-clues').textContent = '0';
+  buildMapDOM();
+  renderObjects();
   renderPlayerSprite();
   renderPlayerPosition();
   updateProximity();
@@ -558,28 +675,6 @@ window.addEventListener('resize', () => {
   buildMapDOM();
   renderObjects();
   renderPlayerPosition();
-});
-
-// ============================================================
-// ESCENA INVERNADERO (interior estático: Abuelo + Sando)
-// ============================================================
-
-document.getElementById('gh-abuelo').addEventListener('click', () => handleTalk(GREENHOUSE_ABUELO));
-document.getElementById('gh-sando').addEventListener('click', () => handleTalk({
-  id: 'sando', label: 'Sando', sprite: 'sando_down', text: GREENHOUSE_SANDO_TEXT,
-}));
-document.getElementById('greenhouse-exit').addEventListener('click', () => {
-  showScene('scene-overworld');
-  updateCamera();
-});
-
-// ============================================================
-// ESCENA INTERIOR DE LA CASA (Pablo + botón a la ruleta)
-// ============================================================
-
-document.getElementById('house-to-wheel').addEventListener('click', () => {
-  showScene('scene-wheel');
-  prepareWheelFromCollectedClues();
 });
 
 // ============================================================
@@ -616,7 +711,7 @@ function buildWheel() {
   wheel.style.background = `conic-gradient(${gradientParts.join(', ')})`;
 
   const radius = wheel.getBoundingClientRect().width / 2;
-  const labelRadius = radius * 0.62;
+  const labelRadius = radius * 0.68;
 
   WHEEL_PRIZES.forEach((prize, i) => {
     const label = document.createElement('div');
@@ -627,7 +722,7 @@ function buildWheel() {
     const y = -labelRadius * Math.cos(rad);
     label.style.left = `calc(50% + ${x}px)`;
     label.style.top = `calc(50% + ${y}px)`;
-    label.textContent = prize.split(' ')[0];
+    label.textContent = i + 1;
     wheel.appendChild(label);
   });
 }
