@@ -99,7 +99,7 @@
       <button class="hud-menu-btn" id="overworld-menu-btn">☰ Menú</button>
       <div class="hud-counters">
         <span>💭 <span id="hud-memories">0</span>/<span id="hud-memories-total">0</span></span>
-        <span>📦 <span id="hud-chests">0</span>/<span id="hud-chests-total">0</span></span>
+        <span>🔑 <span id="hud-clues">0</span>/<span id="hud-clues-total">0</span></span>
       </div>
     </div>
     <p class="overworld-hint" id="overworld-hint">Muévete por la parcela y explora todo lo que puedas.</p>
@@ -107,8 +107,9 @@
     <div class="map-viewport">
       <div class="map-camera" id="map-camera">
         <div class="map-grid" id="map-grid"></div>
+        <div class="map-structures" id="map-structures"></div>
         <div class="map-objects" id="map-objects"></div>
-        <div class="player-sprite" id="player-sprite"><div class="player-pixel"></div></div>
+        <div class="player-sprite" id="player-sprite"><img id="player-img" src="game/cropped/player_down.png" alt=""></div>
       </div>
     </div>
 
@@ -131,7 +132,41 @@
     </div>
   </section>
 
-  <!-- ESCENA 6: RULETA -->
+  <!-- ESCENA 6: INTERIOR DEL INVERNADERO (sorpresa) -->
+  <section class="scene" id="scene-greenhouse">
+    <div class="interior-wrap greenhouse-interior">
+      <h2 class="panel-title">🌿 Dentro del invernadero</h2>
+      <p class="interior-hint">Toca a cada uno para hablar con ellos.</p>
+      <div class="interior-cast">
+        <button class="interior-character" id="gh-abuelo" type="button">
+          <span class="interior-avatar">👴</span>
+          <span class="interior-name">El abuelo</span>
+        </button>
+        <button class="interior-character" id="gh-sando" type="button">
+          <img src="game/cropped/sando_down.png" alt="">
+          <span class="interior-name">Sando</span>
+        </button>
+      </div>
+      <button class="btn-back" id="greenhouse-exit">◀ Salir</button>
+    </div>
+  </section>
+
+  <!-- ESCENA 7: INTERIOR DE LA CASA (Pablo + ruleta) -->
+  <section class="scene" id="scene-house-interior">
+    <div class="interior-wrap house-interior">
+      <h2 class="panel-title">🏡 Dentro de la casa</h2>
+      <div class="interior-cast">
+        <div class="interior-character interior-character--static">
+          <span class="interior-avatar">💛</span>
+          <span class="interior-name">Pablo</span>
+        </div>
+      </div>
+      <p class="interior-hint interior-message">Has hablado con toda la familia... ahora toca decidir. Tira de la ruleta para ver qué regalo te llevas de verdad.</p>
+      <button class="btn-next" id="house-to-wheel">Girar la ruleta ▶</button>
+    </div>
+  </section>
+
+  <!-- ESCENA 8: RULETA -->
   <section class="scene" id="scene-wheel">
     <div class="wheel-wrap">
       <h2 class="panel-title">🎡 La Ruleta de los Regalos</h2>

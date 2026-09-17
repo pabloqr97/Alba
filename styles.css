@@ -384,47 +384,53 @@ html, body {
     radial-gradient(circle at 25% 30%, rgba(255,255,255,0.10) 0 3px, transparent 4px),
     radial-gradient(circle at 70% 65%, rgba(0,0,0,0.05) 0 3px, transparent 4px);
 }
-.tile-path {
-  background-color: #e3c88a;
-  background-image: radial-gradient(circle, rgba(122, 78, 45, 0.18) 1px, transparent 1.5px);
-  background-size: 9px 9px;
-}
+.tile-path { background: url('game/path_tile.jpeg') center/cover; }
 .tile-fence { background: repeating-linear-gradient(90deg, var(--hd-brown), var(--hd-brown) 4px, #a97a4c 4px, #a97a4c 8px); }
 
-/* Casa: tejado + pared + puerta + ventanas, para que se lea como edificio */
-.tile-roof { background: linear-gradient(180deg, #c1543a, #a8402a); border-bottom: 2px solid #7d2f1f; }
-.tile-wall { background: #e8d9b8; border-left: 1px solid rgba(0,0,0,0.05); border-right: 1px solid rgba(0,0,0,0.05); }
-.tile-door { background: #7a4e2d; box-shadow: inset 0 0 0 3px #5c3a20; }
-.tile-window { background: #e8d9b8; }
-.tile-window::after {
-  content: "";
-  position: absolute;
-  inset: 22%;
-  background: #bfe0e8;
-  border: 2px solid #5c3a20;
-}
+/* Casa: la imagen real (map-structures) cubre esta zona; el tile solo da el color de suelo de respaldo */
+.tile-wall { background: #cfa15f; }
 .tile-terrace { background: #cfa15f; background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0 2px, transparent 2px 12px); }
 .tile-steps { background: #b98a52; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12), inset 0 4px 0 rgba(255,255,255,0.15); }
 
-/* Caseta de barbacoa + alacena */
+/* Caseta de barbacoa + alacena (sin arte propio todavía) */
 .tile-shed-roof { background: linear-gradient(180deg, #8a4a3a, #6e392c); border-bottom: 2px solid #4f2a20; }
 .tile-shed-wall { background: #a9835f; }
 
-/* Piscina: borde transitable + agua */
-.tile-pool-edge { background: #e3ddc9; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4); }
-.tile-pool { background: linear-gradient(180deg, #5cb8d1, #3f9fbc); }
+/* Piscina: borde transitable + agua, con las texturas reales */
+.tile-pool-edge { background: url('game/cropped/pool_edge_tile.png') center/cover; }
+.tile-pool { background: url('game/cropped/pool_water_tile.png') center/cover; }
+
+/* Zona de perros: vallada, al descubierto */
+.tile-dogyard {
+  background-color: #d8c9a3;
+  background-image: repeating-linear-gradient(0deg, rgba(90,70,40,0.18) 0 2px, transparent 2px 10px),
+    repeating-linear-gradient(90deg, rgba(90,70,40,0.18) 0 2px, transparent 2px 10px);
+}
 
 .tile-vine {
   background-color: #9fbf7a;
   background-image: radial-gradient(circle at 35% 40%, rgba(90, 60, 120, 0.35) 0 3px, transparent 4px),
     radial-gradient(circle at 65% 65%, rgba(90, 60, 120, 0.3) 0 3px, transparent 4px);
 }
-.tile-crop { background: repeating-linear-gradient(90deg, #c9a35c, #c9a35c 8px, #b98f4e 8px, #b98f4e 16px); }
-.tile-greenhouse {
-  background-color: #cfe8e0;
-  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0 8px, rgba(160, 200, 190, 0.35) 8px 16px);
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5);
+.tile-crop { background: url('game/crop_tile.jpeg') center/cover; }
+
+/* El invernadero real se dibuja como estructura (map-structures); esto es solo el suelo de respaldo */
+.tile-greenhouse-floor { background-color: #cfe8e0; }
+
+.map-structures {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
+.map-structure {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 3px rgba(0,0,0,0.25));
+}
+.map-structure img { display: block; width: 100%; height: 100%; }
 
 .map-objects {
   position: absolute;
@@ -445,9 +451,8 @@ html, body {
   filter: drop-shadow(0 2px 1px rgba(0,0,0,0.3));
   transition: filter 0.2s ease;
 }
-.map-object.chest-opened { opacity: 0.85; }
-.map-object.golden-locked { filter: grayscale(0.7) brightness(0.85); }
-.map-object.golden-ready {
+.map-object.house-locked { filter: grayscale(0.4) brightness(0.9); }
+.map-object.house-ready {
   animation: golden-glow 1.4s ease-in-out infinite;
 }
 @keyframes golden-glow {
@@ -471,38 +476,47 @@ html, body {
   width: var(--tile-size);
   height: var(--tile-size);
   transition: left 0.16s linear, top 0.16s linear;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 5;
 }
-.player-pixel {
-  width: calc(var(--tile-size) * 0.14);
-  height: calc(var(--tile-size) * 0.14);
-  background: transparent;
-  filter: drop-shadow(1px 0 0 #2b2118) drop-shadow(-1px 0 0 #2b2118)
-    drop-shadow(0 1px 0 #2b2118) drop-shadow(0 -1px 0 #2b2118);
+.player-sprite img {
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  height: calc(var(--tile-size) * 1.55);
+  width: auto;
+  max-width: none;
+  filter: drop-shadow(0 3px 2px rgba(0,0,0,0.3));
 }
-.player-sprite.face-left .player-pixel { transform: scaleX(-1); }
-.player-sprite.stepping .player-pixel { animation: step-pulse 0.18s ease-out; }
+.player-sprite.face-left img { transform: translateX(-50%) scaleX(-1); }
+.player-sprite.stepping img { animation: step-pulse 0.18s ease-out; }
 @keyframes step-pulse {
-  0% { transform: scale(1, 1); }
-  40% { transform: scale(1.1, 0.85); }
-  100% { transform: scale(1, 1); }
+  0% { transform: translateX(-50%) scale(1, 1); }
+  40% { transform: translateX(-50%) scale(1.06, 0.93); }
+  100% { transform: translateX(-50%) scale(1, 1); }
 }
-.player-sprite.face-left.stepping .player-pixel { animation: step-pulse-left 0.18s ease-out; }
+.player-sprite.face-left.stepping img { animation: step-pulse-left 0.18s ease-out; }
 @keyframes step-pulse-left {
-  0% { transform: scaleX(-1) scale(1, 1); }
-  40% { transform: scaleX(-1) scale(1.1, 0.85); }
-  100% { transform: scaleX(-1) scale(1, 1); }
+  0% { transform: translateX(-50%) scaleX(-1) scale(1, 1); }
+  40% { transform: translateX(-50%) scaleX(-1) scale(1.06, 0.93); }
+  100% { transform: translateX(-50%) scaleX(-1) scale(1, 1); }
 }
 
-.character-sprite-inner {
-  background: transparent;
+.map-object.character {
   animation: idle-bob 1.8s ease-in-out infinite;
-  filter: drop-shadow(1px 0 0 #2b2118) drop-shadow(-1px 0 0 #2b2118)
-    drop-shadow(0 1px 0 #2b2118) drop-shadow(0 -1px 0 #2b2118);
+  overflow: visible;
 }
+.map-object.character img {
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  height: calc(var(--tile-size) * 1.5);
+  width: auto;
+  max-width: none;
+  filter: drop-shadow(0 3px 2px rgba(0,0,0,0.3));
+}
+.map-object.character.small img { height: calc(var(--tile-size) * 1.05); }
 @keyframes idle-bob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
@@ -565,6 +579,57 @@ html, body {
 @media (min-width: 560px) {
   .interaction-overlay { align-items: center; }
 }
+
+/* ---------- INTERIORES (invernadero / casa) ---------- */
+#scene-greenhouse {
+  background: linear-gradient(180deg, #cfe8e0, #eaf7e9);
+}
+#scene-house-interior {
+  background: linear-gradient(180deg, #f6ecc9, #e8d9b8);
+}
+.interior-wrap {
+  width: min(480px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.interior-hint { font-size: 14px; color: var(--hd-brown); margin: 0; }
+.interior-message { font-size: 16px; max-width: 380px; line-height: 1.6; }
+.interior-cast {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 160px;
+  margin: 10px 0;
+}
+.interior-character {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Baloo 2', sans-serif;
+  animation: idle-bob 1.8s ease-in-out infinite;
+}
+.interior-character img {
+  height: 130px;
+  width: auto;
+  filter: drop-shadow(0 4px 3px rgba(0,0,0,0.25));
+}
+.interior-avatar { font-size: 78px; line-height: 1; }
+.interior-name {
+  font-weight: 800;
+  font-size: 13px;
+  background: var(--cream);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 2px solid var(--hd-wheat-dark);
+}
+.interior-character--static { cursor: default; }
 
 /* ---------- WHEEL ---------- */
 #scene-wheel {
