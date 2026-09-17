@@ -7,26 +7,28 @@
 // iconos. Varios tienen texto PLACEHOLDER — edítalos con calma cuando tengas
 // la anécdota real. col/row son coordenadas de casilla (ver buildGrid).
 const MEMORIES = [
-  { id: 'abuelo', col: 13, row: 2, sprite: 'abuelo', label: 'El abuelo',
-    text: 'En el huerto, donde siempre estaba tu abuelo.\nSigue aquí, en cada rincón de la parcela.' },
-  { id: 'sando', col: 12, row: 2, sprite: 'sando', label: 'Sando',
-    text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, correteando por el huerto.' },
-  { id: 'limonero', col: 3, row: 2, emoji: '🍋', label: 'El limonero',
-    text: 'El limonero de la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'barbacoa', col: 5, row: 2, emoji: '🍖', label: 'La zona de barbacoa',
-    text: 'La barbacoa de al lado de la caseta.\n(Recuerdo por escribir.)' },
-  { id: 'invernadero', col: 10, row: 3, emoji: '🌿', label: 'El invernadero',
-    text: 'El invernadero de la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'piscina', col: 7, row: 3, emoji: '🏊', label: 'La piscina',
-    text: 'La piscina de siempre.\n(Recuerdo por escribir.)' },
-  { id: 'mortero', col: 8, row: 6, emoji: '🥣', label: 'El mortero',
-    text: 'Ese mortero de siempre.\nHay una foto suya de pequeña con él en las manos — icónica.' },
-  { id: 'pozo', col: 13, row: 7, emoji: '💧', label: 'El pozo',
-    text: 'El pozo de la parcela.\n(Recuerdo por escribir: cuéntame algo real sobre él.)' },
-  { id: 'gallinero', col: 13, row: 9, emoji: '🐔', label: 'El gallinero',
-    text: 'El gallinero de toda la vida.\n(Recuerdo por escribir.)' },
-  { id: 'mecedora', col: 6, row: 7, emoji: '🪑', label: 'La mecedora del porche',
+  { id: 'mecedora', col: 6, row: 5, emoji: '🪑', label: 'La mecedora del porche',
     text: 'La mecedora del porche, testigo de tardes enteras.\n(Recuerdo por escribir.)' },
+  { id: 'mortero', col: 8, row: 4, emoji: '🥣', label: 'El mortero',
+    text: 'Ese mortero de siempre.\nHay una foto suya de pequeña con él en las manos — icónica.' },
+  { id: 'barbacoa', col: 2, row: 7, emoji: '🍖', label: 'La barbacoa',
+    text: 'La barbacoa de la parcela.\n(Recuerdo por escribir.)' },
+  { id: 'alacena', col: 2, row: 11, emoji: '🗄️', label: 'La alacena',
+    text: 'La alacena de siempre.\n(Recuerdo por escribir.)' },
+  { id: 'piscina', col: 4, row: 9, emoji: '🏊', label: 'La piscina',
+    text: 'La piscina de la parcela.\n(Recuerdo por escribir.)' },
+  { id: 'invernadero', col: 6, row: 16, emoji: '🌿', label: 'El invernadero',
+    text: 'El invernadero de la parcela.\n(Recuerdo por escribir.)' },
+  { id: 'limonero', col: 2, row: 19, emoji: '🍋', label: 'El limonero',
+    text: 'El limonero de la parcela.\n(Recuerdo por escribir.)' },
+  { id: 'sando', col: 4, row: 19, sprite: 'sando', label: 'Sando',
+    text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, correteando por el huerto.' },
+  { id: 'abuelo', col: 5, row: 19, sprite: 'abuelo', label: 'El abuelo',
+    text: 'En el huerto, donde siempre estaba tu abuelo.\nSigue aquí, en cada rincón de la parcela.' },
+  { id: 'gallinero', col: 8, row: 21, emoji: '🐔', label: 'El gallinero',
+    text: 'El gallinero de toda la vida.\n(Recuerdo por escribir.)' },
+  { id: 'pozo', col: 9, row: 6, emoji: '💧', label: 'El pozo',
+    text: 'El pozo de la parcela.\n(Recuerdo por escribir: cuéntame algo real sobre él.)' },
 ];
 
 // 5 cofres normales. El SEGUNDO que se abra (sea cual sea, en el orden que
@@ -36,17 +38,17 @@ const MEMORIES = [
 // juego (boot, ajustes, créditos...) — solo debe aparecer al abrir un
 // cofre o en la revelación final.
 const CHESTS = [
-  { id: 'chest1', col: 14, row: 2 },
-  { id: 'chest2', col: 5, row: 8 },
-  { id: 'chest3', col: 3, row: 7 },
-  { id: 'chest4', col: 12, row: 8 },
-  { id: 'chest5', col: 7, row: 9 },
+  { id: 'chest1', col: 9, row: 3 },
+  { id: 'chest2', col: 2, row: 14 },
+  { id: 'chest3', col: 8, row: 17 },
+  { id: 'chest4', col: 3, row: 20 },
+  { id: 'chest5', col: 7, row: 21 },
 ];
 
 // Cofre dorado final: se activa solo cuando ya se han abierto 2+ cofres
 // normales (garantía de que Karol G ya está entre lo recogido). Al abrirlo
 // se lanza la ruleta con TODO lo que Alba haya encontrado hasta ese momento.
-const GOLDEN_CHEST = { id: 'golden', col: 9, row: 9 };
+const GOLDEN_CHEST = { id: 'golden', col: 7, row: 12 };
 
 const DECOY_PRIZES = [
   '🧦 Calcetines a juego con tu casa',
@@ -54,14 +56,14 @@ const DECOY_PRIZES = [
   '🛋️ Vale para redecorar el salón (otra vez)',
   '🎬 Noche de cine en casa',
   '🐾 Un peluche que se parece a Sando',
-  '🏝️ Un vecino nuevo para Candeleda',
+  '🏡 Una tarde entera decorando la parcela',
 ];
 const KAROL_G_PRIZE = '🎫 Entradas para ver a Karol G';
 
-const MAP_COLS = 17;
-const MAP_ROWS = 11;
-const VIEW_COLS = 9;
-const VIEW_ROWS = 7;
+const MAP_COLS = 13;
+const MAP_ROWS = 26;
+const VIEW_COLS = 8;
+const VIEW_ROWS = 9;
 
 // ============================================================
 // NAVEGACIÓN ENTRE ESCENAS
@@ -93,7 +95,7 @@ function runBoot() {
     'Cargando cariño...',
     'Plantando fresas...',
     'Espantando vecinos de la isla...',
-    'Puliendo los muebles de Candeleda...',
+    'Puliendo los muebles de la parcela...',
     'Regando el huerto...',
     'Calentando el invernadero...',
     'Cociendo algo en el mortero...',
@@ -121,35 +123,50 @@ function runBoot() {
 // LA PARCELA — mapa, personajes, colisiones e interacción
 // ============================================================
 
-// Plano inspirado en la parcela real de los abuelos de Alba (estilizado,
-// no una recreación literal): entrada por la derecha, camino largo bordeado
-// de parras hacia "el fondo" (izquierda), con campo de cultivo, invernadero,
-// piscina y una zona de césped con caseta + barbacoa a un lado del camino.
-// La casa queda centrada, con espacio para rodearla por detrás.
+// Plano calcado del boceto real de Pablo (estilizado, no una recreación
+// literal por satélite): casa arriba con porche y escaleras, la caseta de
+// barbacoa+alacena a un lado, luego piscina, invernadero y campos de
+// cultivo bajando hacia "el fondo", con un camino largo por el lado
+// derecho (entrada arriba-derecha) que baja hasta abajo del todo.
 function buildGrid() {
   const g = Array.from({ length: MAP_ROWS }, () => Array(MAP_COLS).fill('.'));
   for (let c = 0; c < MAP_COLS; c++) { g[0][c] = '#'; g[MAP_ROWS - 1][c] = '#'; }
   for (let r = 0; r < MAP_ROWS; r++) { g[r][0] = '#'; g[r][MAP_COLS - 1] = '#'; }
+  g[1][MAP_COLS - 1] = 'P'; // entrada, arriba a la derecha
 
-  g[5][MAP_COLS - 1] = 'P'; // entrada, lado derecho
-  for (let c = 2; c <= 15; c++) g[5][c] = 'P'; // camino largo
-  for (let c = 3; c <= 14; c++) g[4][c] = 'V'; // parras bordeando el camino
+  // Casa: tejado, pared con puerta y ventanas
+  for (let c = 4; c <= 8; c++) g[1][c] = 'R';
+  for (let c = 4; c <= 8; c++) g[2][c] = 'H';
+  for (let c = 4; c <= 8; c++) g[3][c] = (c === 5 || c === 7) ? 'N' : 'H';
+  for (let c = 4; c <= 8; c++) g[4][c] = (c === 6) ? 'D' : 'H';
+  for (let c = 4; c <= 8; c++) g[5][c] = 'T'; // porche/terraza
+  g[6][6] = 'E'; // escaleras del porche al jardín
 
-  for (let r = 1; r <= 3; r++) for (let c = 12; c <= 14; c++) g[r][c] = 'C'; // campo de cultivo / huerto
-  for (let r = 1; r <= 3; r++) for (let c = 9; c <= 11; c++) g[r][c] = 'I'; // invernadero
-  for (let r = 1; r <= 3; r++) for (let c = 6; c <= 8; c++) g[r][c] = 'W'; // piscina
-  g[2][4] = 'S'; // caseta de obra (césped alrededor queda como grass)
+  // Caseta de barbacoa + alacena (lado izquierdo)
+  for (let c = 1; c <= 2; c++) g[7][c] = 'K'; // tejadillo
+  for (let r = 8; r <= 11; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'B';
 
-  for (let r = 6; r <= 8; r++) for (let c = 7; c <= 11; c++) g[r][c] = 'H'; // casa
-  g[6][9] = 'P'; // puerta de la casa, da al camino
+  // Piscina: borde transitable ("Y") con agua bloqueada en el centro ("W")
+  for (let c = 3; c <= 6; c++) { g[9][c] = 'Y'; g[11][c] = 'Y'; }
+  g[10][3] = 'Y'; g[10][4] = 'W'; g[10][5] = 'W'; g[10][6] = 'Y';
+
+  // Invernadero
+  for (let r = 13; r <= 16; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'I';
+
+  // Campos de cultivo / huerto
+  for (let r = 18; r <= 23; r++) for (let c = 1; c <= 9; c++) g[r][c] = 'C';
+
+  // Camino largo por la derecha, con parras bordeándolo donde hay hueco
+  for (let r = 9; r <= 24; r++) { g[r][10] = 'P'; g[r][11] = 'P'; }
+  [7, 8, 12, 17].forEach(r => { g[r][9] = 'V'; });
 
   return g;
 }
 
 const grid = buildGrid();
-const OBSTACLE_TILES = new Set(['#', 'H', 'I', 'W', 'S']);
+const OBSTACLE_TILES = new Set(['#', 'R', 'H', 'D', 'N', 'K', 'B', 'I', 'W']);
 
-const player = { col: 15, row: 5, facing: 'down' };
+const player = { col: 11, row: 2, facing: 'down' };
 let currentTarget = null; // objeto con el que se puede interactuar ahora mismo
 let pendingOverlayAction = null;
 
@@ -167,9 +184,9 @@ function shuffle(arr) {
 }
 
 function computeTileSize() {
-  const viewportW = Math.min(window.innerWidth, 520);
-  const size = Math.floor(Math.min(44, (viewportW - 24) / VIEW_COLS, (window.innerHeight * 0.5) / VIEW_ROWS));
-  document.documentElement.style.setProperty('--tile-size', Math.max(28, size) + 'px');
+  const viewportW = Math.min(window.innerWidth, 600);
+  const size = Math.floor(Math.min(60, (viewportW - 16) / VIEW_COLS, (window.innerHeight * 0.8) / VIEW_ROWS));
+  document.documentElement.style.setProperty('--tile-size', Math.max(32, size) + 'px');
 }
 
 function buildMapDOM() {
@@ -183,13 +200,20 @@ function buildMapDOM() {
       const type = grid[r][c];
       let cls = 'tile ';
       if (type === '#') cls += 'tile-fence';
-      else if (type === 'H') cls += 'tile-house';
+      else if (type === 'R') cls += 'tile-roof';
+      else if (type === 'H') cls += 'tile-wall';
+      else if (type === 'D') cls += 'tile-door';
+      else if (type === 'N') cls += 'tile-window';
+      else if (type === 'T') cls += 'tile-terrace';
+      else if (type === 'E') cls += 'tile-steps';
+      else if (type === 'K') cls += 'tile-shed-roof';
+      else if (type === 'B') cls += 'tile-shed-wall';
+      else if (type === 'Y') cls += 'tile-pool-edge';
+      else if (type === 'W') cls += 'tile-pool';
       else if (type === 'P') cls += 'tile-path';
       else if (type === 'V') cls += 'tile-vine';
       else if (type === 'C') cls += 'tile-crop';
       else if (type === 'I') cls += 'tile-greenhouse';
-      else if (type === 'W') cls += 'tile-pool';
-      else if (type === 'S') cls += 'tile-shed';
       else cls += 'tile-grass';
       tile.className = cls;
       mapGrid.appendChild(tile);
@@ -549,7 +573,7 @@ function initOverworld() {
 }
 
 function resetOverworld() {
-  player.col = 15; player.row = 5; player.facing = 'down';
+  player.col = 11; player.row = 2; player.facing = 'down';
   CHESTS.forEach(c => { c.opened = false; c.prize = null; });
   chestsOpenedCount = 0;
   collectedPrizes = [];

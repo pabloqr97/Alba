@@ -302,11 +302,11 @@ html, body {
 
 /* ---------- LA PARCELA (overworld) ---------- */
 :root {
-  --tile-size: 40px;
-  --view-cols: 9;
-  --view-rows: 7;
-  --map-cols: 17;
-  --map-rows: 11;
+  --tile-size: 44px;
+  --view-cols: 8;
+  --view-rows: 9;
+  --map-cols: 13;
+  --map-rows: 26;
 }
 #scene-overworld {
   background: linear-gradient(180deg, #cdeccb, #eaf7e9);
@@ -373,16 +373,58 @@ html, body {
   grid-template-columns: repeat(var(--map-cols), var(--tile-size));
   grid-template-rows: repeat(var(--map-rows), var(--tile-size));
 }
-.tile { width: var(--tile-size); height: var(--tile-size); }
-.tile-grass { background: #bfe3a8; }
-.tile-path { background: #e3c88a; }
+.tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  position: relative;
+}
+.tile-grass {
+  background-color: #bfe3a8;
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(255,255,255,0.10) 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 65%, rgba(0,0,0,0.05) 0 3px, transparent 4px);
+}
+.tile-path {
+  background-color: #e3c88a;
+  background-image: radial-gradient(circle, rgba(122, 78, 45, 0.18) 1px, transparent 1.5px);
+  background-size: 9px 9px;
+}
 .tile-fence { background: repeating-linear-gradient(90deg, var(--hd-brown), var(--hd-brown) 4px, #a97a4c 4px, #a97a4c 8px); }
-.tile-house { background: #c98a4f; }
-.tile-vine { background: #9fbf7a; }
+
+/* Casa: tejado + pared + puerta + ventanas, para que se lea como edificio */
+.tile-roof { background: linear-gradient(180deg, #c1543a, #a8402a); border-bottom: 2px solid #7d2f1f; }
+.tile-wall { background: #e8d9b8; border-left: 1px solid rgba(0,0,0,0.05); border-right: 1px solid rgba(0,0,0,0.05); }
+.tile-door { background: #7a4e2d; box-shadow: inset 0 0 0 3px #5c3a20; }
+.tile-window { background: #e8d9b8; }
+.tile-window::after {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  background: #bfe0e8;
+  border: 2px solid #5c3a20;
+}
+.tile-terrace { background: #cfa15f; background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0 2px, transparent 2px 12px); }
+.tile-steps { background: #b98a52; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12), inset 0 4px 0 rgba(255,255,255,0.15); }
+
+/* Caseta de barbacoa + alacena */
+.tile-shed-roof { background: linear-gradient(180deg, #8a4a3a, #6e392c); border-bottom: 2px solid #4f2a20; }
+.tile-shed-wall { background: #a9835f; }
+
+/* Piscina: borde transitable + agua */
+.tile-pool-edge { background: #e3ddc9; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4); }
+.tile-pool { background: linear-gradient(180deg, #5cb8d1, #3f9fbc); }
+
+.tile-vine {
+  background-color: #9fbf7a;
+  background-image: radial-gradient(circle at 35% 40%, rgba(90, 60, 120, 0.35) 0 3px, transparent 4px),
+    radial-gradient(circle at 65% 65%, rgba(90, 60, 120, 0.3) 0 3px, transparent 4px);
+}
 .tile-crop { background: repeating-linear-gradient(90deg, #c9a35c, #c9a35c 8px, #b98f4e 8px, #b98f4e 16px); }
-.tile-greenhouse { background: #cfe8e0; }
-.tile-pool { background: #6ec6d9; }
-.tile-shed { background: #8a6a45; }
+.tile-greenhouse {
+  background-color: #cfe8e0;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0 8px, rgba(160, 200, 190, 0.35) 8px 16px);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5);
+}
 
 .map-objects {
   position: absolute;
@@ -438,6 +480,8 @@ html, body {
   width: calc(var(--tile-size) * 0.14);
   height: calc(var(--tile-size) * 0.14);
   background: transparent;
+  filter: drop-shadow(1px 0 0 #2b2118) drop-shadow(-1px 0 0 #2b2118)
+    drop-shadow(0 1px 0 #2b2118) drop-shadow(0 -1px 0 #2b2118);
 }
 .player-sprite.face-left .player-pixel { transform: scaleX(-1); }
 .player-sprite.stepping .player-pixel { animation: step-pulse 0.18s ease-out; }
@@ -456,6 +500,8 @@ html, body {
 .character-sprite-inner {
   background: transparent;
   animation: idle-bob 1.8s ease-in-out infinite;
+  filter: drop-shadow(1px 0 0 #2b2118) drop-shadow(-1px 0 0 #2b2118)
+    drop-shadow(0 1px 0 #2b2118) drop-shadow(0 -1px 0 #2b2118);
 }
 @keyframes idle-bob {
   0%, 100% { transform: translateY(0); }
