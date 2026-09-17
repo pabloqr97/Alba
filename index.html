@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>La Isla de Candeleda — Edición Cumpleaños</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏝️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ESCENA 1: BOOT / CARGA -->
+  <section class="scene active" id="scene-boot">
+    <div class="boot-wrap">
+      <p class="boot-studio">PABOLITO GAMES presenta</p>
+      <h1 class="boot-title">🏝️ La Isla de Candeleda</h1>
+      <p class="boot-subtitle">Edición Cumpleaños — Nivel 28</p>
+      <div class="loadbar-track">
+        <div class="loadbar-fill" id="loadbar-fill"></div>
+      </div>
+      <p class="boot-flavor" id="boot-flavor">Cargando cariño...</p>
+    </div>
+  </section>
+
+  <!-- ESCENA 2: MENÚ PRINCIPAL -->
+  <section class="scene" id="scene-menu">
+    <div class="sky"></div>
+    <div class="floaties" aria-hidden="true">
+      <span>🍃</span><span>🍃</span><span>🌾</span><span>🍓</span><span>🍃</span>
+    </div>
+    <div class="menu-wrap">
+      <h1 class="game-title">🏝️ La Isla de Candeleda</h1>
+      <p class="game-subtitle">— Edición Cumpleaños de Alba —</p>
+      <nav class="menu-list" id="menu-list">
+        <button class="menu-item" data-target="scene-story-intro"><span class="cursor">▶</span> Jugar</button>
+        <button class="menu-item" data-target="scene-settings"><span class="cursor">▶</span> Configuración</button>
+        <button class="menu-item" data-target="scene-credits"><span class="cursor">▶</span> Créditos</button>
+      </nav>
+      <p class="menu-hint">27.09.1998 — hoy sube de nivel 🎂</p>
+    </div>
+  </section>
+
+  <!-- ESCENA 3: CONFIGURACIÓN (broma) -->
+  <section class="scene" id="scene-settings">
+    <div class="panel">
+      <h2 class="panel-title">⚙️ Configuración</h2>
+      <ul class="settings-list">
+        <li>
+          <span class="setting-label">🧑‍🤝‍🧑 Vecinos en la isla</span>
+          <div class="slider"><div class="slider-fill" style="width:0%"></div></div>
+          <span class="setting-value">0% — ajustado por Alba, no tocar</span>
+        </li>
+        <li>
+          <span class="setting-label">🛋️ Nivel de decoración</span>
+          <div class="slider"><div class="slider-fill" style="width:100%"></div></div>
+          <span class="setting-value">100% — al máximo, como siempre</span>
+        </li>
+        <li>
+          <span class="setting-label">🎤 Volumen de Karol G</span>
+          <div class="slider"><div class="slider-fill" style="width:100%"></div></div>
+          <span class="setting-value">100% — bloqueado, no se puede bajar</span>
+        </li>
+        <li>
+          <span class="setting-label">🐾 Modo Sando</span>
+          <div class="slider"><div class="slider-fill" style="width:100%"></div></div>
+          <span class="setting-value">Activado siempre, en el corazón</span>
+        </li>
+      </ul>
+      <button class="btn-back" data-target="scene-menu">◀ Volver</button>
+    </div>
+  </section>
+
+  <!-- ESCENA 4: CRÉDITOS -->
+  <section class="scene" id="scene-credits">
+    <div class="panel">
+      <h2 class="panel-title">📜 Créditos</h2>
+      <ul class="credits-list">
+        <li><strong>Un juego de</strong> Pabolito 💛</li>
+        <li><strong>Dirección de arte</strong> Alba (sin saberlo)</li>
+        <li><strong>Isla original</strong> Candeleda 🏝️</li>
+        <li><strong>Control de calidad</strong> Sando 🐾 <em>(in memoriam, el mejor becario)</em></li>
+        <li><strong>Vecinos contratados</strong> 0 — decisión de la dirección</li>
+        <li><strong>Motor del juego</strong> HTML, CSS, JS y mucho cariño</li>
+      </ul>
+      <button class="btn-back" data-target="scene-menu">◀ Volver</button>
+    </div>
+  </section>
+
+  <!-- ESCENA 5: INTRO HISTORIA -->
+  <section class="scene" id="scene-story-intro">
+    <div class="story-bg"></div>
+    <div class="dialogue-box">
+      <div class="dialogue-avatar">🌱</div>
+      <p class="dialogue-text" id="story-text">Cargando historia...</p>
+      <div class="dialogue-controls">
+        <span class="dialogue-progress" id="story-progress"></span>
+        <button class="btn-next" id="story-next">Continuar ▶</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ESCENA 6: MINIJUEGO COSECHA -->
+  <section class="scene" id="scene-minigame">
+    <div class="minigame-wrap">
+      <h2 class="panel-title">🌾 Cosecha rápida</h2>
+      <p class="minigame-instructions">Para desbloquear el cofre de regalos, recoge <strong id="mg-target">10</strong> fresas antes de que se acabe el tiempo. (Esto es muy Hay Day, lo sabemos.)</p>
+      <div class="minigame-hud">
+        <span>🍓 <span id="mg-count">0</span> / <span id="mg-total">10</span></span>
+        <span>⏱️ <span id="mg-timer">20</span>s</span>
+      </div>
+      <div class="minigame-field" id="minigame-field"></div>
+      <button class="btn-next" id="minigame-start">Empezar cosecha</button>
+      <button class="btn-back" id="minigame-retry" style="display:none">Reintentar</button>
+    </div>
+  </section>
+
+  <!-- ESCENA 7: COFRE -->
+  <section class="scene" id="scene-chest">
+    <div class="chest-wrap">
+      <div class="chest" id="chest">📦</div>
+      <p class="chest-text" id="chest-text">¡Cofre desbloqueado! Tócalo para abrirlo.</p>
+    </div>
+  </section>
+
+  <!-- ESCENA 8: RULETA -->
+  <section class="scene" id="scene-wheel">
+    <div class="wheel-wrap">
+      <h2 class="panel-title">🎡 La Ruleta de los Regalos</h2>
+      <div class="wheel-pointer">▼</div>
+      <div class="wheel" id="wheel"></div>
+      <button class="btn-next" id="wheel-spin">Girar la ruleta</button>
+    </div>
+  </section>
+
+  <!-- ESCENA 9: REVELACIÓN -->
+  <section class="scene" id="scene-reveal">
+    <div class="confetti-layer" id="confetti-layer"></div>
+    <div class="reveal-card">
+      <p class="reveal-label">¡OBJETO OBTENIDO!</p>
+      <div class="ticket">
+        <p class="ticket-artist">KAROL G</p>
+        <p class="ticket-detail">27 · JUNIO · 2027</p>
+        <p class="ticket-detail">Madrid</p>
+        <p class="ticket-note">🎫 2 entradas</p>
+      </div>
+      <p class="reveal-message">Feliz cumpleaños, Albuchi.<br>Nivel 28 desbloqueado y... ¡misión cumplida!<br>Nos vamos a ver a Karol G.<br>Te quiero.<br>— Pabolito 💛</p>
+      <button class="btn-back" id="reveal-replay">◀ Volver al menú</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
