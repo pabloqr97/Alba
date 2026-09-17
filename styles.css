@@ -343,6 +343,16 @@ html, body {
   border-radius: var(--radius-md);
   box-shadow: 0 6px 0 var(--shadow);
 }
+.scene-fade {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 50;
+}
+.scene-fade.active { opacity: 1; }
 .map-camera {
   position: absolute;
   top: 0;
@@ -374,8 +384,13 @@ html, body {
     radial-gradient(circle at 45% 80%, rgba(120,170,90,0.55) 0 3px, transparent 4px);
 }
 .tile-curb {
-  background: url('game/path_tile.jpeg') center/cover;
-  box-shadow: inset 4px 0 0 rgba(255,255,255,0.35), inset -1px 0 0 rgba(0,0,0,0.25);
+  background-image:
+    linear-gradient(90deg, transparent 0%, transparent 56%, rgba(160,160,155,0.95) 56%, rgba(160,160,155,0.95) 64%, transparent 64%, transparent 100%),
+    url('game/path_tile.jpeg'),
+    url('game/crop_tile.jpeg');
+  background-size: 100% 100%, 44% 100%, 60% 100%;
+  background-position: left, right, left;
+  background-repeat: no-repeat, no-repeat, no-repeat;
 }
 
 /* Casa/invernadero: la imagen real (map-structures) cubre esta zona */
@@ -465,25 +480,6 @@ html, body {
   animation: near-pulse 1s linear infinite;
 }
 @keyframes near-pulse { to { transform: rotate(360deg); } }
-
-/* Marcador neutro para objetos sin arte propio todavía (sin emoji) */
-.map-object.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.map-object.placeholder::before {
-  content: "";
-  width: 46%;
-  height: 46%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(212,175,55,0.9), rgba(212,175,55,0.3));
-  animation: placeholder-pulse 1.6s ease-in-out infinite;
-}
-@keyframes placeholder-pulse {
-  0%, 100% { transform: scale(0.9); opacity: 0.7; }
-  50% { transform: scale(1.1); opacity: 1; }
-}
 
 .player-sprite {
   position: absolute;

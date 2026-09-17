@@ -6,16 +6,8 @@
 // (sin pista de regalo). Los que no tienen "sprite" muestran un marcador
 // neutro (sin emoji) hasta que tengan arte propio.
 const OBJECT_MEMORIES = [
-  { id: 'mecedora', col: 5, row: 4, label: 'La mecedora del porche',
-    text: 'La mecedora del porche, testigo de tardes enteras.\n(Recuerdo por escribir.)' },
-  { id: 'mortero', col: 8, row: 3, label: 'El mortero',
-    text: 'Ese mortero de siempre.\nHay una foto suya de pequeña con él en las manos — icónica.' },
-  { id: 'madrono', col: 4, row: 7, sprite: 'madroño_title', tree: true, label: 'El madroño',
+  { id: 'madrono', col: 8, row: 9, sprite: 'madroño_title', tree: true, label: 'El madroño',
     text: 'El madroño de la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'limonero', col: 3, row: 21, label: 'El limonero',
-    text: 'El limonero de la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'gallinero', col: 6, row: 23, label: 'El gallinero',
-    text: 'El gallinero de toda la vida.\n(Recuerdo por escribir.)' },
 ];
 
 // Personas de la familia: cada una da un recuerdo profundo Y una pista de
@@ -23,7 +15,7 @@ const OBJECT_MEMORIES = [
 // por la parcela (no todas junto a la casa). Cuando Alba haya hablado con
 // TODAS (incluida la del invernadero), la casa se abre.
 const HUMAN_CHARACTERS = [
-  { id: 'padre', col: 8, row: 9, sprite: 'padre_down', label: 'Papá',
+  { id: 'padre', col: 4, row: 7, sprite: 'padre_down', label: 'Papá',
     text: '(Diálogo profundo por escribir.)',
     clue: 'Pablo me dijo que estaba pensando regalarte unos calcetines a juego con la casa.' },
   { id: 'madre', col: 3, row: 13, sprite: 'madre_down', label: 'Mamá',
@@ -63,12 +55,13 @@ const DOG_MEMORIES = [
 
 const TOTAL_CLUE_GIVERS = HUMAN_CHARACTERS.length + 1; // +1 = el abuelo del invernadero
 
-const MAP_COLS = 13;
+const MAP_COLS = 14;
 const MAP_ROWS = 26;
 const VIEW_COLS = 8;
 const VIEW_ROWS = 9;
 const HOUSE_DOOR_KEY = '6,3';
-const GREENHOUSE_DOOR_KEY = '9,15';
+const GREENHOUSE_ROWS = [14, 15, 16, 17];
+const GREENHOUSE_DOOR_COL = 9;
 
 // ============================================================
 // NAVEGACIÓN ENTRE ESCENAS
@@ -142,15 +135,19 @@ function buildMainGrid() {
   const g = Array.from({ length: rows }, () => Array(cols).fill('.'));
 
   // Bordes: murito de piedra arriba/abajo, valla con arizónica a la
-  // izquierda, valla con parra a la derecha.
+  // izquierda, valla con parra a la derecha (un cuadrado más afuera que
+  // antes: la columna donde iba la valla ahora es tierra-plantas).
   for (let c = 0; c < cols; c++) { g[0][c] = 'S'; g[rows - 1][c] = 'S'; }
   for (let r = 0; r < rows; r++) { g[r][0] = 'X'; g[r][cols - 1] = 'Y'; }
+  for (let r = 1; r < rows - 1; r++) g[r][cols - 2] = 'D';
 
   // Franjas de césped/tierra alrededor de la piscina y zona de cultivo
   for (let c = 3; c <= 8; c++) { g[7][c] = 'G'; g[8][c] = 'G'; }
   for (let c = 7; c <= 8; c++) { g[9][c] = 'G'; g[10][c] = 'G'; g[11][c] = 'G'; g[12][c] = 'G'; }
   for (let c = 1; c <= 9; c++) { g[13][c] = 'G'; g[18][c] = 'G'; }
   for (let c = 1; c <= 8; c++) for (let r = 19; r <= 24; r++) g[r][c] = 'C';
+  // Césped junto al invernadero (donde antes había asfalto suelto)
+  for (let r = 14; r <= 17; r++) g[r][2] = 'G';
 
   // Casa: cuerpo (imagen real encima), porche transitable, escaleras y
   // puerta (casilla especial que teletransporta al interior)
@@ -160,25 +157,31 @@ function buildMainGrid() {
   g[3][6] = 'O';
 
   // Caseta de barbacoa + alacena (una sola estructura, imagen real encima)
-  for (let r = 7; r <= 11; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
+  for (let r = 6; r <= 10; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
 
-  // Piscina: solo agua, sin bordillo
-  for (let r = 9; r <= 11; r++) for (let c = 3; c <= 6; c++) g[r][c] = 'W';
+  // Piscina: solo agua, sin bordillo, 6 cuadrados (2x3)
+  for (let r = 10; r <= 11; r++) for (let c = 4; c <= 6; c++) g[r][c] = 'W';
+  // Césped donde antes había piscina (fila de arriba y columna de la izquierda)
+  for (let c = 3; c <= 6; c++) g[9][c] = 'G';
+  g[10][3] = 'G'; g[11][3] = 'G';
 
   // Zona de perros: al descubierto pero vallada (transitable)
   for (let c = 3; c <= 6; c++) g[12][c] = 'F';
 
-  // Invernadero (imagen real encima); la puerta está en el lado derecho,
-  // se entra colisionando desde el camino hacia la izquierda
+  // Invernadero (imagen real encima); la puerta ocupa todo el lado derecho,
+  // se entra colisionando desde el camino hacia la izquierda en cualquier fila
   for (let r = 14; r <= 17; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'I';
-  g[15][9] = 'O';
+  for (let r = 14; r <= 17; r++) g[r][9] = 'O';
 
   // Camino largo (asfalto) a lo largo de todo el lateral derecho
   for (let r = 1; r <= 24; r++) { g[r][10] = 'P'; g[r][11] = 'P'; }
 
-  // Franjas de tierra-plantas justo dentro de las vallas laterales
-  [1, 2, 3, 4, 5, 6, 12, 13, 14, 15, 16, 17, 18].forEach(r => { g[r][1] = 'D'; });
-  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].forEach(r => { g[r][9] = 'D'; });
+  // Franja de tierra-plantas junto a la valla izquierda (se salta la caseta)
+  [1, 2, 3, 4, 5, 11, 12, 13, 14, 15, 16, 17, 18].forEach(r => { g[r][1] = 'D'; });
+  // Franja de tierra-plantas al lado izquierdo del camino: solo junto a la
+  // piscina (arriba se junta con el asfalto de la casa, abajo pasa a césped)
+  [7, 8, 9, 10, 11].forEach(r => { g[r][9] = 'D'; });
+  g[12][9] = 'G'; g[13][9] = 'G';
 
   // Bordillo entre la zona de cultivo y el camino
   for (let r = 19; r <= 24; r++) g[r][9] = 'U';
@@ -222,9 +225,9 @@ function mainStructures() {
     { src: houseUnlocked() ? 'game/cropped/house_open.png' : 'game/cropped/house.png',
       aspect: 1368 / 1776, colStart: 4, colEnd: 8, bottomRow: 5 },
     { src: 'game/cropped/greenhouse_tile.png', aspect: 2646 / 1341,
-      colStart: 3, colEnd: 9, bottomRow: 18, matchWidth: true },
+      colStart: 3, colEnd: 9, bottomRow: 18, matchWidth: true, scale: 1.14 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
-      colStart: 1, colEnd: 2, bottomRow: 12, matchWidth: true },
+      colStart: 1, colEnd: 2, bottomRow: 11, matchWidth: true },
   ];
 }
 
@@ -232,10 +235,10 @@ function mainObjects() {
   return [...OBJECT_MEMORIES, ...HUMAN_CHARACTERS, ...DOG_MEMORIES];
 }
 
-const MAIN_WARPS = {
-  [HOUSE_DOOR_KEY]: { area: 'house', enter: { col: 2, row: 3, facing: 'up' } },
-  [GREENHOUSE_DOOR_KEY]: { area: 'greenhouse', enter: { col: 4, row: 2, facing: 'left' } },
-};
+const MAIN_WARPS = { [HOUSE_DOOR_KEY]: { area: 'house', enter: { col: 2, row: 3, facing: 'up' } } };
+GREENHOUSE_ROWS.forEach(r => {
+  MAIN_WARPS[`${GREENHOUSE_DOOR_COL},${r}`] = { area: 'greenhouse', enter: { col: 4, row: 2, facing: 'left' } };
+});
 
 // ============================================================
 // INTERIORES (misma cámara/joystick, mapas diminutos)
@@ -305,8 +308,11 @@ const talkedTo = new Set();
 function area() { return AREAS[currentArea]; }
 
 function computeTileSize() {
-  const viewportW = Math.min(window.innerWidth, 600);
-  const size = Math.floor(Math.min(60, (viewportW - 16) / VIEW_COLS, (window.innerHeight * 0.8) / VIEW_ROWS));
+  const isLandscape = window.innerWidth > window.innerHeight;
+  const maxTile = isLandscape ? 100 : 60;
+  const viewportW = isLandscape ? window.innerWidth * 0.92 : Math.min(window.innerWidth, 600);
+  const viewportH = window.innerHeight * (isLandscape ? 0.88 : 0.8);
+  const size = Math.floor(Math.min(maxTile, (viewportW - 16) / VIEW_COLS, viewportH / VIEW_ROWS));
   document.documentElement.style.setProperty('--tile-size', Math.max(32, size) + 'px');
 }
 
@@ -336,7 +342,7 @@ function renderStructures() {
   container.innerHTML = '';
   area().structures().forEach(s => {
     const footprintWidth = (s.colEnd - s.colStart + 1) * tileSize;
-    const width = s.matchWidth ? footprintWidth * 1.18 : footprintWidth;
+    const width = s.matchWidth ? footprintWidth * (s.scale != null ? s.scale : 1.18) : footprintWidth;
     const height = width / s.aspect;
     const centerCol = (s.colStart + s.colEnd + 1) / 2;
     const el = document.createElement('div');
@@ -369,8 +375,6 @@ function renderObjects() {
       img.src = `game/cropped/${obj.sprite}.png`;
       img.alt = '';
       el.appendChild(img);
-    } else {
-      el.classList.add('placeholder');
     }
     layer.appendChild(el);
   });
@@ -448,12 +452,22 @@ function tryMove(dx, dy, forcedFacing) {
     const warp = area().warps[key];
     if (warp) {
       renderPlayerPosition();
-      enterArea(warp.area, warp.enter);
+      fadeToArea(warp.area, warp.enter);
       return;
     }
   }
   renderPlayerPosition();
   updateProximity();
+}
+
+function fadeToArea(name, enter) {
+  const fade = document.getElementById('scene-fade');
+  stopMoveLoop();
+  fade.classList.add('active');
+  setTimeout(() => {
+    enterArea(name, enter);
+    requestAnimationFrame(() => fade.classList.remove('active'));
+  }, 260);
 }
 
 function enterArea(name, enter) {
@@ -496,6 +510,7 @@ function updateProximity() {
 }
 
 function openOverlay(avatarHtml, text, closeLabel) {
+  stopMoveLoop();
   const avatarEl = document.getElementById('interaction-avatar');
   avatarEl.innerHTML = avatarHtml;
   document.getElementById('interaction-text').textContent = text;
@@ -552,13 +567,35 @@ function handleInteract() {
 
 document.getElementById('action-btn').addEventListener('click', handleInteract);
 
+const KEY_DIR = {
+  ArrowUp: 'up', w: 'up', W: 'up',
+  ArrowDown: 'down', s: 'down', S: 'down',
+  ArrowLeft: 'left', a: 'left', A: 'left',
+  ArrowRight: 'right', d: 'right', D: 'right',
+};
+const heldDirs = [];
+
 document.addEventListener('keydown', (e) => {
   if (!document.getElementById('scene-overworld').classList.contains('active')) return;
-  if (['ArrowUp', 'w', 'W'].includes(e.key)) tryMove(0, -1);
-  else if (['ArrowDown', 's', 'S'].includes(e.key)) tryMove(0, 1);
-  else if (['ArrowLeft', 'a', 'A'].includes(e.key)) tryMove(-1, 0);
-  else if (['ArrowRight', 'd', 'D'].includes(e.key)) tryMove(1, 0);
-  else if (e.key === 'Enter' || e.key === ' ') handleInteract();
+  if (document.getElementById('interaction-overlay').classList.contains('active')) return;
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInteract(); return; }
+  const dir = KEY_DIR[e.key];
+  if (!dir) return;
+  e.preventDefault();
+  if (e.repeat) return;
+  if (!heldDirs.includes(dir)) heldDirs.push(dir);
+  startMoveLoop(dir, dir);
+});
+document.addEventListener('keyup', (e) => {
+  const dir = KEY_DIR[e.key];
+  if (!dir) return;
+  const idx = heldDirs.indexOf(dir);
+  if (idx !== -1) heldDirs.splice(idx, 1);
+  if (currentDir === dir) {
+    const next = heldDirs[heldDirs.length - 1];
+    if (next) startMoveLoop(next, next);
+    else stopMoveLoop();
+  }
 });
 
 // ------------------------------------------------------------
