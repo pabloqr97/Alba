@@ -3,43 +3,50 @@
 // ============================================================
 
 // Recuerdos desbloqueables al interactuar con objetos/personas de la parcela.
-// Los de "pozo", "limonero", "gallinero", "mecedora", "tendedero" y "parra"
-// tienen texto PLACEHOLDER — edítalos con calma cuando tengas la anécdota real.
-// col/row son coordenadas de casilla en el mapa (ver buildGrid más abajo).
+// "abuelo" y "sando" se renderizan como personajes (pixel-art), el resto como
+// iconos. Varios tienen texto PLACEHOLDER — edítalos con calma cuando tengas
+// la anécdota real. col/row son coordenadas de casilla (ver buildGrid).
 const MEMORIES = [
-  { id: 'pozo', col: 2, row: 5, emoji: '💧', label: 'El pozo',
-    text: 'El pozo de la parcela.\n(Recuerdo por escribir: cuéntame algo real sobre él.)' },
-  { id: 'mortero', col: 7, row: 3, emoji: '🥣', label: 'El mortero',
-    text: 'Ese mortero de siempre.\nHay una foto suya de pequeña con él en las manos — icónica.' },
-  { id: 'limonero', col: 9, row: 5, emoji: '🍋', label: 'El limonero',
+  { id: 'abuelo', col: 13, row: 2, sprite: 'abuelo', label: 'El abuelo',
+    text: 'En el huerto, donde siempre estaba tu abuelo.\nSigue aquí, en cada rincón de la parcela.' },
+  { id: 'sando', col: 12, row: 2, sprite: 'sando', label: 'Sando',
+    text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, correteando por el huerto.' },
+  { id: 'limonero', col: 3, row: 2, emoji: '🍋', label: 'El limonero',
     text: 'El limonero de la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'gallinero', col: 8, row: 10, emoji: '🐔', label: 'El gallinero',
+  { id: 'barbacoa', col: 5, row: 2, emoji: '🍖', label: 'La zona de barbacoa',
+    text: 'La barbacoa de al lado de la caseta.\n(Recuerdo por escribir.)' },
+  { id: 'invernadero', col: 10, row: 3, emoji: '🌿', label: 'El invernadero',
+    text: 'El invernadero de la parcela.\n(Recuerdo por escribir.)' },
+  { id: 'piscina', col: 7, row: 3, emoji: '🏊', label: 'La piscina',
+    text: 'La piscina de siempre.\n(Recuerdo por escribir.)' },
+  { id: 'mortero', col: 8, row: 6, emoji: '🥣', label: 'El mortero',
+    text: 'Ese mortero de siempre.\nHay una foto suya de pequeña con él en las manos — icónica.' },
+  { id: 'pozo', col: 13, row: 7, emoji: '💧', label: 'El pozo',
+    text: 'El pozo de la parcela.\n(Recuerdo por escribir: cuéntame algo real sobre él.)' },
+  { id: 'gallinero', col: 13, row: 9, emoji: '🐔', label: 'El gallinero',
     text: 'El gallinero de toda la vida.\n(Recuerdo por escribir.)' },
-  { id: 'mecedora', col: 4, row: 4, emoji: '🪑', label: 'La mecedora del porche',
+  { id: 'mecedora', col: 6, row: 7, emoji: '🪑', label: 'La mecedora del porche',
     text: 'La mecedora del porche, testigo de tardes enteras.\n(Recuerdo por escribir.)' },
-  { id: 'tendedero', col: 2, row: 8, emoji: '🎽', label: 'El tendedero',
-    text: 'El tendedero de siempre.\n(Recuerdo por escribir.)' },
-  { id: 'parra', col: 3, row: 10, emoji: '🍇', label: 'La parra',
-    text: 'La parra que da sombra en verano.\n(Recuerdo por escribir.)' },
-  { id: 'abuelo-sando', col: 4, row: 11, emoji: '👴', label: 'El abuelo y Sando',
-    text: 'En el huerto, donde siempre estaban su abuelo y Sando juntos.\nLos dos siguen aquí, en cada rincón de la parcela.' },
 ];
 
 // 5 cofres normales. El SEGUNDO que se abra (sea cual sea, en el orden que
 // Alba decida) da siempre las entradas de Karol G — así el regalo queda
 // garantizado aunque no llegue a abrir los 5. Ver resolveChestPrize().
+// IMPORTANTE (spoiler): no menciones a Karol G en ningún otro texto del
+// juego (boot, ajustes, créditos...) — solo debe aparecer al abrir un
+// cofre o en la revelación final.
 const CHESTS = [
-  { id: 'chest1', col: 8, row: 4 },
-  { id: 'chest2', col: 2, row: 9 },
-  { id: 'chest3', col: 7, row: 7 },
-  { id: 'chest4', col: 7, row: 11 },
-  { id: 'chest5', col: 2, row: 3 },
+  { id: 'chest1', col: 14, row: 2 },
+  { id: 'chest2', col: 5, row: 8 },
+  { id: 'chest3', col: 3, row: 7 },
+  { id: 'chest4', col: 12, row: 8 },
+  { id: 'chest5', col: 7, row: 9 },
 ];
 
 // Cofre dorado final: se activa solo cuando ya se han abierto 2+ cofres
 // normales (garantía de que Karol G ya está entre lo recogido). Al abrirlo
 // se lanza la ruleta con TODO lo que Alba haya encontrado hasta ese momento.
-const GOLDEN_CHEST = { id: 'golden', col: 3, row: 7 };
+const GOLDEN_CHEST = { id: 'golden', col: 9, row: 9 };
 
 const DECOY_PRIZES = [
   '🧦 Calcetines a juego con tu casa',
@@ -51,8 +58,10 @@ const DECOY_PRIZES = [
 ];
 const KAROL_G_PRIZE = '🎫 Entradas para ver a Karol G';
 
-const MAP_COLS = 11;
-const MAP_ROWS = 14;
+const MAP_COLS = 17;
+const MAP_ROWS = 11;
+const VIEW_COLS = 9;
+const VIEW_ROWS = 7;
 
 // ============================================================
 // NAVEGACIÓN ENTRE ESCENAS
@@ -65,7 +74,10 @@ function showScene(id) {
 }
 
 document.querySelectorAll('[data-target]').forEach(el => {
-  el.addEventListener('click', () => showScene(el.dataset.target));
+  el.addEventListener('click', () => {
+    showScene(el.dataset.target);
+    if (el.dataset.target === 'scene-overworld') updateCamera();
+  });
 });
 
 document.getElementById('overworld-menu-btn').addEventListener('click', () => showScene('scene-menu'));
@@ -83,7 +95,7 @@ function runBoot() {
     'Espantando vecinos de la isla...',
     'Puliendo los muebles de Candeleda...',
     'Regando el huerto...',
-    'Afinando la voz de Karol G...',
+    'Calentando el invernadero...',
     'Cociendo algo en el mortero...',
     'Repasando fotos antiguas...',
     'Casi está...',
@@ -106,32 +118,38 @@ function runBoot() {
 }
 
 // ============================================================
-// LA PARCELA — mapa, personaje, colisiones e interacción
+// LA PARCELA — mapa, personajes, colisiones e interacción
 // ============================================================
 
+// Plano inspirado en la parcela real de los abuelos de Alba (estilizado,
+// no una recreación literal): entrada por la derecha, camino largo bordeado
+// de parras hacia "el fondo" (izquierda), con campo de cultivo, invernadero,
+// piscina y una zona de césped con caseta + barbacoa a un lado del camino.
+// La casa queda centrada, con espacio para rodearla por detrás.
 function buildGrid() {
   const g = Array.from({ length: MAP_ROWS }, () => Array(MAP_COLS).fill('.'));
   for (let c = 0; c < MAP_COLS; c++) { g[0][c] = '#'; g[MAP_ROWS - 1][c] = '#'; }
   for (let r = 0; r < MAP_ROWS; r++) { g[r][0] = '#'; g[r][MAP_COLS - 1] = '#'; }
-  g[MAP_ROWS - 1][5] = 'P'; // puerta de entrada a la parcela
 
-  for (let r = 1; r <= 3; r++) {
-    for (let c = 3; c <= 7; c++) g[r][c] = 'H';
-  }
-  g[3][5] = 'P'; // puerta de la casa
+  g[5][MAP_COLS - 1] = 'P'; // entrada, lado derecho
+  for (let c = 2; c <= 15; c++) g[5][c] = 'P'; // camino largo
+  for (let c = 3; c <= 14; c++) g[4][c] = 'V'; // parras bordeando el camino
 
-  for (let r = 4; r <= 12; r++) g[r][5] = 'P'; // camino central
+  for (let r = 1; r <= 3; r++) for (let c = 12; c <= 14; c++) g[r][c] = 'C'; // campo de cultivo / huerto
+  for (let r = 1; r <= 3; r++) for (let c = 9; c <= 11; c++) g[r][c] = 'I'; // invernadero
+  for (let r = 1; r <= 3; r++) for (let c = 6; c <= 8; c++) g[r][c] = 'W'; // piscina
+  g[2][4] = 'S'; // caseta de obra (césped alrededor queda como grass)
 
-  const trees = [[2, 1], [2, 9], [6, 1], [9, 9], [12, 9], [12, 2]];
-  trees.forEach(([r, c]) => { g[r][c] = 'T'; });
+  for (let r = 6; r <= 8; r++) for (let c = 7; c <= 11; c++) g[r][c] = 'H'; // casa
+  g[6][9] = 'P'; // puerta de la casa, da al camino
 
   return g;
 }
 
 const grid = buildGrid();
-const OBSTACLE_TILES = new Set(['#', 'H', 'T']);
+const OBSTACLE_TILES = new Set(['#', 'H', 'I', 'W', 'S']);
 
-const player = { col: 5, row: 12, facing: 'down' };
+const player = { col: 15, row: 5, facing: 'down' };
 let currentTarget = null; // objeto con el que se puede interactuar ahora mismo
 let pendingOverlayAction = null;
 
@@ -150,9 +168,8 @@ function shuffle(arr) {
 
 function computeTileSize() {
   const viewportW = Math.min(window.innerWidth, 520);
-  const viewportH = window.innerHeight;
-  const size = Math.floor(Math.min(42, (viewportW - 24) / MAP_COLS, (viewportH * 0.55) / MAP_ROWS));
-  document.documentElement.style.setProperty('--tile-size', Math.max(24, size) + 'px');
+  const size = Math.floor(Math.min(44, (viewportW - 24) / VIEW_COLS, (window.innerHeight * 0.5) / VIEW_ROWS));
+  document.documentElement.style.setProperty('--tile-size', Math.max(28, size) + 'px');
 }
 
 function buildMapDOM() {
@@ -168,13 +185,20 @@ function buildMapDOM() {
       if (type === '#') cls += 'tile-fence';
       else if (type === 'H') cls += 'tile-house';
       else if (type === 'P') cls += 'tile-path';
-      else if (type === 'T') cls += 'tile-tree';
+      else if (type === 'V') cls += 'tile-vine';
+      else if (type === 'C') cls += 'tile-crop';
+      else if (type === 'I') cls += 'tile-greenhouse';
+      else if (type === 'W') cls += 'tile-pool';
+      else if (type === 'S') cls += 'tile-shed';
       else cls += 'tile-grass';
       tile.className = cls;
-      if (type === 'T') tile.textContent = '🌳';
       mapGrid.appendChild(tile);
     }
   }
+  document.documentElement.style.setProperty('--map-cols', MAP_COLS);
+  document.documentElement.style.setProperty('--map-rows', MAP_ROWS);
+  document.documentElement.style.setProperty('--view-cols', VIEW_COLS);
+  document.documentElement.style.setProperty('--view-rows', VIEW_ROWS);
 }
 
 function allObjects() {
@@ -183,6 +207,57 @@ function allObjects() {
     ...CHESTS.map(c => ({ ...c, type: 'chest' })),
     { ...GOLDEN_CHEST, type: 'golden' },
   ];
+}
+
+// Sprites en pixel-art dibujados con box-shadow (sin imágenes externas)
+const PLAYER_MATRIX = [
+  '011110',
+  '122221',
+  '122221',
+  '033330',
+  '333333',
+  '333333',
+  '032230',
+  '044440',
+];
+const PLAYER_PALETTE = { '1': '#6b4a34', '2': '#f3c9a3', '3': '#e78fa6', '4': '#4a3b2a' };
+
+const ABUELO_MATRIX = PLAYER_MATRIX;
+const ABUELO_PALETTE = { '1': '#d9d3c8', '2': '#f3c9a3', '3': '#a9784f', '4': '#4a3b2a' };
+
+const SANDO_MATRIX = [
+  '0011100000',
+  '0111110000',
+  '1111111100',
+  '1111111120',
+  '1101111010',
+];
+const SANDO_PALETTE = { '1': '#c9954f', '2': '#8a5a2b' };
+
+const CHARACTER_SPRITES = {
+  player: { matrix: PLAYER_MATRIX, palette: PLAYER_PALETTE },
+  abuelo: { matrix: ABUELO_MATRIX, palette: ABUELO_PALETTE },
+  sando: { matrix: SANDO_MATRIX, palette: SANDO_PALETTE },
+};
+
+function paintPixelSprite(el, kind, tileSize) {
+  const { matrix, palette } = CHARACTER_SPRITES[kind];
+  const unit = tileSize * 0.135;
+  const cols = matrix[0].length;
+  const rows = matrix.length;
+  const shadows = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const v = matrix[r][c];
+      if (v === '0') continue;
+      const x = (c - cols / 2) * unit;
+      const y = (r - rows / 2) * unit;
+      shadows.push(`${x}px ${y}px 0 0 ${palette[v]}`);
+    }
+  }
+  el.style.width = unit + 'px';
+  el.style.height = unit + 'px';
+  el.style.boxShadow = shadows.join(', ');
 }
 
 function renderObjects() {
@@ -197,7 +272,15 @@ function renderObjects() {
     el.style.top = obj.row * tileSize + 'px';
 
     if (obj.type === 'memory') {
-      el.textContent = obj.emoji;
+      if (obj.sprite) {
+        el.classList.add('character');
+        const inner = document.createElement('div');
+        inner.className = 'character-sprite-inner';
+        paintPixelSprite(inner, obj.sprite, tileSize);
+        el.appendChild(inner);
+      } else {
+        el.textContent = obj.emoji;
+      }
     } else if (obj.type === 'chest') {
       const chestState = CHESTS.find(c => c.id === obj.id);
       el.textContent = chestState.opened ? '🎁' : '📦';
@@ -214,46 +297,31 @@ function getTileSizePx() {
   return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'));
 }
 
+function updateCamera() {
+  const tileSize = getTileSizePx();
+  const viewport = document.querySelector('.map-viewport');
+  const camera = document.getElementById('map-camera');
+  const viewportRect = viewport.getBoundingClientRect();
+  const mapW = MAP_COLS * tileSize;
+  const mapH = MAP_ROWS * tileSize;
+  let camX = player.col * tileSize + tileSize / 2 - viewportRect.width / 2;
+  let camY = player.row * tileSize + tileSize / 2 - viewportRect.height / 2;
+  camX = Math.max(0, Math.min(camX, Math.max(0, mapW - viewportRect.width)));
+  camY = Math.max(0, Math.min(camY, Math.max(0, mapH - viewportRect.height)));
+  camera.style.transform = `translate(${-camX}px, ${-camY}px)`;
+}
+
 function renderPlayerPosition() {
   const tileSize = getTileSizePx();
   const sprite = document.getElementById('player-sprite');
   sprite.style.left = player.col * tileSize + 'px';
   sprite.style.top = player.row * tileSize + 'px';
   sprite.classList.toggle('face-left', player.facing === 'left');
+  updateCamera();
 }
 
-// Sprite en pixel-art dibujado con box-shadow (sin imágenes externas)
-const PLAYER_MATRIX = [
-  '011110',
-  '122221',
-  '122221',
-  '033330',
-  '333333',
-  '333333',
-  '032230',
-  '044440',
-];
-const PLAYER_PALETTE = { '1': '#6b4a34', '2': '#f3c9a3', '3': '#e78fa6', '4': '#4a3b2a' };
-
 function renderPlayerSprite() {
-  const tileSize = getTileSizePx();
-  const unit = tileSize * 0.135;
-  const cols = PLAYER_MATRIX[0].length;
-  const rows = PLAYER_MATRIX.length;
-  const shadows = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const v = PLAYER_MATRIX[r][c];
-      if (v === '0') continue;
-      const x = (c - cols / 2) * unit;
-      const y = (r - rows / 2) * unit;
-      shadows.push(`${x}px ${y}px 0 0 ${PLAYER_PALETTE[v]}`);
-    }
-  }
-  const pixel = document.querySelector('.player-pixel');
-  pixel.style.width = unit + 'px';
-  pixel.style.height = unit + 'px';
-  pixel.style.boxShadow = shadows.join(', ');
+  paintPixelSprite(document.querySelector('.player-pixel'), 'player', getTileSizePx());
 }
 
 function isBlocked(col, row) {
@@ -270,6 +338,10 @@ function tryMove(dx, dy) {
   if (!isBlocked(targetCol, targetRow)) {
     player.col = targetCol;
     player.row = targetRow;
+    const sprite = document.getElementById('player-sprite');
+    sprite.classList.remove('stepping');
+    void sprite.offsetWidth; // reinicia la animación aunque se repita el mismo movimiento
+    sprite.classList.add('stepping');
   }
   renderPlayerPosition();
   updateProximity();
@@ -347,7 +419,8 @@ function handleInteract() {
   if (obj.type === 'memory') {
     unlockedMemories.add(obj.id);
     document.getElementById('hud-memories').textContent = unlockedMemories.size;
-    openOverlay(obj.emoji, `${obj.label}\n\n${obj.text}`, 'Cerrar');
+    const avatar = obj.sprite ? (obj.sprite === 'sando' ? '🐾' : '👴') : obj.emoji;
+    openOverlay(avatar, `${obj.label}\n\n${obj.text}`, 'Cerrar');
     return;
   }
 
@@ -383,16 +456,6 @@ function handleInteract() {
 
 document.getElementById('action-btn').addEventListener('click', handleInteract);
 
-document.querySelectorAll('.dpad-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const dir = btn.dataset.dir;
-    if (dir === 'up') tryMove(0, -1);
-    else if (dir === 'down') tryMove(0, 1);
-    else if (dir === 'left') tryMove(-1, 0);
-    else if (dir === 'right') tryMove(1, 0);
-  });
-});
-
 document.addEventListener('keydown', (e) => {
   if (!document.getElementById('scene-overworld').classList.contains('active')) return;
   if (['ArrowUp', 'w', 'W'].includes(e.key)) tryMove(0, -1);
@@ -402,6 +465,78 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'Enter' || e.key === ' ') handleInteract();
 });
 
+// ------------------------------------------------------------
+// Joystick táctil (mantener pulsado y arrastrar para moverse)
+// ------------------------------------------------------------
+
+const joystick = document.getElementById('joystick');
+const joystickKnob = document.getElementById('joystick-knob');
+let joystickActive = false;
+let joystickCenter = { x: 0, y: 0 };
+let moveInterval = null;
+let currentDir = null;
+const MOVE_REPEAT_MS = 220;
+const JOYSTICK_MAX = 40;
+const JOYSTICK_DEADZONE = 12;
+
+function setKnobPosition(x, y) {
+  joystickKnob.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+}
+function resetKnob() {
+  joystickKnob.style.transform = 'translate(-50%, -50%)';
+}
+function dirFromVector(dx, dy) {
+  if (Math.hypot(dx, dy) < JOYSTICK_DEADZONE) return null;
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+  if (angle > -45 && angle <= 45) return 'right';
+  if (angle > 45 && angle <= 135) return 'down';
+  if (angle > 135 || angle <= -135) return 'left';
+  return 'up';
+}
+function moveForDir(dir) {
+  if (dir === 'up') tryMove(0, -1);
+  else if (dir === 'down') tryMove(0, 1);
+  else if (dir === 'left') tryMove(-1, 0);
+  else if (dir === 'right') tryMove(1, 0);
+}
+function startMoveLoop(dir) {
+  if (currentDir === dir) return;
+  currentDir = dir;
+  clearInterval(moveInterval);
+  moveForDir(dir);
+  moveInterval = setInterval(() => moveForDir(dir), MOVE_REPEAT_MS);
+}
+function stopMoveLoop() {
+  clearInterval(moveInterval);
+  moveInterval = null;
+  currentDir = null;
+}
+function handleJoystickPointer(e) {
+  const dx = e.clientX - joystickCenter.x;
+  const dy = e.clientY - joystickCenter.y;
+  const dist = Math.min(JOYSTICK_MAX, Math.hypot(dx, dy));
+  const angle = Math.atan2(dy, dx);
+  setKnobPosition(Math.cos(angle) * dist, Math.sin(angle) * dist);
+  const dir = dirFromVector(dx, dy);
+  if (dir) startMoveLoop(dir);
+  else stopMoveLoop();
+}
+function endJoystick() {
+  joystickActive = false;
+  resetKnob();
+  stopMoveLoop();
+}
+joystick.addEventListener('pointerdown', (e) => {
+  joystickActive = true;
+  joystick.setPointerCapture(e.pointerId);
+  const rect = joystick.getBoundingClientRect();
+  joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  handleJoystickPointer(e);
+});
+joystick.addEventListener('pointermove', (e) => { if (joystickActive) handleJoystickPointer(e); });
+joystick.addEventListener('pointerup', endJoystick);
+joystick.addEventListener('pointercancel', endJoystick);
+
 function initOverworld() {
   computeTileSize();
   buildMapDOM();
@@ -409,10 +544,12 @@ function initOverworld() {
   renderPlayerSprite();
   renderPlayerPosition();
   updateProximity();
+  document.getElementById('hud-memories-total').textContent = MEMORIES.length;
+  document.getElementById('hud-chests-total').textContent = CHESTS.length;
 }
 
 function resetOverworld() {
-  player.col = 5; player.row = 12; player.facing = 'down';
+  player.col = 15; player.row = 5; player.facing = 'down';
   CHESTS.forEach(c => { c.opened = false; c.prize = null; });
   chestsOpenedCount = 0;
   collectedPrizes = [];

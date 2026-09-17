@@ -143,8 +143,16 @@ html, body {
 .game-subtitle {
   font-weight: 700;
   color: var(--hd-brown);
-  margin: 0 0 34px;
+  margin: 0 0 6px;
   font-size: 15px;
+}
+.menu-studio {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--hd-wheat-dark);
+  opacity: 0.8;
+  margin: 0 0 28px;
 }
 .menu-list {
   display: flex;
@@ -295,6 +303,10 @@ html, body {
 /* ---------- LA PARCELA (overworld) ---------- */
 :root {
   --tile-size: 40px;
+  --view-cols: 9;
+  --view-rows: 7;
+  --map-cols: 17;
+  --map-rows: 11;
 }
 #scene-overworld {
   background: linear-gradient(180deg, #cdeccb, #eaf7e9);
@@ -340,12 +352,21 @@ html, body {
 }
 .map-viewport {
   position: relative;
-  overflow: auto;
-  max-width: 100%;
-  max-height: calc(100dvh - 220px);
+  overflow: hidden;
+  width: calc(var(--tile-size) * var(--view-cols));
+  height: calc(var(--tile-size) * var(--view-rows));
+  max-width: 94vw;
   border: 4px solid var(--hd-brown);
   border-radius: var(--radius-md);
   box-shadow: 0 6px 0 var(--shadow);
+}
+.map-camera {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--tile-size) * var(--map-cols));
+  height: calc(var(--tile-size) * var(--map-rows));
+  transition: transform 0.16s linear;
 }
 .map-grid {
   display: grid;
@@ -356,8 +377,12 @@ html, body {
 .tile-grass { background: #bfe3a8; }
 .tile-path { background: #e3c88a; }
 .tile-fence { background: repeating-linear-gradient(90deg, var(--hd-brown), var(--hd-brown) 4px, #a97a4c 4px, #a97a4c 8px); }
-.tile-tree { background: #bfe3a8; display: flex; align-items: center; justify-content: center; font-size: calc(var(--tile-size) * 0.85); }
 .tile-house { background: #c98a4f; }
+.tile-vine { background: #9fbf7a; }
+.tile-crop { background: repeating-linear-gradient(90deg, #c9a35c, #c9a35c 8px, #b98f4e 8px, #b98f4e 16px); }
+.tile-greenhouse { background: #cfe8e0; }
+.tile-pool { background: #6ec6d9; }
+.tile-shed { background: #8a6a45; }
 
 .map-objects {
   position: absolute;
@@ -415,6 +440,27 @@ html, body {
   background: transparent;
 }
 .player-sprite.face-left .player-pixel { transform: scaleX(-1); }
+.player-sprite.stepping .player-pixel { animation: step-pulse 0.18s ease-out; }
+@keyframes step-pulse {
+  0% { transform: scale(1, 1); }
+  40% { transform: scale(1.1, 0.85); }
+  100% { transform: scale(1, 1); }
+}
+.player-sprite.face-left.stepping .player-pixel { animation: step-pulse-left 0.18s ease-out; }
+@keyframes step-pulse-left {
+  0% { transform: scaleX(-1) scale(1, 1); }
+  40% { transform: scaleX(-1) scale(1.1, 0.85); }
+  100% { transform: scaleX(-1) scale(1, 1); }
+}
+
+.character-sprite-inner {
+  background: transparent;
+  animation: idle-bob 1.8s ease-in-out infinite;
+}
+@keyframes idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
 
 .action-btn {
   font-family: 'Baloo 2', sans-serif;
@@ -433,31 +479,31 @@ html, body {
   z-index: 20;
 }
 
-.dpad {
+.joystick {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
-  width: 132px;
-  height: 132px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  bottom: 24px;
+  left: 24px;
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: 3px solid var(--hd-brown);
   z-index: 20;
+  touch-action: none;
 }
-.dpad-btn {
-  font-size: 18px;
-  font-weight: 800;
-  border: 2px solid var(--hd-brown);
-  background: var(--cream);
-  color: var(--hd-brown);
-  cursor: pointer;
-  opacity: 0.9;
+.joystick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--hd-wheat);
+  border: 3px solid var(--hd-wheat-dark);
+  box-shadow: 0 3px 0 var(--shadow);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
-.dpad-btn:active { background: var(--hd-wheat); }
-.dpad-up { grid-column: 2; grid-row: 1; border-radius: 10px 10px 0 0; }
-.dpad-left { grid-column: 1; grid-row: 2; border-radius: 10px 0 0 10px; }
-.dpad-right { grid-column: 3; grid-row: 2; border-radius: 0 10px 10px 0; }
-.dpad-down { grid-column: 2; grid-row: 3; border-radius: 0 0 10px 10px; }
 
 .interaction-overlay {
   position: fixed;

@@ -36,6 +36,7 @@
     <div class="menu-wrap">
       <h1 class="game-title">🏝️ La Isla de Candeleda</h1>
       <p class="game-subtitle">— Edición Cumpleaños de Alba —</p>
+      <p class="menu-studio">🎮 PABOLITO GAMES</p>
       <nav class="menu-list" id="menu-list">
         <button class="menu-item" data-target="scene-overworld"><span class="cursor">▶</span> Jugar</button>
         <button class="menu-item disabled" disabled><span class="cursor">🔒</span> Cargar partida</button>
@@ -62,14 +63,14 @@
           <span class="setting-value">100% — al máximo, como siempre</span>
         </li>
         <li>
-          <span class="setting-label">🎤 Volumen de Karol G</span>
+          <span class="setting-label">🎉 Nivel de sorpresa</span>
           <div class="slider"><div class="slider-fill" style="width:100%"></div></div>
           <span class="setting-value">100% — bloqueado, no se puede bajar</span>
         </li>
         <li>
-          <span class="setting-label">🐾 Modo Sando</span>
+          <span class="setting-label">🛡️ Modo seguro</span>
           <div class="slider"><div class="slider-fill" style="width:100%"></div></div>
-          <span class="setting-value">Activado siempre, en el corazón</span>
+          <span class="setting-value">Activo — sin armas cerca, esto no se convierte en un juego de matar</span>
         </li>
       </ul>
       <button class="btn-back" data-target="scene-menu">◀ Volver</button>
@@ -83,7 +84,7 @@
       <ul class="credits-list">
         <li><strong>Un juego de</strong> Pabolito 💛</li>
         <li><strong>Dirección de arte</strong> Alba (sin saberlo)</li>
-        <li><strong>Isla original</strong> Candeleda 🏝️</li>
+        <li><strong>Isla original</strong> La Parcela 🏡</li>
         <li><strong>Control de calidad</strong> Sando 🐾 <em>(in memoriam, el mejor becario)</em></li>
         <li><strong>Vecinos contratados</strong> 0 — decisión de la dirección</li>
         <li><strong>Motor del juego</strong> HTML, CSS, JS y mucho cariño</li>
@@ -97,25 +98,24 @@
     <div class="overworld-hud">
       <button class="hud-menu-btn" id="overworld-menu-btn">☰ Menú</button>
       <div class="hud-counters">
-        <span>💭 <span id="hud-memories">0</span>/8</span>
-        <span>📦 <span id="hud-chests">0</span>/5</span>
+        <span>💭 <span id="hud-memories">0</span>/<span id="hud-memories-total">0</span></span>
+        <span>📦 <span id="hud-chests">0</span>/<span id="hud-chests-total">0</span></span>
       </div>
     </div>
     <p class="overworld-hint" id="overworld-hint">Muévete por la parcela y explora todo lo que puedas.</p>
 
     <div class="map-viewport">
-      <div class="map-grid" id="map-grid"></div>
-      <div class="map-objects" id="map-objects"></div>
-      <div class="player-sprite" id="player-sprite"><div class="player-pixel"></div></div>
+      <div class="map-camera" id="map-camera">
+        <div class="map-grid" id="map-grid"></div>
+        <div class="map-objects" id="map-objects"></div>
+        <div class="player-sprite" id="player-sprite"><div class="player-pixel"></div></div>
+      </div>
     </div>
 
     <button class="action-btn" id="action-btn" style="display:none">Interactuar</button>
 
-    <div class="dpad">
-      <button class="dpad-btn dpad-up" data-dir="up">▲</button>
-      <button class="dpad-btn dpad-left" data-dir="left">◀</button>
-      <button class="dpad-btn dpad-right" data-dir="right">▶</button>
-      <button class="dpad-btn dpad-down" data-dir="down">▼</button>
+    <div class="joystick" id="joystick">
+      <div class="joystick-knob" id="joystick-knob"></div>
     </div>
 
     <!-- Overlay de diálogo/recuerdo/cofre -->
