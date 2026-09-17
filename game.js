@@ -47,7 +47,7 @@ const GREENHOUSE_SANDO = {
 
 // Perros de la familia: solo recuerdo, sin pista de regalo.
 const DOG_MEMORIES = [
-  { id: 'turka', col: 4, row: 12, sprite: 'turka_down', label: 'Turka',
+  { id: 'turka', col: 8, row: 4, sprite: 'turka_down', label: 'Turka',
     text: 'Turka, siempre atenta a todo lo que pasa en la parcela.\n(Recuerdo por escribir.)' },
   { id: 'nuka', col: 2, row: 5, sprite: 'nuka_down', label: 'Nuka',
     text: 'Nuka, la otra perrita de la familia.\n(Recuerdo por escribir.)' },
@@ -60,8 +60,8 @@ const MAP_ROWS = 26;
 const VIEW_COLS = 8;
 const VIEW_ROWS = 9;
 const HOUSE_DOOR_KEY = '6,3';
-const GREENHOUSE_ROWS = [14, 15, 16, 17];
-const GREENHOUSE_DOOR_COL = 9;
+const GREENHOUSE_ROWS = [14, 15];
+const GREENHOUSE_DOOR_COL = 8;
 
 // ============================================================
 // NAVEGACIÓN ENTRE ESCENAS
@@ -144,34 +144,35 @@ function buildMainGrid() {
   // Franjas de césped/tierra alrededor de la piscina y zona de cultivo
   for (let c = 3; c <= 8; c++) { g[7][c] = 'G'; g[8][c] = 'G'; }
   for (let c = 7; c <= 8; c++) { g[9][c] = 'G'; g[10][c] = 'G'; g[11][c] = 'G'; g[12][c] = 'G'; }
-  for (let c = 1; c <= 9; c++) { g[13][c] = 'G'; g[18][c] = 'G'; }
+  for (let c = 1; c <= 9; c++) { g[13][c] = 'G'; g[17][c] = 'G'; g[18][c] = 'G'; }
   for (let c = 1; c <= 8; c++) for (let r = 19; r <= 24; r++) g[r][c] = 'C';
   // Césped junto al invernadero (donde antes había asfalto suelto)
-  for (let r = 14; r <= 17; r++) g[r][2] = 'G';
+  for (let r = 14; r <= 16; r++) g[r][2] = 'G';
 
-  // Casa: cuerpo (imagen real encima), porche transitable, escaleras y
-  // puerta (casilla especial que teletransporta al interior)
+  // Casa: cuerpo (la imagen real ya trae su propio porche y escalera
+  // dibujados, así que el suelo debajo se deja en asfalto normal)
   for (let r = 1; r <= 3; r++) for (let c = 4; c <= 8; c++) g[r][c] = 'H';
-  for (let c = 4; c <= 8; c++) g[4][c] = 'T';
-  g[5][6] = 'E';
   g[3][6] = 'O';
 
   // Caseta de barbacoa + alacena (una sola estructura, imagen real encima)
   for (let r = 6; r <= 10; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
 
-  // Piscina: solo agua, sin bordillo, 6 cuadrados (2x3)
+  // Piscina: solo agua, sin bordillo, 6 cuadrados (2x3), un poco elevada
   for (let r = 10; r <= 11; r++) for (let c = 4; c <= 6; c++) g[r][c] = 'W';
   // Césped donde antes había piscina (fila de arriba y columna de la izquierda)
   for (let c = 3; c <= 6; c++) g[9][c] = 'G';
   g[10][3] = 'G'; g[11][3] = 'G';
+  // Bordillo elevado justo bajo el agua (no se puede pisar desde ningún lado)
+  for (let c = 4; c <= 6; c++) g[12][c] = 'B';
 
-  // Zona de perros: al descubierto pero vallada (transitable)
-  for (let c = 3; c <= 6; c++) g[12][c] = 'F';
-
-  // Invernadero (imagen real encima); la puerta ocupa todo el lado derecho,
-  // se entra colisionando desde el camino hacia la izquierda en cualquier fila
-  for (let r = 14; r <= 17; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'I';
-  for (let r = 14; r <= 17; r++) g[r][9] = 'O';
+  // Invernadero (imagen real encima, reducido); la puerta ocupa las dos
+  // filas de arriba de su lado derecho (la esquina de abajo queda cerrada,
+  // no se entra por ahí). Al otro lado de la puerta, entre el camino y el
+  // invernadero, queda una franja de césped (ahí se reservará sitio para
+  // la caseta de los perros).
+  for (let r = 14; r <= 16; r++) for (let c = 3; c <= 8; c++) g[r][c] = 'I';
+  GREENHOUSE_ROWS.forEach(r => { g[r][GREENHOUSE_DOOR_COL] = 'O'; });
+  [12, 13, 14, 15, 16].forEach(r => { g[r][9] = 'G'; });
 
   // Camino largo (asfalto) a lo largo de todo el lateral derecho
   for (let r = 1; r <= 24; r++) { g[r][10] = 'P'; g[r][11] = 'P'; }
@@ -181,7 +182,6 @@ function buildMainGrid() {
   // Franja de tierra-plantas al lado izquierdo del camino: solo junto a la
   // piscina (arriba se junta con el asfalto de la casa, abajo pasa a césped)
   [7, 8, 9, 10, 11].forEach(r => { g[r][9] = 'D'; });
-  g[12][9] = 'G'; g[13][9] = 'G';
 
   // Bordillo entre la zona de cultivo y el camino
   for (let r = 19; r <= 24; r++) g[r][9] = 'U';
@@ -200,13 +200,11 @@ function mainTileClass(type) {
     case 'Y': return 'tile-fence-vine';
     case 'Z': return 'tile-gate';
     case 'H': return 'tile-wall';
-    case 'T': return 'tile-terrace';
-    case 'E': return 'tile-steps';
-    case 'O': return 'tile-terrace';
+    case 'O': return 'tile-asphalt';
     case 'K': return 'tile-shed';
     case 'I': return 'tile-greenhouse-floor';
     case 'W': return 'tile-pool';
-    case 'F': return 'tile-dogyard';
+    case 'B': return 'tile-poolcurb';
     case 'P': return 'tile-path';
     case 'C': return 'tile-crop';
     case 'G': return 'tile-grass';
@@ -216,7 +214,7 @@ function mainTileClass(type) {
   }
 }
 
-const MAIN_OBSTACLES = new Set(['H', 'K', 'I', 'W', 'S', 'X', 'Y']);
+const MAIN_OBSTACLES = new Set(['H', 'K', 'I', 'W', 'S', 'X', 'Y', 'B']);
 
 function houseUnlocked() { return collectedClues.length >= TOTAL_CLUE_GIVERS; }
 
@@ -225,9 +223,9 @@ function mainStructures() {
     { src: houseUnlocked() ? 'game/cropped/house_open.png' : 'game/cropped/house.png',
       aspect: 1368 / 1776, colStart: 4, colEnd: 8, bottomRow: 5 },
     { src: 'game/cropped/greenhouse_tile.png', aspect: 2646 / 1341,
-      colStart: 3, colEnd: 9, bottomRow: 18, matchWidth: true, scale: 1.14 },
+      colStart: 3, colEnd: 8, bottomRow: 17, matchWidth: true, scale: 1.05 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
-      colStart: 1, colEnd: 2, bottomRow: 11, matchWidth: true },
+      colStart: 1, colEnd: 2, bottomRow: 11, matchWidth: true, scale: 1.25 },
   ];
 }
 
@@ -466,8 +464,8 @@ function fadeToArea(name, enter) {
   fade.classList.add('active');
   setTimeout(() => {
     enterArea(name, enter);
-    requestAnimationFrame(() => fade.classList.remove('active'));
-  }, 260);
+    setTimeout(() => fade.classList.remove('active'), 200);
+  }, 420);
 }
 
 function enterArea(name, enter) {
