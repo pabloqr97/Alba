@@ -1,33 +1,58 @@
 // ============================================================
-// CONFIGURACIÓN EDITABLE — cambia aquí el texto sin tocar el resto
+// CONFIGURACIÓN EDITABLE — cambia aquí el contenido sin tocar el resto
 // ============================================================
 
-// Diapositivas del "modo historia". Son PLACEHOLDERS en varios puntos:
-// edítalas con hitos reales si quieres afinar el recorrido antes de
-// mandar la web (fechas, viajes, anécdotas concretas, etc).
-const STORY_SLIDES = [
-  { avatar: '🌱', text: '27 de septiembre de 1998. Llega al mundo una crack.\n(Nivel 1 desbloqueado: Vivir)' },
-  { avatar: '🏝️', text: 'Con el tiempo funda su propia isla: Candeleda.\nDecide pronto que los vecinos sobran — mejor decorar sola, a su gusto.' },
-  { avatar: '🛋️', text: 'Descubre su don: decorar cada rincón hasta que quede perfecto.\n(Dato real: hoy es interiorista. Algunas empiezan jugando... ella se lo tomó en serio.)' },
-  { avatar: '🐾', text: 'Durante años tuvo a su lado a su compañero más fiel: Sando.\nYa no está, pero sigue siendo parte de su isla y de su corazón.' },
-  { avatar: '💛', text: 'Un día un tal Pabolito se coló en su isla...\ny ya no hubo manera de echarlo.' },
-  { avatar: '🎉', text: 'Hoy, 27 de septiembre, sube de nivel: ¡28 años desbloqueados!\nToca celebrarlo por todo lo alto.' },
+// Recuerdos desbloqueables al interactuar con objetos/personas de la parcela.
+// Los de "pozo", "limonero", "gallinero", "mecedora", "tendedero" y "parra"
+// tienen texto PLACEHOLDER — edítalos con calma cuando tengas la anécdota real.
+// col/row son coordenadas de casilla en el mapa (ver buildGrid más abajo).
+const MEMORIES = [
+  { id: 'pozo', col: 2, row: 5, emoji: '💧', label: 'El pozo',
+    text: 'El pozo de la parcela.\n(Recuerdo por escribir: cuéntame algo real sobre él.)' },
+  { id: 'mortero', col: 7, row: 3, emoji: '🥣', label: 'El mortero',
+    text: 'Ese mortero de siempre.\nHay una foto suya de pequeña con él en las manos — icónica.' },
+  { id: 'limonero', col: 9, row: 5, emoji: '🍋', label: 'El limonero',
+    text: 'El limonero de la parcela.\n(Recuerdo por escribir.)' },
+  { id: 'gallinero', col: 8, row: 10, emoji: '🐔', label: 'El gallinero',
+    text: 'El gallinero de toda la vida.\n(Recuerdo por escribir.)' },
+  { id: 'mecedora', col: 4, row: 4, emoji: '🪑', label: 'La mecedora del porche',
+    text: 'La mecedora del porche, testigo de tardes enteras.\n(Recuerdo por escribir.)' },
+  { id: 'tendedero', col: 2, row: 8, emoji: '🎽', label: 'El tendedero',
+    text: 'El tendedero de siempre.\n(Recuerdo por escribir.)' },
+  { id: 'parra', col: 3, row: 10, emoji: '🍇', label: 'La parra',
+    text: 'La parra que da sombra en verano.\n(Recuerdo por escribir.)' },
+  { id: 'abuelo-sando', col: 4, row: 11, emoji: '👴', label: 'El abuelo y Sando',
+    text: 'En el huerto, donde siempre estaban su abuelo y Sando juntos.\nLos dos siguen aquí, en cada rincón de la parcela.' },
 ];
 
-// Regalos que aparecen en la ruleta (el último SIEMPRE gana, ver spinWheel)
-const WHEEL_PRIZES = [
+// 5 cofres normales. El SEGUNDO que se abra (sea cual sea, en el orden que
+// Alba decida) da siempre las entradas de Karol G — así el regalo queda
+// garantizado aunque no llegue a abrir los 5. Ver resolveChestPrize().
+const CHESTS = [
+  { id: 'chest1', col: 8, row: 4 },
+  { id: 'chest2', col: 2, row: 9 },
+  { id: 'chest3', col: 7, row: 7 },
+  { id: 'chest4', col: 7, row: 11 },
+  { id: 'chest5', col: 2, row: 3 },
+];
+
+// Cofre dorado final: se activa solo cuando ya se han abierto 2+ cofres
+// normales (garantía de que Karol G ya está entre lo recogido). Al abrirlo
+// se lanza la ruleta con TODO lo que Alba haya encontrado hasta ese momento.
+const GOLDEN_CHEST = { id: 'golden', col: 3, row: 7 };
+
+const DECOY_PRIZES = [
   '🧦 Calcetines a juego con tu casa',
   '🍓 Fresas infinitas para la granja',
   '🛋️ Vale para redecorar el salón (otra vez)',
   '🎬 Noche de cine en casa',
   '🐾 Un peluche que se parece a Sando',
   '🏝️ Un vecino nuevo para Candeleda',
-  '🎫 Entradas para ver a Karol G',
 ];
-const WINNING_PRIZE_INDEX = WHEEL_PRIZES.length - 1;
+const KAROL_G_PRIZE = '🎫 Entradas para ver a Karol G';
 
-const MINIGAME_TARGET = 10;
-const MINIGAME_SECONDS = 20;
+const MAP_COLS = 11;
+const MAP_ROWS = 14;
 
 // ============================================================
 // NAVEGACIÓN ENTRE ESCENAS
@@ -43,8 +68,10 @@ document.querySelectorAll('[data-target]').forEach(el => {
   el.addEventListener('click', () => showScene(el.dataset.target));
 });
 
+document.getElementById('overworld-menu-btn').addEventListener('click', () => showScene('scene-menu'));
+
 // ============================================================
-// ESCENA BOOT — barra de carga falsa
+// ESCENA BOOT — barra de carga falsa (con tiempo para disfrutarla)
 // ============================================================
 
 function runBoot() {
@@ -55,162 +82,377 @@ function runBoot() {
     'Plantando fresas...',
     'Espantando vecinos de la isla...',
     'Puliendo los muebles de Candeleda...',
+    'Regando el huerto...',
     'Afinando la voz de Karol G...',
+    'Cociendo algo en el mortero...',
+    'Repasando fotos antiguas...',
     'Casi está...',
   ];
-  let pct = 0;
-  let msgIndex = 0;
-  flavor.textContent = messages[0];
+  const totalSteps = 12;
+  const stepMs = 480;
+  let step = 0;
 
   const interval = setInterval(() => {
-    pct += Math.random() * 18 + 7;
-    if (pct >= 100) {
-      pct = 100;
-      clearInterval(interval);
-      setTimeout(() => showScene('scene-menu'), 500);
-    }
+    step++;
+    const pct = Math.min(100, Math.round((step / totalSteps) * 100));
     fill.style.width = pct + '%';
-    const nextIndex = Math.min(messages.length - 1, Math.floor((pct / 100) * messages.length));
-    if (nextIndex !== msgIndex) {
-      msgIndex = nextIndex;
-      flavor.textContent = messages[msgIndex];
+    const msgIndex = Math.min(messages.length - 1, Math.floor((step / totalSteps) * messages.length));
+    flavor.textContent = messages[msgIndex];
+    if (step >= totalSteps) {
+      clearInterval(interval);
+      setTimeout(() => showScene('scene-menu'), 600);
     }
-  }, 380);
+  }, stepMs);
 }
 
 // ============================================================
-// ESCENA HISTORIA — diálogos estilo Animal Crossing
+// LA PARCELA — mapa, personaje, colisiones e interacción
 // ============================================================
 
-let storyIndex = 0;
+function buildGrid() {
+  const g = Array.from({ length: MAP_ROWS }, () => Array(MAP_COLS).fill('.'));
+  for (let c = 0; c < MAP_COLS; c++) { g[0][c] = '#'; g[MAP_ROWS - 1][c] = '#'; }
+  for (let r = 0; r < MAP_ROWS; r++) { g[r][0] = '#'; g[r][MAP_COLS - 1] = '#'; }
+  g[MAP_ROWS - 1][5] = 'P'; // puerta de entrada a la parcela
 
-function renderStorySlide() {
-  const slide = STORY_SLIDES[storyIndex];
-  document.querySelector('#scene-story-intro .dialogue-avatar').textContent = slide.avatar;
-  document.getElementById('story-text').innerHTML = slide.text.replace(/\n/g, '<br>');
-  document.getElementById('story-progress').textContent = `${storyIndex + 1} / ${STORY_SLIDES.length}`;
-  const btn = document.getElementById('story-next');
-  btn.textContent = storyIndex === STORY_SLIDES.length - 1 ? 'Empezar la misión ▶' : 'Continuar ▶';
+  for (let r = 1; r <= 3; r++) {
+    for (let c = 3; c <= 7; c++) g[r][c] = 'H';
+  }
+  g[3][5] = 'P'; // puerta de la casa
+
+  for (let r = 4; r <= 12; r++) g[r][5] = 'P'; // camino central
+
+  const trees = [[2, 1], [2, 9], [6, 1], [9, 9], [12, 9], [12, 2]];
+  trees.forEach(([r, c]) => { g[r][c] = 'T'; });
+
+  return g;
 }
 
-document.getElementById('story-next').addEventListener('click', () => {
-  if (storyIndex < STORY_SLIDES.length - 1) {
-    storyIndex++;
-    renderStorySlide();
-  } else {
-    storyIndex = 0;
-    showScene('scene-minigame');
+const grid = buildGrid();
+const OBSTACLE_TILES = new Set(['#', 'H', 'T']);
+
+const player = { col: 5, row: 12, facing: 'down' };
+let currentTarget = null; // objeto con el que se puede interactuar ahora mismo
+let pendingOverlayAction = null;
+
+let chestsOpenedCount = 0;
+let collectedPrizes = []; // { text, isKarolG }
+let decoyPool = shuffle([...DECOY_PRIZES]);
+const unlockedMemories = new Set();
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function computeTileSize() {
+  const viewportW = Math.min(window.innerWidth, 520);
+  const viewportH = window.innerHeight;
+  const size = Math.floor(Math.min(42, (viewportW - 24) / MAP_COLS, (viewportH * 0.55) / MAP_ROWS));
+  document.documentElement.style.setProperty('--tile-size', Math.max(24, size) + 'px');
+}
+
+function buildMapDOM() {
+  const mapGrid = document.getElementById('map-grid');
+  mapGrid.style.setProperty('--map-cols', MAP_COLS);
+  mapGrid.style.setProperty('--map-rows', MAP_ROWS);
+  mapGrid.innerHTML = '';
+  for (let r = 0; r < MAP_ROWS; r++) {
+    for (let c = 0; c < MAP_COLS; c++) {
+      const tile = document.createElement('div');
+      const type = grid[r][c];
+      let cls = 'tile ';
+      if (type === '#') cls += 'tile-fence';
+      else if (type === 'H') cls += 'tile-house';
+      else if (type === 'P') cls += 'tile-path';
+      else if (type === 'T') cls += 'tile-tree';
+      else cls += 'tile-grass';
+      tile.className = cls;
+      if (type === 'T') tile.textContent = '🌳';
+      mapGrid.appendChild(tile);
+    }
+  }
+}
+
+function allObjects() {
+  return [
+    ...MEMORIES.map(m => ({ ...m, type: 'memory' })),
+    ...CHESTS.map(c => ({ ...c, type: 'chest' })),
+    { ...GOLDEN_CHEST, type: 'golden' },
+  ];
+}
+
+function renderObjects() {
+  const tileSize = getTileSizePx();
+  const layer = document.getElementById('map-objects');
+  layer.innerHTML = '';
+  allObjects().forEach(obj => {
+    const el = document.createElement('div');
+    el.className = 'map-object';
+    el.dataset.id = obj.id;
+    el.style.left = obj.col * tileSize + 'px';
+    el.style.top = obj.row * tileSize + 'px';
+
+    if (obj.type === 'memory') {
+      el.textContent = obj.emoji;
+    } else if (obj.type === 'chest') {
+      const chestState = CHESTS.find(c => c.id === obj.id);
+      el.textContent = chestState.opened ? '🎁' : '📦';
+      if (chestState.opened) el.classList.add('chest-opened');
+    } else if (obj.type === 'golden') {
+      el.textContent = '✨';
+      el.classList.add(chestsOpenedCount >= 2 ? 'golden-ready' : 'golden-locked');
+    }
+    layer.appendChild(el);
+  });
+}
+
+function getTileSizePx() {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'));
+}
+
+function renderPlayerPosition() {
+  const tileSize = getTileSizePx();
+  const sprite = document.getElementById('player-sprite');
+  sprite.style.left = player.col * tileSize + 'px';
+  sprite.style.top = player.row * tileSize + 'px';
+  sprite.classList.toggle('face-left', player.facing === 'left');
+}
+
+// Sprite en pixel-art dibujado con box-shadow (sin imágenes externas)
+const PLAYER_MATRIX = [
+  '011110',
+  '122221',
+  '122221',
+  '033330',
+  '333333',
+  '333333',
+  '032230',
+  '044440',
+];
+const PLAYER_PALETTE = { '1': '#6b4a34', '2': '#f3c9a3', '3': '#e78fa6', '4': '#4a3b2a' };
+
+function renderPlayerSprite() {
+  const tileSize = getTileSizePx();
+  const unit = tileSize * 0.135;
+  const cols = PLAYER_MATRIX[0].length;
+  const rows = PLAYER_MATRIX.length;
+  const shadows = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const v = PLAYER_MATRIX[r][c];
+      if (v === '0') continue;
+      const x = (c - cols / 2) * unit;
+      const y = (r - rows / 2) * unit;
+      shadows.push(`${x}px ${y}px 0 0 ${PLAYER_PALETTE[v]}`);
+    }
+  }
+  const pixel = document.querySelector('.player-pixel');
+  pixel.style.width = unit + 'px';
+  pixel.style.height = unit + 'px';
+  pixel.style.boxShadow = shadows.join(', ');
+}
+
+function isBlocked(col, row) {
+  if (col < 0 || row < 0 || col >= MAP_COLS || row >= MAP_ROWS) return true;
+  if (OBSTACLE_TILES.has(grid[row][col])) return true;
+  return allObjects().some(o => o.col === col && o.row === row);
+}
+
+function tryMove(dx, dy) {
+  const targetCol = player.col + dx;
+  const targetRow = player.row + dy;
+  if (dx < 0) player.facing = 'left';
+  else if (dx > 0) player.facing = 'right';
+  if (!isBlocked(targetCol, targetRow)) {
+    player.col = targetCol;
+    player.row = targetRow;
+  }
+  renderPlayerPosition();
+  updateProximity();
+}
+
+function updateProximity() {
+  document.querySelectorAll('.map-object').forEach(el => el.classList.remove('near'));
+  const neighbors = [
+    [player.col, player.row - 1], [player.col, player.row + 1],
+    [player.col - 1, player.row], [player.col + 1, player.row],
+  ];
+  const objects = allObjects();
+  let found = null;
+  for (const [c, r] of neighbors) {
+    const obj = objects.find(o => o.col === c && o.row === r);
+    if (obj) { found = obj; break; }
+  }
+  currentTarget = found;
+  const btn = document.getElementById('action-btn');
+  const hint = document.getElementById('overworld-hint');
+  if (!found) {
+    btn.style.display = 'none';
+    hint.textContent = 'Muévete por la parcela y explora todo lo que puedas.';
+    return;
+  }
+  const el = document.querySelector(`.map-object[data-id="${found.id}"]`);
+  if (el) el.classList.add('near');
+  btn.style.display = 'inline-block';
+  if (found.type === 'memory') {
+    btn.textContent = 'Hablar';
+    hint.textContent = '✨ Hay algo aquí. Toca "Hablar".';
+  } else if (found.type === 'chest') {
+    const chestState = CHESTS.find(c => c.id === found.id);
+    btn.textContent = chestState.opened ? 'Ver de nuevo' : 'Abrir cofre';
+    hint.textContent = '✨ Hay un cofre. Toca el botón para abrirlo.';
+  } else if (found.type === 'golden') {
+    btn.textContent = chestsOpenedCount >= 2 ? 'Abrir regalo final' : 'Tocar';
+    hint.textContent = chestsOpenedCount >= 2
+      ? '✨ ¡El cofre dorado está listo!'
+      : 'Ese cofre dorado parece cerrado con algo más...';
+  }
+}
+
+function openOverlay(emoji, text, closeLabel) {
+  document.getElementById('interaction-avatar').textContent = emoji;
+  document.getElementById('interaction-text').textContent = text;
+  document.getElementById('interaction-close').textContent = closeLabel || 'Cerrar';
+  document.getElementById('interaction-overlay').classList.add('active');
+}
+
+function closeOverlay() {
+  document.getElementById('interaction-overlay').classList.remove('active');
+}
+
+document.getElementById('interaction-close').addEventListener('click', () => {
+  closeOverlay();
+  if (pendingOverlayAction) {
+    const fn = pendingOverlayAction;
+    pendingOverlayAction = null;
+    fn();
   }
 });
 
-// Re-render slide 1 whenever we enter the story scene fresh from the menu
-document.querySelectorAll('.menu-item[data-target="scene-story-intro"]').forEach(btn => {
+function resolveChestPrize() {
+  chestsOpenedCount++;
+  if (chestsOpenedCount === 2) return { text: KAROL_G_PRIZE, isKarolG: true };
+  const decoy = decoyPool.pop() || '🎁 Un regalo sorpresa';
+  return { text: decoy, isKarolG: false };
+}
+
+function handleInteract() {
+  if (!currentTarget) return;
+  const obj = currentTarget;
+
+  if (obj.type === 'memory') {
+    unlockedMemories.add(obj.id);
+    document.getElementById('hud-memories').textContent = unlockedMemories.size;
+    openOverlay(obj.emoji, `${obj.label}\n\n${obj.text}`, 'Cerrar');
+    return;
+  }
+
+  if (obj.type === 'chest') {
+    const chestState = CHESTS.find(c => c.id === obj.id);
+    if (!chestState.opened) {
+      const prize = resolveChestPrize();
+      chestState.opened = true;
+      chestState.prize = prize;
+      collectedPrizes.push(prize);
+      document.getElementById('hud-chests').textContent = CHESTS.filter(c => c.opened).length;
+      renderObjects();
+      updateProximity();
+      openOverlay('🎁', `¡Cofre abierto!\n\nDentro hay: ${prize.text}`, 'Genial');
+    } else {
+      openOverlay('📦', `Este cofre ya lo abriste.\n\nDentro había: ${chestState.prize.text}`, 'Cerrar');
+    }
+    return;
+  }
+
+  if (obj.type === 'golden') {
+    if (chestsOpenedCount < 2) {
+      openOverlay('✨', 'Este cofre dorado parece cerrado con algo más...\nQuizá abrir un par de cofres normales ayude.', 'Vale');
+      return;
+    }
+    pendingOverlayAction = () => {
+      showScene('scene-wheel');
+      prepareWheelFromCollectedPrizes();
+    };
+    openOverlay('✨', '¡Has encontrado el regalo especial!\nVamos a decidir con la ruleta cuál te llevas de verdad, entre todo lo que has ido encontrando...', 'Ir a la ruleta ▶');
+  }
+}
+
+document.getElementById('action-btn').addEventListener('click', handleInteract);
+
+document.querySelectorAll('.dpad-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    storyIndex = 0;
-    renderStorySlide();
+    const dir = btn.dataset.dir;
+    if (dir === 'up') tryMove(0, -1);
+    else if (dir === 'down') tryMove(0, 1);
+    else if (dir === 'left') tryMove(-1, 0);
+    else if (dir === 'right') tryMove(1, 0);
   });
 });
 
-// ============================================================
-// ESCENA MINIJUEGO — cosecha rápida de fresas
-// ============================================================
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('scene-overworld').classList.contains('active')) return;
+  if (['ArrowUp', 'w', 'W'].includes(e.key)) tryMove(0, -1);
+  else if (['ArrowDown', 's', 'S'].includes(e.key)) tryMove(0, 1);
+  else if (['ArrowLeft', 'a', 'A'].includes(e.key)) tryMove(-1, 0);
+  else if (['ArrowRight', 'd', 'D'].includes(e.key)) tryMove(1, 0);
+  else if (e.key === 'Enter' || e.key === ' ') handleInteract();
+});
 
-let mgCount = 0;
-let mgTimer = MINIGAME_SECONDS;
-let mgInterval = null;
-let mgSpawnTimeout = null;
-let mgActive = false;
-
-document.getElementById('mg-target').textContent = MINIGAME_TARGET;
-document.getElementById('mg-total').textContent = MINIGAME_TARGET;
-document.getElementById('mg-timer').textContent = MINIGAME_SECONDS;
-
-function spawnCrop() {
-  if (!mgActive) return;
-  const field = document.getElementById('minigame-field');
-  const crop = document.createElement('button');
-  crop.className = 'crop';
-  crop.textContent = '🍓';
-  crop.style.left = (Math.random() * 88 + 6) + '%';
-  crop.style.top = (Math.random() * 80 + 8) + '%';
-  crop.addEventListener('click', () => {
-    if (!mgActive) return;
-    mgCount++;
-    document.getElementById('mg-count').textContent = mgCount;
-    crop.remove();
-    if (mgCount >= MINIGAME_TARGET) {
-      finishMinigame(true);
-    }
-  });
-  field.appendChild(crop);
-
-  // La fresa desaparece sola si no se recoge a tiempo
-  setTimeout(() => crop.remove(), 1800);
-
-  mgSpawnTimeout = setTimeout(spawnCrop, 550);
+function initOverworld() {
+  computeTileSize();
+  buildMapDOM();
+  renderObjects();
+  renderPlayerSprite();
+  renderPlayerPosition();
+  updateProximity();
 }
 
-function finishMinigame(success) {
-  mgActive = false;
-  clearInterval(mgInterval);
-  clearTimeout(mgSpawnTimeout);
-  document.getElementById('minigame-field').innerHTML = '';
-  document.getElementById('minigame-start').style.display = 'none';
-
-  if (success) {
-    setTimeout(() => showScene('scene-chest'), 400);
-  } else {
-    document.getElementById('minigame-retry').style.display = 'inline-block';
-  }
+function resetOverworld() {
+  player.col = 5; player.row = 12; player.facing = 'down';
+  CHESTS.forEach(c => { c.opened = false; c.prize = null; });
+  chestsOpenedCount = 0;
+  collectedPrizes = [];
+  decoyPool = shuffle([...DECOY_PRIZES]);
+  unlockedMemories.clear();
+  document.getElementById('hud-memories').textContent = '0';
+  document.getElementById('hud-chests').textContent = '0';
+  renderObjects();
+  renderPlayerPosition();
+  updateProximity();
 }
 
-function startMinigame() {
-  mgCount = 0;
-  mgTimer = MINIGAME_SECONDS;
-  mgActive = true;
-  document.getElementById('mg-count').textContent = '0';
-  document.getElementById('mg-timer').textContent = mgTimer;
-  document.getElementById('minigame-field').innerHTML = '';
-  document.getElementById('minigame-start').style.display = 'none';
-  document.getElementById('minigame-retry').style.display = 'none';
-
-  spawnCrop();
-  mgInterval = setInterval(() => {
-    mgTimer--;
-    document.getElementById('mg-timer').textContent = mgTimer;
-    if (mgTimer <= 0) {
-      finishMinigame(mgCount >= MINIGAME_TARGET);
-    }
-  }, 1000);
-}
-
-document.getElementById('minigame-start').addEventListener('click', startMinigame);
-document.getElementById('minigame-retry').addEventListener('click', startMinigame);
-
-// ============================================================
-// ESCENA COFRE
-// ============================================================
-
-document.getElementById('chest').addEventListener('click', function () {
-  if (this.classList.contains('opened')) return;
-  this.classList.add('opened');
-  this.textContent = '🎁';
-  document.getElementById('chest-text').textContent = '¡Vaya! Dentro hay una ruleta de posibles regalos...';
-  setTimeout(() => {
-    showScene('scene-wheel');
-    if (!wheelBuilt) buildWheel();
-  }, 1400);
+window.addEventListener('resize', () => {
+  computeTileSize();
+  renderObjects();
+  renderPlayerSprite();
+  renderPlayerPosition();
 });
 
 // ============================================================
-// ESCENA RULETA
+// ESCENA RULETA (contenido dinámico según lo recogido en la parcela)
 // ============================================================
 
-let wheelBuilt = false;
+let WHEEL_PRIZES = [];
+let WINNING_PRIZE_INDEX = 0;
 let wheelSpun = false;
+
+function prepareWheelFromCollectedPrizes() {
+  WHEEL_PRIZES = collectedPrizes.map(p => p.text);
+  WINNING_PRIZE_INDEX = collectedPrizes.findIndex(p => p.isKarolG);
+  if (WINNING_PRIZE_INDEX === -1) WINNING_PRIZE_INDEX = 0; // salvaguarda, no debería pasar
+  wheelSpun = false;
+  document.getElementById('wheel-spin').disabled = false;
+  buildWheel();
+}
 
 function buildWheel() {
   const wheel = document.getElementById('wheel');
+  wheel.innerHTML = '';
+  wheel.style.transform = 'rotate(0deg)';
   const n = WHEEL_PRIZES.length;
   const sliceAngle = 360 / n;
   const colors = ['#f4c26b', '#bfe8d9', '#f2a6b8', '#dcb96a', '#a9d8b4', '#e8c9e0', '#f6d98c'];
@@ -238,8 +480,6 @@ function buildWheel() {
     label.textContent = prize.split(' ')[0];
     wheel.appendChild(label);
   });
-
-  wheelBuilt = true;
 }
 
 function spinWheel() {
@@ -249,9 +489,6 @@ function spinWheel() {
   const n = WHEEL_PRIZES.length;
   const sliceAngle = 360 / n;
 
-  // El puntero apunta hacia arriba (0deg). Calculamos el giro final
-  // para que el centro de la porción ganadora quede justo ahí,
-  // añadiendo varias vueltas completas para dar sensación de suspense.
   const targetSliceCenter = WINNING_PRIZE_INDEX * sliceAngle + sliceAngle / 2;
   const extraSpins = 5 * 360;
   const finalRotation = extraSpins + (360 - targetSliceCenter);
@@ -287,14 +524,8 @@ function launchConfetti() {
 }
 
 document.getElementById('reveal-replay').addEventListener('click', () => {
-  // Reset de estado para poder volver a jugar desde el menú
-  wheelSpun = false;
-  document.getElementById('wheel').style.transform = 'rotate(0deg)';
-  document.getElementById('wheel-spin').disabled = false;
-  document.getElementById('minigame-start').style.display = 'inline-block';
-  document.getElementById('chest').classList.remove('opened');
-  document.getElementById('chest').textContent = '📦';
-  document.getElementById('chest-text').textContent = '¡Cofre desbloqueado! Tócalo para abrirlo.';
+  resetOverworld();
+  showScene('scene-menu');
 });
 
 // ============================================================
@@ -302,3 +533,4 @@ document.getElementById('reveal-replay').addEventListener('click', () => {
 // ============================================================
 
 runBoot();
+initOverworld();

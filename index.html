@@ -37,7 +37,8 @@
       <h1 class="game-title">🏝️ La Isla de Candeleda</h1>
       <p class="game-subtitle">— Edición Cumpleaños de Alba —</p>
       <nav class="menu-list" id="menu-list">
-        <button class="menu-item" data-target="scene-story-intro"><span class="cursor">▶</span> Jugar</button>
+        <button class="menu-item" data-target="scene-overworld"><span class="cursor">▶</span> Jugar</button>
+        <button class="menu-item disabled" disabled><span class="cursor">🔒</span> Cargar partida</button>
         <button class="menu-item" data-target="scene-settings"><span class="cursor">▶</span> Configuración</button>
         <button class="menu-item" data-target="scene-credits"><span class="cursor">▶</span> Créditos</button>
       </nav>
@@ -91,53 +92,57 @@
     </div>
   </section>
 
-  <!-- ESCENA 5: INTRO HISTORIA -->
-  <section class="scene" id="scene-story-intro">
-    <div class="story-bg"></div>
-    <div class="dialogue-box">
-      <div class="dialogue-avatar">🌱</div>
-      <p class="dialogue-text" id="story-text">Cargando historia...</p>
-      <div class="dialogue-controls">
-        <span class="dialogue-progress" id="story-progress"></span>
-        <button class="btn-next" id="story-next">Continuar ▶</button>
+  <!-- ESCENA 5: LA PARCELA (exploración) -->
+  <section class="scene" id="scene-overworld">
+    <div class="overworld-hud">
+      <button class="hud-menu-btn" id="overworld-menu-btn">☰ Menú</button>
+      <div class="hud-counters">
+        <span>💭 <span id="hud-memories">0</span>/8</span>
+        <span>📦 <span id="hud-chests">0</span>/5</span>
+      </div>
+    </div>
+    <p class="overworld-hint" id="overworld-hint">Muévete por la parcela y explora todo lo que puedas.</p>
+
+    <div class="map-viewport">
+      <div class="map-grid" id="map-grid"></div>
+      <div class="map-objects" id="map-objects"></div>
+      <div class="player-sprite" id="player-sprite"><div class="player-pixel"></div></div>
+    </div>
+
+    <button class="action-btn" id="action-btn" style="display:none">Interactuar</button>
+
+    <div class="dpad">
+      <button class="dpad-btn dpad-up" data-dir="up">▲</button>
+      <button class="dpad-btn dpad-left" data-dir="left">◀</button>
+      <button class="dpad-btn dpad-right" data-dir="right">▶</button>
+      <button class="dpad-btn dpad-down" data-dir="down">▼</button>
+    </div>
+
+    <!-- Overlay de diálogo/recuerdo/cofre -->
+    <div class="interaction-overlay" id="interaction-overlay">
+      <div class="dialogue-box">
+        <div class="dialogue-avatar" id="interaction-avatar">🌱</div>
+        <p class="dialogue-text" id="interaction-text">...</p>
+        <div class="dialogue-controls">
+          <span></span>
+          <button class="btn-next" id="interaction-close">Cerrar</button>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ESCENA 6: MINIJUEGO COSECHA -->
-  <section class="scene" id="scene-minigame">
-    <div class="minigame-wrap">
-      <h2 class="panel-title">🌾 Cosecha rápida</h2>
-      <p class="minigame-instructions">Para desbloquear el cofre de regalos, recoge <strong id="mg-target">10</strong> fresas antes de que se acabe el tiempo. (Esto es muy Hay Day, lo sabemos.)</p>
-      <div class="minigame-hud">
-        <span>🍓 <span id="mg-count">0</span> / <span id="mg-total">10</span></span>
-        <span>⏱️ <span id="mg-timer">20</span>s</span>
-      </div>
-      <div class="minigame-field" id="minigame-field"></div>
-      <button class="btn-next" id="minigame-start">Empezar cosecha</button>
-      <button class="btn-back" id="minigame-retry" style="display:none">Reintentar</button>
-    </div>
-  </section>
-
-  <!-- ESCENA 7: COFRE -->
-  <section class="scene" id="scene-chest">
-    <div class="chest-wrap">
-      <div class="chest" id="chest">📦</div>
-      <p class="chest-text" id="chest-text">¡Cofre desbloqueado! Tócalo para abrirlo.</p>
-    </div>
-  </section>
-
-  <!-- ESCENA 8: RULETA -->
+  <!-- ESCENA 6: RULETA -->
   <section class="scene" id="scene-wheel">
     <div class="wheel-wrap">
       <h2 class="panel-title">🎡 La Ruleta de los Regalos</h2>
+      <p class="wheel-subtitle">Entre todo lo que has encontrado en la parcela, la ruleta decide qué te llevas.</p>
       <div class="wheel-pointer">▼</div>
       <div class="wheel" id="wheel"></div>
       <button class="btn-next" id="wheel-spin">Girar la ruleta</button>
     </div>
   </section>
 
-  <!-- ESCENA 9: REVELACIÓN -->
+  <!-- ESCENA 7: REVELACIÓN -->
   <section class="scene" id="scene-reveal">
     <div class="confetti-layer" id="confetti-layer"></div>
     <div class="reveal-card">
