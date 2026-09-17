@@ -614,6 +614,7 @@ let joystickCenter = { x: 0, y: 0 };
 let moveInterval = null;
 let currentDir = null;
 const MOVE_REPEAT_MS = 220;
+const JOYSTICK_MOVE_REPEAT_MS = 300;
 const JOYSTICK_MAX = 40;
 const JOYSTICK_DEADZONE = 12;
 
@@ -623,21 +624,14 @@ function setKnobPosition(x, y) {
 function resetKnob() {
   joystickKnob.style.transform = 'translate(-50%, -50%)';
 }
+// Eje dominante: si el joystick apunta más hacia arriba/abajo que hacia un
+// lado, se mueve (y se ve) de espaldas/frente; si apunta más hacia un lado,
+// de lado. Mismo criterio para movimiento y orientación, sin desajustes.
 function moveDirFromAngle(angle) {
   if (angle > -45 && angle <= 45) return 'right';
   if (angle > 45 && angle <= 135) return 'down';
   if (angle > 135 || angle <= -135) return 'left';
   return 'up';
-}
-function facingDirFromAngle(angle) {
-  if (angle > 67.5 && angle <= 112.5) return 'down';
-  if (angle > -112.5 && angle <= -67.5) return 'up';
-  if (angle > -22.5 && angle <= 22.5) return 'right';
-  if (angle > 157.5 || angle <= -157.5) return 'left';
-  if (angle > 22.5 && angle <= 67.5) return 'right';   // abajo-derecha -> lateral
-  if (angle > 112.5 && angle <= 157.5) return 'left';  // abajo-izquierda -> lateral
-  if (angle > -67.5 && angle <= -22.5) return 'right'; // arriba-derecha -> lateral
-  return 'left'; // arriba-izquierda -> lateral
 }
 function moveForDir(dir, facing) {
   if (dir === 'up') tryMove(0, -1, facing);
@@ -645,12 +639,12 @@ function moveForDir(dir, facing) {
   else if (dir === 'left') tryMove(-1, 0, facing);
   else if (dir === 'right') tryMove(1, 0, facing);
 }
-function startMoveLoop(dir, facing) {
+function startMoveLoop(dir, facing, repeatMs) {
   if (currentDir === dir) return;
   currentDir = dir;
   clearInterval(moveInterval);
   moveForDir(dir, facing);
-  moveInterval = setInterval(() => moveForDir(dir, facing), MOVE_REPEAT_MS);
+  moveInterval = setInterval(() => moveForDir(dir, facing), repeatMs || MOVE_REPEAT_MS);
 }
 function stopMoveLoop() {
   clearInterval(moveInterval);
@@ -664,7 +658,8 @@ function handleJoystickPointer(e) {
   const angle = Math.atan2(dy, dx) * 180 / Math.PI;
   setKnobPosition(Math.cos(angle * Math.PI / 180) * dist, Math.sin(angle * Math.PI / 180) * dist);
   if (Math.hypot(dx, dy) < JOYSTICK_DEADZONE) { stopMoveLoop(); return; }
-  startMoveLoop(moveDirFromAngle(angle), facingDirFromAngle(angle));
+  const dir = moveDirFromAngle(angle);
+  startMoveLoop(dir, dir, JOYSTICK_MOVE_REPEAT_MS);
 }
 function endJoystick() {
   joystickActive = false;
