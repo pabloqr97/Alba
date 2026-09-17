@@ -16,20 +16,20 @@ const OBJECT_MEMORIES = [
 // TODAS (incluida la del invernadero), la casa se abre.
 const HUMAN_CHARACTERS = [
   { id: 'padre', col: 4, row: 7, sprite: 'padre_down', label: 'Papá',
-    text: '(Diálogo profundo por escribir.)',
-    clue: 'Pablo me dijo que estaba pensando regalarte unos calcetines a juego con la casa.' },
+    text: '¡Albita! Dame un abrazo, ¿has visto a Nukita? El otro día me la llevé al campo y agarró su primer conejo, lo tengo ahora en la barbacoa, ¡no se lo digas a tu tío Victor! Anda tráeme una cervecita del congelador. Por cierto, Pabolito está dentro de la casa, pero me ha dicho que no entres hasta que hables con todos, ¿es verdad que te va a regalar a Jeepito?',
+    clue: 'Jeepito (un jeep de coche).', clueInline: true },
   { id: 'madre', col: 3, row: 13, sprite: 'madre_down', label: 'Mamá',
-    text: '(Diálogo profundo por escribir.)',
-    clue: 'Pablo me dijo que estaba pensando regalarte fresas infinitas para la granja.' },
-  { id: 'abuela2', col: 2, row: 3, sprite: 'abuela2_down', label: 'La abuela',
-    text: '(Diálogo profundo por escribir.)',
-    clue: 'Pablo me dijo que estaba pensando regalarte un vale para redecorar el salón (otra vez).' },
-  { id: 'abuelo2', col: 7, row: 6, sprite: 'abuelo2_down', label: 'El abuelo',
+    text: '¡Alba! Por fin llegas, te tengo preparadas unas lentejas que te vas a chupar los dedos, las alitas hoy se las dejamos a Pabolito jejejeje. Por cierto, ¿he escuchado que te va a regalar el nuevo iPhone?',
+    clue: 'El nuevo iPhone.', clueInline: true },
+  { id: 'abuela2', col: 9, row: 23, sprite: 'abuela2_down', label: 'La abuela',
+    text: '¡Pero bueno qué sorpresa Alba! ¿Cómo están vuestras plantas? Si llego a saber que vienes te hubiese cortado un poquito del helecho que está bárbaro. Pasa pasa, Pablo está dentro, me había dicho que no te dijese nada de lo que te va a regalar por tu cumpleaños, pero yo creo que tiene algo que ver con un Mak? Mac? Uy no sé....',
+    clue: 'Un Mac (ordenador).', clueInline: true },
+  { id: 'abuelo2', col: 9, row: 2, sprite: 'abuelo2_down', label: 'El abuelo',
     text: '(Diálogo profundo por escribir.)',
     clue: 'Pablo me dijo que estaba pensando regalarte una noche de cine en casa.' },
   { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Tu hermana',
-    text: '(Diálogo profundo por escribir.)',
-    clue: 'Pablo me dijo que estaba pensando regalarte una tarde entera decorando la parcela.' },
+    text: '¡Hermana! Como te echaba de menos, por fin llegas, papá se ha puesto ya con la barbacoa y Nuka no para de mordisquear piedras... ¡Pasa pasa, que luego jugamos al Voley! Por cierto, Pablo me ha contado algo de tu regalo, creo que te va a gustar, creo que era algo como de un viaje a... ¿Canadá?',
+    clue: 'Un viaje a Canadá.', clueInline: true },
 ];
 
 // El abuelo que murió: vive dentro del invernadero, junto a Sando. Su
@@ -42,15 +42,15 @@ const GREENHOUSE_ABUELO = {
 };
 const GREENHOUSE_SANDO = {
   id: 'sando', label: 'Sando', sprite: 'sando_down',
-  text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, correteando por el invernadero.',
+  text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, jugando con el abuelo.',
 };
 
 // Perros de la familia: solo recuerdo, sin pista de regalo.
 const DOG_MEMORIES = [
-  { id: 'turka', col: 8, row: 4, sprite: 'turka_down', label: 'Turka',
-    text: 'Turka, siempre atenta a todo lo que pasa en la parcela.\n(Recuerdo por escribir.)' },
-  { id: 'nuka', col: 2, row: 5, sprite: 'nuka_down', label: 'Nuka',
-    text: 'Nuka, la otra perrita de la familia.\n(Recuerdo por escribir.)' },
+  { id: 'turka', col: 3, row: 7, sprite: 'turka_down', label: 'Turka',
+    text: 'Pensamiento de Alba: «No le quita ojo a las alitas de la barbacoa».\nTurka se acerca a ti para que la acaricies.' },
+  { id: 'nuka', col: 2, row: 3, sprite: 'nuka_down', label: 'Nuka',
+    text: 'Nuka: «¡Guau! ¡Guau!»\nAlba: «¡Nuka, deja de morder!»' },
 ];
 
 const TOTAL_CLUE_GIVERS = HUMAN_CHARACTERS.length + 1; // +1 = el abuelo del invernadero
@@ -60,7 +60,7 @@ const MAP_ROWS = 26;
 const VIEW_COLS = 8;
 const VIEW_ROWS = 9;
 const HOUSE_DOOR_KEY = '6,3';
-const GREENHOUSE_ROWS = [14, 15];
+const GREENHOUSE_ROWS = [16];
 const GREENHOUSE_DOOR_COL = 8;
 
 // ============================================================
@@ -146,16 +146,20 @@ function buildMainGrid() {
   for (let c = 7; c <= 8; c++) { g[9][c] = 'G'; g[10][c] = 'G'; g[11][c] = 'G'; g[12][c] = 'G'; }
   for (let c = 1; c <= 9; c++) { g[13][c] = 'G'; g[17][c] = 'G'; g[18][c] = 'G'; }
   for (let c = 1; c <= 8; c++) for (let r = 19; r <= 24; r++) g[r][c] = 'C';
-  // Césped junto al invernadero (donde antes había asfalto suelto)
-  for (let r = 14; r <= 16; r++) g[r][2] = 'G';
+  // Franja reservada para la futura caseta de los perros, entre la
+  // piscina y el invernadero, y césped junto al invernadero
+  for (let c = 1; c <= 9; c++) g[14][c] = 'G';
+  for (let r = 15; r <= 17; r++) g[r][2] = 'G';
 
   // Casa: cuerpo (la imagen real ya trae su propio porche y escalera
   // dibujados, así que el suelo debajo se deja en asfalto normal)
   for (let r = 1; r <= 3; r++) for (let c = 4; c <= 8; c++) g[r][c] = 'H';
   g[3][6] = 'O';
 
-  // Caseta de barbacoa + alacena (una sola estructura, imagen real encima)
-  for (let r = 6; r <= 10; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
+  // Caseta de barbacoa + alacena (una sola estructura, imagen real encima);
+  // debajo, césped en vez del asfalto suelto que quedaba
+  for (let r = 5; r <= 9; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
+  g[10][1] = 'G'; g[10][2] = 'G';
 
   // Piscina: solo agua, sin bordillo, 6 cuadrados (2x3), un poco elevada
   for (let r = 10; r <= 11; r++) for (let c = 4; c <= 6; c++) g[r][c] = 'W';
@@ -165,20 +169,19 @@ function buildMainGrid() {
   // Bordillo elevado justo bajo el agua (no se puede pisar desde ningún lado)
   for (let c = 4; c <= 6; c++) g[12][c] = 'B';
 
-  // Invernadero (imagen real encima, reducido); la puerta ocupa las dos
-  // filas de arriba de su lado derecho (la esquina de abajo queda cerrada,
-  // no se entra por ahí). Al otro lado de la puerta, entre el camino y el
-  // invernadero, queda una franja de césped (ahí se reservará sitio para
-  // la caseta de los perros).
-  for (let r = 14; r <= 16; r++) for (let c = 3; c <= 8; c++) g[r][c] = 'I';
+  // Invernadero (imagen real encima, reducido, bajado un bloque); solo se
+  // entra por la fila central de su lado derecho, las dos esquinas quedan
+  // cerradas (si no, parece que se accede "por arte de magia" por ellas).
+  for (let r = 15; r <= 17; r++) for (let c = 3; c <= 8; c++) g[r][c] = 'I';
   GREENHOUSE_ROWS.forEach(r => { g[r][GREENHOUSE_DOOR_COL] = 'O'; });
-  [12, 13, 14, 15, 16].forEach(r => { g[r][9] = 'G'; });
+  [12, 13, 14, 15, 16, 17].forEach(r => { g[r][9] = 'G'; });
 
   // Camino largo (asfalto) a lo largo de todo el lateral derecho
   for (let r = 1; r <= 24; r++) { g[r][10] = 'P'; g[r][11] = 'P'; }
 
-  // Franja de tierra-plantas junto a la valla izquierda (se salta la caseta)
-  [1, 2, 3, 4, 5, 11, 12, 13, 14, 15, 16, 17, 18].forEach(r => { g[r][1] = 'D'; });
+  // Franja de tierra-plantas junto a la valla izquierda (se salta la caseta
+  // y el hueco de césped justo debajo de ella)
+  [1, 2, 3, 4, 11, 12, 13, 14, 15, 16, 17, 18].forEach(r => { g[r][1] = 'D'; });
   // Franja de tierra-plantas al lado izquierdo del camino: solo junto a la
   // piscina (arriba se junta con el asfalto de la casa, abajo pasa a césped)
   [7, 8, 9, 10, 11].forEach(r => { g[r][9] = 'D'; });
@@ -223,9 +226,9 @@ function mainStructures() {
     { src: houseUnlocked() ? 'game/cropped/house_open.png' : 'game/cropped/house.png',
       aspect: 1368 / 1776, colStart: 4, colEnd: 8, bottomRow: 5 },
     { src: 'game/cropped/greenhouse_tile.png', aspect: 2646 / 1341,
-      colStart: 3, colEnd: 8, bottomRow: 17, matchWidth: true, scale: 1.05 },
+      colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.05 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
-      colStart: 1, colEnd: 2, bottomRow: 11, matchWidth: true, scale: 1.25 },
+      colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25 },
   ];
 }
 
@@ -291,7 +294,7 @@ const AREAS = {
       { ...GREENHOUSE_SANDO, col: 2, row: 3 },
     ],
     structures: () => [],
-    warps: { '5,2': { area: 'main', enter: { col: 10, row: 15, facing: 'right' } } },
+    warps: { '5,2': { area: 'main', enter: { col: 10, row: 16, facing: 'right' } } },
   },
 };
 
@@ -551,7 +554,7 @@ function handleTalk(obj) {
   let text = `${obj.label}\n\n${obj.text}`;
   if (obj.clue) {
     if (isNew) collectedClues.push({ text: obj.clue, isKarolG: !!obj.isKarolG });
-    text += `\n\n"${obj.clue}"`;
+    if (!obj.clueInline) text += `\n\n"${obj.clue}"`;
     document.getElementById('hud-clues').textContent = collectedClues.length;
     if (currentArea === 'main') renderStructures();
   }
