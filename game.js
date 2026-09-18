@@ -50,7 +50,7 @@ const GREENHOUSE_SANDO = {
 
 // Perros de la familia: solo recuerdo, sin pista de regalo.
 const DOG_MEMORIES = [
-  { id: 'turka', col: 3, row: 7, sprite: 'turka_down', label: 'Turka', small: true,
+  { id: 'turka', col: 5, row: 7, sprite: 'turka_down', label: 'Turka', small: true,
     text: 'Pensamiento de Alba: «No le quita ojo a las alitas de la barbacoa».\nTurka se acerca a ti para que la acaricies.' },
   { id: 'nuka', col: 2, row: 3, sprite: 'nuka_down', label: 'Nukita', small: true,
     text: 'Nuka: «¡Guau! ¡Guau!»\nAlba: «¡Nuka, deja de morder!»' },
@@ -195,7 +195,7 @@ function buildMainGrid() {
   // Bordillo (tierra + piedra) junto al camino, en el lado izquierdo,
   // en toda su longitud (con el bordillo mirando hacia el camino, a la
   // derecha de la tierra)
-  for (let r = 1; r <= 24; r++) g[r][9] = 'R';
+  for (let r = 7; r <= 24; r++) g[r][9] = 'R';
 
   // Entrada: verja metálica abierta de 2 casillas, abajo
   g[rows - 1][10] = 'Z';
@@ -257,15 +257,15 @@ function mainStructures() {
       colStart: 1, colEnd: 1, bottomRow: 22, blockRow: 21, matchWidth: true, scale: 2.0, sway: true },
     // Plantas de cultivo en el huerto, repartidas con espacio de por
     // medio (tamaño acorde a una planta real, no a un árbol)
-    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 3, colEnd: 3, bottomRow: 21, matchWidth: true, scale: 0.78 },
-    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 5, colEnd: 5, bottomRow: 21, matchWidth: true, scale: 0.48 },
-    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 7, colEnd: 7, bottomRow: 21, matchWidth: true, scale: 0.76 },
-    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 2, colEnd: 2, bottomRow: 23, matchWidth: true, scale: 0.48 },
-    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 4, colEnd: 4, bottomRow: 23, matchWidth: true, scale: 0.76 },
-    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 6, colEnd: 6, bottomRow: 23, matchWidth: true, scale: 0.78 },
-    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 3, colEnd: 3, bottomRow: 25, matchWidth: true, scale: 0.76 },
-    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 5, colEnd: 5, bottomRow: 25, matchWidth: true, scale: 0.78 },
-    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 7, colEnd: 7, bottomRow: 25, matchWidth: true, scale: 0.48 },
+    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 3, colEnd: 3, bottomRow: 21, matchWidth: true, scale: 0.78, sway: true },
+    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 5, colEnd: 5, bottomRow: 21, matchWidth: true, scale: 0.48, sway: true },
+    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 7, colEnd: 7, bottomRow: 21, matchWidth: true, scale: 0.76, sway: true },
+    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 2, colEnd: 2, bottomRow: 23, matchWidth: true, scale: 0.48, sway: true },
+    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 4, colEnd: 4, bottomRow: 23, matchWidth: true, scale: 0.76, sway: true },
+    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 6, colEnd: 6, bottomRow: 23, matchWidth: true, scale: 0.78, sway: true },
+    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 3, colEnd: 3, bottomRow: 25, matchWidth: true, scale: 0.76, sway: true },
+    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 5, colEnd: 5, bottomRow: 25, matchWidth: true, scale: 0.78, sway: true },
+    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 7, colEnd: 7, bottomRow: 25, matchWidth: true, scale: 0.48, sway: true },
   ];
 }
 
