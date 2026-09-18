@@ -149,6 +149,8 @@ function buildMainGrid() {
   for (let c = 7; c <= 8; c++) { g[9][c] = 'G'; g[10][c] = 'G'; g[11][c] = 'G'; g[12][c] = 'G'; }
   for (let c = 1; c <= 9; c++) { g[13][c] = 'G'; g[17][c] = 'G'; g[18][c] = 'G'; }
   for (let c = 1; c <= 8; c++) for (let r = 19; r <= 24; r++) g[r][c] = 'C';
+  // Tierra normal para delimitar el huerto por el lado que da a la arizónica
+  for (let r = 19; r <= 24; r++) g[r][1] = 'D';
   // Franja reservada para la futura caseta de los perros, entre la
   // piscina y el invernadero, y césped junto al invernadero
   for (let c = 1; c <= 9; c++) g[14][c] = 'G';
@@ -191,8 +193,8 @@ function buildMainGrid() {
   // piscina (arriba se junta con el asfalto de la casa, abajo pasa a césped)
   [7, 8, 9, 10, 11].forEach(r => { g[r][9] = 'D'; });
 
-  // Bordillo entre la zona de cultivo y el camino
-  for (let r = 19; r <= 24; r++) g[r][9] = 'U';
+  // Tierra normal entre la zona de cultivo y el camino (sin bordillo especial)
+  for (let r = 19; r <= 24; r++) g[r][9] = 'D';
 
   // Entrada: verja metálica abierta de 2 casillas, abajo
   g[rows - 1][10] = 'Z';
@@ -217,7 +219,6 @@ function mainTileClass(type) {
     case 'C': return 'tile-crop';
     case 'G': return 'tile-grass';
     case 'D': return 'tile-dirtplants';
-    case 'U': return 'tile-curb';
     default: return 'tile-asphalt';
   }
 }
@@ -234,33 +235,22 @@ function mainStructures() {
       colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.05 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
       colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25 },
-    // Árboles/plantas decorativas (sin diálogo, solo ambientación —
+    // Árboles decorativos (sin diálogo, solo ambientación —
     // el único árbol interactuable por ahora es el madroño).
-    // Parras junto a la valla derecha, cada 4 bloques desde la entrada.
-    ...([21, 17, 13, 9, 5, 1].map(row => ({
+    // Parras junto a la valla derecha, cada 2 bloques desde la entrada.
+    ...([21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1].map(row => ({
       src: 'game/cropped/parra_title.png', aspect: 700 / 544,
       colStart: 12, colEnd: 12, bottomRow: row + 1, matchWidth: true, scale: 1.66, sway: true,
     }))),
-    // Almendros flanqueando la entrada del invernadero (las dos esquinas
-    // donde no se puede entrar), no en los laterales de la estructura.
+    // Almendros flanqueando la entrada del invernadero, un poco más
+    // separados (uno un bloque más arriba, el otro un bloque más abajo).
     { src: 'game/cropped/almendro_title.png', aspect: 700 / 620,
-      colStart: 9, colEnd: 9, bottomRow: 16, matchWidth: true, scale: 2.0, sway: true },
+      colStart: 9, colEnd: 9, bottomRow: 15, matchWidth: true, scale: 2.0, sway: true },
     { src: 'game/cropped/almendro_title.png', aspect: 700 / 620,
-      colStart: 9, colEnd: 9, bottomRow: 18, matchWidth: true, scale: 2.0, sway: true },
+      colStart: 9, colEnd: 9, bottomRow: 19, matchWidth: true, scale: 2.0, sway: true },
     // Olivo en el lado izquierdo del campo de cultivo
     { src: 'game/cropped/olivo_title.png', aspect: 700 / 619,
       colStart: 1, colEnd: 1, bottomRow: 22, matchWidth: true, scale: 2.0, sway: true },
-    // Plantas pequeñas en los huecos entre parras (de 4 en 4) y por el huerto
-    { src: 'game/cropped/plant_sprout.png', aspect: 1, colStart: 12, colEnd: 12, bottomRow: 20, matchWidth: true, scale: 0.5 },
-    { src: 'game/cropped/plant_corn.png', aspect: 1, colStart: 12, colEnd: 12, bottomRow: 16, matchWidth: true, scale: 0.75 },
-    { src: 'game/cropped/plant_sunflower.png', aspect: 112 / 128, colStart: 12, colEnd: 12, bottomRow: 12, matchWidth: true, scale: 0.85 },
-    { src: 'game/cropped/plant_sunflower_bud.png', aspect: 96 / 104, colStart: 12, colEnd: 12, bottomRow: 8, matchWidth: true, scale: 0.6 },
-    { src: 'game/cropped/plant_leaf.png', aspect: 1, colStart: 12, colEnd: 12, bottomRow: 4, matchWidth: true, scale: 0.5 },
-    { src: 'game/cropped/plant_corn.png', aspect: 1, colStart: 2, colEnd: 2, bottomRow: 21, matchWidth: true, scale: 0.75 },
-    { src: 'game/cropped/plant_sunflower.png', aspect: 112 / 128, colStart: 6, colEnd: 6, bottomRow: 23, matchWidth: true, scale: 0.85 },
-    { src: 'game/cropped/plant_leaf.png', aspect: 1, colStart: 4, colEnd: 4, bottomRow: 25, matchWidth: true, scale: 0.5 },
-    { src: 'game/cropped/plant_sprout.png', aspect: 1, colStart: 7, colEnd: 7, bottomRow: 20, matchWidth: true, scale: 0.5 },
-    { src: 'game/cropped/plant_sunflower_bud.png', aspect: 96 / 104, colStart: 3, colEnd: 3, bottomRow: 24, matchWidth: true, scale: 0.6 },
   ];
 }
 

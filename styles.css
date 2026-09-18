@@ -376,23 +376,11 @@ html, body {
 .tile-asphalt { background: url('game/path_tile.jpeg') center/cover; filter: brightness(1.08); }
 .tile-path { background: url('game/path_tile.jpeg') center/cover; }
 .tile-grass { background: url('game/grass_tile.jpeg') center/cover; }
-.tile-crop { background: url('game/crop_tile.jpeg') center/cover; }
+.tile-crop { background: url('game/Cultivo_title.jpeg') center/cover; }
 .tile-dirtplants {
-  background-color: #8a6a45;
-  background-image: url('game/cropped/grass_tuft.png');
-  background-size: 60% 60%;
-  background-position: 20% 65%;
-  background-repeat: no-repeat;
-  image-rendering: pixelated;
-}
-.tile-curb {
-  background-image:
-    linear-gradient(90deg, transparent 0%, transparent 56%, rgba(160,160,155,0.95) 56%, rgba(160,160,155,0.95) 64%, transparent 64%, transparent 100%),
-    url('game/path_tile.jpeg'),
-    url('game/crop_tile.jpeg');
-  background-size: 100% 100%, 44% 100%, 60% 100%;
-  background-position: left, right, left;
-  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-image: url('game/Tierra_title.jpeg');
+  background-size: cover;
+  background-position: center;
 }
 
 /* Casa/invernadero: la imagen real (map-structures) cubre esta zona */
@@ -415,13 +403,7 @@ html, body {
     repeating-linear-gradient(90deg, rgba(255,255,255,0.12) 0 2px, transparent 2px 22px);
 }
 .tile-fence-hedge { background: url('game/cropped/arizonica_tile.png') center/cover; }
-.tile-fence-vine {
-  background-color: #7a7a7a;
-  background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.25) 0 2px, transparent 2px 10px),
-    repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0 2px, transparent 2px 10px),
-    radial-gradient(circle at 40% 60%, rgba(90,150,70,0.55) 0 8px, transparent 10px),
-    radial-gradient(circle at 65% 30%, rgba(90,150,70,0.5) 0 7px, transparent 9px);
-}
+.tile-fence-vine { background: url('game/Delimitación parcela_title.jpeg') center/cover; }
 .tile-gate {
   background-color: #8a8a8a;
   background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.3) 0 2px, transparent 2px 12px);
@@ -430,7 +412,7 @@ html, body {
 
 /* Interiores pequeños */
 .tile-interior-floor { background: #e8d9b8; }
-.tile-interior-floor-crop { background: url('game/crop_tile.jpeg') center/cover; }
+.tile-interior-floor-crop { background: url('game/Cultivo_title.jpeg') center/cover; }
 .tile-interior-wall { background: #7a4e2d; }
 .tile-door-warp {
   background: #3a2a1a;
