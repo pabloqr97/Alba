@@ -372,9 +372,9 @@ html, body {
   position: relative;
 }
 
-/* Suelo por defecto: asfalto */
-.tile-asphalt { background: url('game/path_tile.jpeg') center/cover; filter: brightness(1.08); }
-.tile-path { background: url('game/path_tile.jpeg') center/cover; }
+/* Suelo por defecto: empedrado (pixel art) */
+.tile-asphalt { background: url('game/cropped/path_pixel.png') center/cover; image-rendering: pixelated; filter: brightness(1.05); }
+.tile-path { background: url('game/cropped/path_pixel.png') center/cover; image-rendering: pixelated; }
 .tile-grass { background: url('game/grass_tile.jpeg') center/cover; }
 .tile-crop { background: url('game/crop_tile.jpeg') center/cover; }
 .tile-dirtplants {
@@ -386,11 +386,12 @@ html, body {
 .tile-curb {
   background-image:
     linear-gradient(90deg, transparent 0%, transparent 56%, rgba(160,160,155,0.95) 56%, rgba(160,160,155,0.95) 64%, transparent 64%, transparent 100%),
-    url('game/path_tile.jpeg'),
+    url('game/cropped/path_pixel.png'),
     url('game/crop_tile.jpeg');
   background-size: 100% 100%, 44% 100%, 60% 100%;
   background-position: left, right, left;
   background-repeat: no-repeat, no-repeat, no-repeat;
+  image-rendering: pixelated;
 }
 
 /* Casa/invernadero: la imagen real (map-structures) cubre esta zona */

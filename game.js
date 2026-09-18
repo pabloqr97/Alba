@@ -229,6 +229,11 @@ function mainStructures() {
       colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.05 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
       colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25 },
+    // Árboles decorativos (sin diálogo, solo ambientación)
+    { src: 'game/cropped/deco_tree_round.png', aspect: 135 / 177,
+      colStart: 5, colEnd: 5, bottomRow: 9, matchWidth: true, scale: 1.37 },
+    { src: 'game/cropped/deco_tree_willow.png', aspect: 156 / 180,
+      colStart: 8, colEnd: 8, bottomRow: 13, matchWidth: true, scale: 1.56 },
   ];
 }
 
