@@ -382,6 +382,11 @@ html, body {
   background-size: cover;
   background-position: center;
 }
+.tile-curbdirt-r { background: url('game/Bordillo_title.jpeg') center/cover; }
+.tile-curbdirt-l {
+  background: url('game/Bordillo_title.jpeg') center/cover;
+  transform: scaleX(-1);
+}
 
 /* Casa/invernadero: la imagen real (map-structures) cubre esta zona */
 .tile-wall { background: #cfa15f; }

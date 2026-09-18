@@ -144,7 +144,10 @@ function buildMainGrid() {
   for (let c = 0; c < cols; c++) { g[0][c] = 'S'; g[rows - 1][c] = 'Q'; }
   for (let r = 0; r < rows; r++) { g[r][0] = 'X'; g[r][cols - 1] = 'Y'; }
   g[rows - 1][cols - 1] = 'Q';
-  for (let r = 1; r < rows - 1; r++) g[r][cols - 2] = 'D';
+  g[0][cols - 1] = 'S';
+  // Bordillo (tierra + piedra) junto al camino, en el lado derecho del
+  // todo (mirando hacia el camino, o sea con el bordillo a la izquierda)
+  for (let r = 1; r < rows - 1; r++) g[r][cols - 2] = 'L';
 
   // Franjas de césped/tierra alrededor de la piscina y zona de cultivo
   for (let c = 3; c <= 8; c++) { g[7][c] = 'G'; g[8][c] = 'G'; }
@@ -189,12 +192,10 @@ function buildMainGrid() {
   // Franja de tierra-plantas junto a la valla izquierda (se salta la caseta
   // y el hueco de césped justo debajo de ella)
   [1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16, 17, 18].forEach(r => { g[r][1] = 'D'; });
-  // Franja de tierra-plantas al lado izquierdo del camino: solo junto a la
-  // piscina (arriba se junta con el asfalto de la casa, abajo pasa a césped)
-  [7, 8, 9, 10, 11].forEach(r => { g[r][9] = 'D'; });
-
-  // Tierra normal entre la zona de cultivo y el camino (sin bordillo especial)
-  for (let r = 19; r <= 24; r++) g[r][9] = 'D';
+  // Bordillo (tierra + piedra) junto al camino, en el lado izquierdo,
+  // en toda su longitud (con el bordillo mirando hacia el camino, a la
+  // derecha de la tierra)
+  for (let r = 1; r <= 24; r++) g[r][9] = 'R';
 
   // Entrada: verja metálica abierta de 2 casillas, abajo
   g[rows - 1][10] = 'Z';
@@ -220,6 +221,8 @@ function mainTileClass(type) {
     case 'C': return 'tile-crop';
     case 'G': return 'tile-grass';
     case 'D': return 'tile-dirtplants';
+    case 'R': return 'tile-curbdirt-r';
+    case 'L': return 'tile-curbdirt-l';
     default: return 'tile-asphalt';
   }
 }
