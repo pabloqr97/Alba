@@ -137,11 +137,13 @@ function buildMainGrid() {
   const cols = MAP_COLS, rows = MAP_ROWS;
   const g = Array.from({ length: rows }, () => Array(cols).fill('.'));
 
-  // Bordes: murito de piedra arriba/abajo, valla con arizónica a la
-  // izquierda, valla con parra a la derecha (un cuadrado más afuera que
-  // antes: la columna donde iba la valla ahora es tierra-plantas).
-  for (let c = 0; c < cols; c++) { g[0][c] = 'S'; g[rows - 1][c] = 'S'; }
+  // Bordes: murito de piedra arriba, arizónica abajo (todo el lateral
+  // inferior salvo la puerta), arizónica a la izquierda, valla de
+  // delimitación a la derecha (un cuadrado más afuera que antes: la
+  // columna donde iba la valla ahora es tierra-plantas).
+  for (let c = 0; c < cols; c++) { g[0][c] = 'S'; g[rows - 1][c] = 'Q'; }
   for (let r = 0; r < rows; r++) { g[r][0] = 'X'; g[r][cols - 1] = 'Y'; }
+  g[rows - 1][cols - 1] = 'Q';
   for (let r = 1; r < rows - 1; r++) g[r][cols - 2] = 'D';
 
   // Franjas de césped/tierra alrededor de la piscina y zona de cultivo
@@ -161,11 +163,9 @@ function buildMainGrid() {
   for (let r = 1; r <= 3; r++) for (let c = 4; c <= 8; c++) g[r][c] = 'H';
   g[3][6] = 'O';
 
-  // Caseta de barbacoa + alacena (una sola estructura, imagen real encima);
-  // un parche de tierra delante (a juego con la franja de la valla) y
-  // césped al otro lado, en vez del asfalto suelto que quedaba
+  // Caseta de barbacoa + alacena (una sola estructura, imagen real
+  // encima); césped al otro lado, en vez del asfalto suelto que quedaba
   for (let r = 5; r <= 9; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
-  g[4][2] = 'D';
   g[10][2] = 'G'; g[11][2] = 'G'; g[12][2] = 'G';
 
   // Piscina: solo agua, sin bordillo, 6 cuadrados (2x3), un poco elevada
@@ -207,6 +207,7 @@ function mainTileClass(type) {
   switch (type) {
     case 'S': return 'tile-stonewall';
     case 'X': return 'tile-fence-hedge';
+    case 'Q': return 'tile-fence-hedge-h';
     case 'Y': return 'tile-fence-vine';
     case 'Z': return 'tile-gate';
     case 'H': return 'tile-wall';
@@ -223,7 +224,7 @@ function mainTileClass(type) {
   }
 }
 
-const MAIN_OBSTACLES = new Set(['H', 'K', 'I', 'W', 'S', 'X', 'Y', 'B']);
+const MAIN_OBSTACLES = new Set(['H', 'K', 'I', 'W', 'S', 'X', 'Y', 'B', 'Q']);
 
 function houseUnlocked() { return collectedClues.length >= TOTAL_CLUE_GIVERS; }
 
@@ -240,17 +241,28 @@ function mainStructures() {
     // Parras junto a la valla derecha, cada 2 bloques desde la entrada.
     ...([21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1].map(row => ({
       src: 'game/cropped/parra_title.png', aspect: 700 / 544,
-      colStart: 12, colEnd: 12, bottomRow: row + 1, matchWidth: true, scale: 1.66, sway: true,
+      colStart: 12, colEnd: 12, bottomRow: row + 1, blockRow: row, matchWidth: true, scale: 1.66, sway: true,
     }))),
     // Almendros flanqueando la entrada del invernadero, un poco más
     // separados (uno un bloque más arriba, el otro un bloque más abajo).
     { src: 'game/cropped/almendro_title.png', aspect: 700 / 620,
-      colStart: 9, colEnd: 9, bottomRow: 15, matchWidth: true, scale: 2.0, sway: true },
+      colStart: 9, colEnd: 9, bottomRow: 15, blockRow: 14, matchWidth: true, scale: 2.0, sway: true },
     { src: 'game/cropped/almendro_title.png', aspect: 700 / 620,
-      colStart: 9, colEnd: 9, bottomRow: 19, matchWidth: true, scale: 2.0, sway: true },
+      colStart: 9, colEnd: 9, bottomRow: 19, blockRow: 18, matchWidth: true, scale: 2.0, sway: true },
     // Olivo en el lado izquierdo del campo de cultivo
     { src: 'game/cropped/olivo_title.png', aspect: 700 / 619,
-      colStart: 1, colEnd: 1, bottomRow: 22, matchWidth: true, scale: 2.0, sway: true },
+      colStart: 1, colEnd: 1, bottomRow: 22, blockRow: 21, matchWidth: true, scale: 2.0, sway: true },
+    // Plantas de cultivo en el huerto, repartidas con espacio de por
+    // medio (tamaño acorde a una planta real, no a un árbol)
+    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 3, colEnd: 3, bottomRow: 21, matchWidth: true, scale: 0.78 },
+    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 5, colEnd: 5, bottomRow: 21, matchWidth: true, scale: 0.48 },
+    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 7, colEnd: 7, bottomRow: 21, matchWidth: true, scale: 0.76 },
+    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 2, colEnd: 2, bottomRow: 23, matchWidth: true, scale: 0.48 },
+    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 4, colEnd: 4, bottomRow: 23, matchWidth: true, scale: 0.76 },
+    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 6, colEnd: 6, bottomRow: 23, matchWidth: true, scale: 0.78 },
+    { src: 'game/cropped/esparraguera_title.png', aspect: 500 / 593, colStart: 3, colEnd: 3, bottomRow: 25, matchWidth: true, scale: 0.76 },
+    { src: 'game/cropped/tomatera_title.png', aspect: 500 / 638, colStart: 5, colEnd: 5, bottomRow: 25, matchWidth: true, scale: 0.78 },
+    { src: 'game/cropped/patatas_title.png', aspect: 500 / 633, colStart: 7, colEnd: 7, bottomRow: 25, matchWidth: true, scale: 0.48 },
   ];
 }
 
@@ -295,6 +307,7 @@ const AREAS = {
     tileClass: mainTileClass,
     objects: mainObjects,
     structures: mainStructures,
+    blocked: mainBlockedPoints,
     warps: MAIN_WARPS,
   },
   house: {
@@ -446,7 +459,17 @@ function isBlocked(col, row) {
   const a = area();
   if (col < 0 || row < 0 || col >= a.cols || row >= a.rows) return true;
   if (a.obstacles.has(a.grid[row][col])) return true;
+  if (a.blocked && a.blocked().some(p => p.col === col && p.row === row)) return true;
   return a.objects().some(o => o.col === col && o.row === row);
+}
+
+// Puntos bloqueados por árboles/plantas decorativas (parras, almendros,
+// olivo) que no son "objects" interactuables pero sí deben colisionar;
+// se derivan de mainStructures() para no duplicar coordenadas.
+function mainBlockedPoints() {
+  return mainStructures()
+    .filter(s => s.blockRow != null)
+    .map(s => ({ col: s.colStart, row: s.blockRow }));
 }
 
 function tryMove(dx, dy, forcedFacing) {

@@ -403,6 +403,10 @@ html, body {
     repeating-linear-gradient(90deg, rgba(255,255,255,0.12) 0 2px, transparent 2px 22px);
 }
 .tile-fence-hedge { background: url('game/cropped/arizonica_tile.png') center/cover; }
+.tile-fence-hedge-h {
+  background: url('game/cropped/arizonica_tile.png') center/cover;
+  transform: rotate(90deg);
+}
 .tile-fence-vine { background: url('game/Delimitación parcela_title.jpeg') center/cover; }
 .tile-gate {
   background-color: #8a8a8a;
