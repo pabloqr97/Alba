@@ -157,15 +157,17 @@ function buildMainGrid() {
   g[3][6] = 'O';
 
   // Caseta de barbacoa + alacena (una sola estructura, imagen real encima);
-  // debajo, césped en vez del asfalto suelto que quedaba
+  // un parche de tierra delante (a juego con la franja de la valla) y
+  // césped al otro lado, en vez del asfalto suelto que quedaba
   for (let r = 5; r <= 9; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
-  g[10][1] = 'G'; g[10][2] = 'G'; g[11][2] = 'G'; g[12][2] = 'G';
+  g[4][2] = 'D';
+  g[10][2] = 'G'; g[11][2] = 'G'; g[12][2] = 'G';
 
   // Piscina: solo agua, sin bordillo, 6 cuadrados (2x3), un poco elevada
   for (let r = 10; r <= 11; r++) for (let c = 4; c <= 6; c++) g[r][c] = 'W';
   // Césped donde antes había piscina (fila de arriba y columna de la izquierda)
   for (let c = 3; c <= 6; c++) g[9][c] = 'G';
-  g[10][3] = 'G'; g[11][3] = 'G';
+  g[10][3] = 'G'; g[11][3] = 'G'; g[12][3] = 'G';
   // Bordillo elevado justo bajo el agua (no se puede pisar desde ningún lado)
   for (let c = 4; c <= 6; c++) g[12][c] = 'B';
 
@@ -181,7 +183,7 @@ function buildMainGrid() {
 
   // Franja de tierra-plantas junto a la valla izquierda (se salta la caseta
   // y el hueco de césped justo debajo de ella)
-  [1, 2, 3, 4, 11, 12, 13, 14, 15, 16, 17, 18].forEach(r => { g[r][1] = 'D'; });
+  [1, 2, 3, 4, 10, 11, 12, 13, 14, 15, 16, 17, 18].forEach(r => { g[r][1] = 'D'; });
   // Franja de tierra-plantas al lado izquierdo del camino: solo junto a la
   // piscina (arriba se junta con el asfalto de la casa, abajo pasa a césped)
   [7, 8, 9, 10, 11].forEach(r => { g[r][9] = 'D'; });
@@ -236,19 +238,6 @@ function mainStructures() {
       colStart: 1, colEnd: 1, bottomRow: 4, matchWidth: true, scale: 1.37 },
     { src: 'game/cropped/deco_tree_willow.png', aspect: 156 / 180,
       colStart: 12, colEnd: 12, bottomRow: 21, matchWidth: true, scale: 1.56 },
-    // Cultivos plantados en el huerto (sin diálogo, solo ambientación)
-    { src: 'game/cropped/crop_carrot.png', aspect: 66 / 54,
-      colStart: 2, colEnd: 2, bottomRow: 21, matchWidth: true, scale: 1.10 },
-    { src: 'game/cropped/crop_carrot.png', aspect: 66 / 54,
-      colStart: 6, colEnd: 6, bottomRow: 23, matchWidth: true, scale: 1.10 },
-    { src: 'game/cropped/crop_tomato.png', aspect: 66 / 60,
-      colStart: 4, colEnd: 4, bottomRow: 22, matchWidth: true, scale: 0.99 },
-    { src: 'game/cropped/crop_tomato.png', aspect: 66 / 60,
-      colStart: 7, colEnd: 7, bottomRow: 25, matchWidth: true, scale: 0.99 },
-    { src: 'game/cropped/crop_blueberry.png', aspect: 84 / 54,
-      colStart: 3, colEnd: 3, bottomRow: 24, matchWidth: true, scale: 1.40 },
-    { src: 'game/cropped/crop_blueberry.png', aspect: 84 / 54,
-      colStart: 5, colEnd: 5, bottomRow: 20, matchWidth: true, scale: 1.40 },
   ];
 }
 

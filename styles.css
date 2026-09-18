@@ -372,14 +372,11 @@ html, body {
   position: relative;
 }
 
-/* Suelo por defecto: empedrado (pixel art) */
-.tile-asphalt { background: url('game/cropped/path_pixel.png') center/cover; image-rendering: pixelated; filter: brightness(1.05); }
-.tile-path { background: url('game/cropped/path_pixel.png') center/cover; image-rendering: pixelated; }
+/* Suelo por defecto: asfalto */
+.tile-asphalt { background: url('game/path_tile.jpeg') center/cover; filter: brightness(1.08); }
+.tile-path { background: url('game/path_tile.jpeg') center/cover; }
 .tile-grass { background: url('game/grass_tile.jpeg') center/cover; }
-.tile-crop {
-  background-color: #c2663d;
-  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0 3px, transparent 3px 13px);
-}
+.tile-crop { background: url('game/crop_tile.jpeg') center/cover; }
 .tile-dirtplants {
   background-color: #8a6a45;
   background-image: url('game/cropped/grass_tuft.png');
@@ -389,14 +386,13 @@ html, body {
   image-rendering: pixelated;
 }
 .tile-curb {
-  background-color: #c2663d;
   background-image:
     linear-gradient(90deg, transparent 0%, transparent 56%, rgba(160,160,155,0.95) 56%, rgba(160,160,155,0.95) 64%, transparent 64%, transparent 100%),
-    url('game/cropped/path_pixel.png');
-  background-size: 100% 100%, 44% 100%;
-  background-position: left, right;
-  background-repeat: no-repeat, no-repeat;
-  image-rendering: pixelated;
+    url('game/path_tile.jpeg'),
+    url('game/crop_tile.jpeg');
+  background-size: 100% 100%, 44% 100%, 60% 100%;
+  background-position: left, right, left;
+  background-repeat: no-repeat, no-repeat, no-repeat;
 }
 
 /* Casa/invernadero: la imagen real (map-structures) cubre esta zona */
@@ -438,10 +434,7 @@ html, body {
 
 /* Interiores pequeños */
 .tile-interior-floor { background: #e8d9b8; }
-.tile-interior-floor-crop {
-  background-color: #c2663d;
-  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0 3px, transparent 3px 13px);
-}
+.tile-interior-floor-crop { background: url('game/crop_tile.jpeg') center/cover; }
 .tile-interior-wall { background: #7a4e2d; }
 .tile-door-warp {
   background: #3a2a1a;
