@@ -159,7 +159,7 @@ function buildMainGrid() {
   // Caseta de barbacoa + alacena (una sola estructura, imagen real encima);
   // debajo, césped en vez del asfalto suelto que quedaba
   for (let r = 5; r <= 9; r++) for (let c = 1; c <= 2; c++) g[r][c] = 'K';
-  g[10][1] = 'G'; g[10][2] = 'G';
+  g[10][1] = 'G'; g[10][2] = 'G'; g[11][2] = 'G'; g[12][2] = 'G';
 
   // Piscina: solo agua, sin bordillo, 6 cuadrados (2x3), un poco elevada
   for (let r = 10; r <= 11; r++) for (let c = 4; c <= 6; c++) g[r][c] = 'W';
@@ -229,11 +229,26 @@ function mainStructures() {
       colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.05 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
       colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25 },
-    // Árboles decorativos (sin diálogo, solo ambientación)
+    // Árboles decorativos (sin diálogo, solo ambientación), pegados al
+    // borde de la valla — el interior de la parcela (junto a la piscina)
+    // se deja solo para el madroño.
     { src: 'game/cropped/deco_tree_round.png', aspect: 135 / 177,
-      colStart: 5, colEnd: 5, bottomRow: 9, matchWidth: true, scale: 1.37 },
+      colStart: 1, colEnd: 1, bottomRow: 4, matchWidth: true, scale: 1.37 },
     { src: 'game/cropped/deco_tree_willow.png', aspect: 156 / 180,
-      colStart: 8, colEnd: 8, bottomRow: 13, matchWidth: true, scale: 1.56 },
+      colStart: 12, colEnd: 12, bottomRow: 21, matchWidth: true, scale: 1.56 },
+    // Cultivos plantados en el huerto (sin diálogo, solo ambientación)
+    { src: 'game/cropped/crop_carrot.png', aspect: 66 / 54,
+      colStart: 2, colEnd: 2, bottomRow: 21, matchWidth: true, scale: 1.10 },
+    { src: 'game/cropped/crop_carrot.png', aspect: 66 / 54,
+      colStart: 6, colEnd: 6, bottomRow: 23, matchWidth: true, scale: 1.10 },
+    { src: 'game/cropped/crop_tomato.png', aspect: 66 / 60,
+      colStart: 4, colEnd: 4, bottomRow: 22, matchWidth: true, scale: 0.99 },
+    { src: 'game/cropped/crop_tomato.png', aspect: 66 / 60,
+      colStart: 7, colEnd: 7, bottomRow: 25, matchWidth: true, scale: 0.99 },
+    { src: 'game/cropped/crop_blueberry.png', aspect: 84 / 54,
+      colStart: 3, colEnd: 3, bottomRow: 24, matchWidth: true, scale: 1.40 },
+    { src: 'game/cropped/crop_blueberry.png', aspect: 84 / 54,
+      colStart: 5, colEnd: 5, bottomRow: 20, matchWidth: true, scale: 1.40 },
   ];
 }
 
