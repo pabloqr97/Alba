@@ -400,7 +400,7 @@ html, body {
 .tile-shed { background: #cfa15f; }
 .tile-greenhouse-floor { background-color: #cfe8e0; }
 
-.tile-pool { background: url('game/cropped/pool_water_tile.png') center/cover; }
+.tile-pool { background: url('game/cropped/pool_water_pixel.png') center/cover; image-rendering: pixelated; }
 
 .tile-poolcurb {
   background-color: #b9b3a8;

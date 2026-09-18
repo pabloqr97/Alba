@@ -21,38 +21,38 @@ const HUMAN_CHARACTERS = [
   { id: 'madre', col: 3, row: 13, sprite: 'madre_down', label: 'Mamá',
     text: '¡Alba! Por fin llegas, te tengo preparadas unas lentejas que te vas a chupar los dedos, las alitas hoy se las dejamos a Pabolito jejejeje. Por cierto, ¿he escuchado que te va a regalar el nuevo iPhone?',
     clue: 'El nuevo iPhone.', clueInline: true },
-  { id: 'abuela2', col: 9, row: 23, sprite: 'abuela2_down', label: 'La abuela',
+  { id: 'abuela2', col: 9, row: 23, sprite: 'abuela2_down', label: 'Abuela Sofi',
     text: '¡Pero bueno qué sorpresa Alba! ¿Cómo están vuestras plantas? Si llego a saber que vienes te hubiese cortado un poquito del helecho que está bárbaro. Pasa pasa, Pablo está dentro, me había dicho que no te dijese nada de lo que te va a regalar por tu cumpleaños, pero yo creo que tiene algo que ver con un Mak? Mac? Uy no sé....',
     clue: 'Un Mac (ordenador).', clueInline: true },
-  { id: 'abuelo2', col: 9, row: 2, sprite: 'abuelo2_down', label: 'El abuelo',
+  { id: 'abuelo2', col: 9, row: 2, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
     text: '(Diálogo profundo por escribir.)',
     clue: 'Pablo me dijo que estaba pensando regalarte una noche de cine en casa.' },
-  { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Tu hermana',
+  { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Hermanita',
     text: '¡Hermana! Como te echaba de menos, por fin llegas, papá se ha puesto ya con la barbacoa y Nuka no para de mordisquear piedras... ¡Pasa pasa, que luego jugamos al Voley! Por cierto, Pablo me ha contado algo de tu regalo, creo que te va a gustar, creo que era algo como de un viaje a... ¿Canadá?',
     clue: 'Un viaje a Canadá.', clueInline: true },
-  { id: 'abuela1', col: 7, row: 13, sprite: 'abuela1_down', label: 'Tu otra abuela',
+  { id: 'abuela1', col: 7, row: 13, sprite: 'abuela1_down', label: 'Abuela Encarna',
     text: '(Diálogo profundo por escribir.)',
     clue: 'Pablo me dijo que estaba pensando regalarte un fin de semana en un balneario.' },
 ];
 
 // El abuelo que murió: vive dentro del invernadero, junto a Sando. Su
-// "pista" cuenta igual para desbloquear la casa. Sin arte propio todavía.
+// "pista" cuenta igual para desbloquear la casa.
 const GREENHOUSE_ABUELO = {
-  id: 'abuelo', label: 'El abuelo',
+  id: 'abuelo', label: 'Abuelo Manolo', sprite: 'abuelo1_down',
   text: 'En el huerto, donde siempre estaba tu abuelo.\nSigue aquí, en cada rincón de la parcela.',
   clue: 'Pablo me dijo que tenía algo que ver con música... o un concierto. No quiso decir más.',
   isKarolG: true,
 };
 const GREENHOUSE_SANDO = {
-  id: 'sando', label: 'Sando', sprite: 'sando_down',
+  id: 'sando', label: 'Sandete', sprite: 'sando_down', small: true,
   text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, jugando con el abuelo.',
 };
 
 // Perros de la familia: solo recuerdo, sin pista de regalo.
 const DOG_MEMORIES = [
-  { id: 'turka', col: 3, row: 7, sprite: 'turka_down', label: 'Turka',
+  { id: 'turka', col: 3, row: 7, sprite: 'turka_down', label: 'Turka', small: true,
     text: 'Pensamiento de Alba: «No le quita ojo a las alitas de la barbacoa».\nTurka se acerca a ti para que la acaricies.' },
-  { id: 'nuka', col: 2, row: 3, sprite: 'nuka_down', label: 'Nuka',
+  { id: 'nuka', col: 2, row: 3, sprite: 'nuka_down', label: 'Nukita', small: true,
     text: 'Nuka: «¡Guau! ¡Guau!»\nAlba: «¡Nuka, deja de morder!»' },
 ];
 
@@ -238,17 +238,29 @@ function mainStructures() {
     // el único árbol interactuable por ahora es el madroño).
     // Parras junto a la valla derecha, cada 4 bloques desde la entrada.
     ...([21, 17, 13, 9, 5, 1].map(row => ({
-      src: 'game/cropped/parra_title.png', aspect: 1675 / 1311,
+      src: 'game/cropped/parra_title.png', aspect: 700 / 544,
       colStart: 12, colEnd: 12, bottomRow: row + 1, matchWidth: true, scale: 1.66, sway: true,
     }))),
-    // Almendros a cada lado del invernadero
-    { src: 'game/cropped/almendro_title.png', aspect: 1571 / 1394,
-      colStart: 2, colEnd: 2, bottomRow: 17, matchWidth: true, scale: 2.0, sway: true },
-    { src: 'game/cropped/almendro_title.png', aspect: 1571 / 1394,
-      colStart: 9, colEnd: 9, bottomRow: 17, matchWidth: true, scale: 2.0, sway: true },
+    // Almendros flanqueando la entrada del invernadero (las dos esquinas
+    // donde no se puede entrar), no en los laterales de la estructura.
+    { src: 'game/cropped/almendro_title.png', aspect: 700 / 620,
+      colStart: 9, colEnd: 9, bottomRow: 16, matchWidth: true, scale: 2.0, sway: true },
+    { src: 'game/cropped/almendro_title.png', aspect: 700 / 620,
+      colStart: 9, colEnd: 9, bottomRow: 18, matchWidth: true, scale: 2.0, sway: true },
     // Olivo en el lado izquierdo del campo de cultivo
-    { src: 'game/cropped/olivo_title.png', aspect: 1579 / 1399,
+    { src: 'game/cropped/olivo_title.png', aspect: 700 / 619,
       colStart: 1, colEnd: 1, bottomRow: 22, matchWidth: true, scale: 2.0, sway: true },
+    // Plantas pequeñas en los huecos entre parras (de 4 en 4) y por el huerto
+    { src: 'game/cropped/plant_sprout.png', aspect: 1, colStart: 12, colEnd: 12, bottomRow: 20, matchWidth: true, scale: 0.5 },
+    { src: 'game/cropped/plant_corn.png', aspect: 1, colStart: 12, colEnd: 12, bottomRow: 16, matchWidth: true, scale: 0.75 },
+    { src: 'game/cropped/plant_sunflower.png', aspect: 112 / 128, colStart: 12, colEnd: 12, bottomRow: 12, matchWidth: true, scale: 0.85 },
+    { src: 'game/cropped/plant_sunflower_bud.png', aspect: 96 / 104, colStart: 12, colEnd: 12, bottomRow: 8, matchWidth: true, scale: 0.6 },
+    { src: 'game/cropped/plant_leaf.png', aspect: 1, colStart: 12, colEnd: 12, bottomRow: 4, matchWidth: true, scale: 0.5 },
+    { src: 'game/cropped/plant_corn.png', aspect: 1, colStart: 2, colEnd: 2, bottomRow: 21, matchWidth: true, scale: 0.75 },
+    { src: 'game/cropped/plant_sunflower.png', aspect: 112 / 128, colStart: 6, colEnd: 6, bottomRow: 23, matchWidth: true, scale: 0.85 },
+    { src: 'game/cropped/plant_leaf.png', aspect: 1, colStart: 4, colEnd: 4, bottomRow: 25, matchWidth: true, scale: 0.5 },
+    { src: 'game/cropped/plant_sprout.png', aspect: 1, colStart: 7, colEnd: 7, bottomRow: 20, matchWidth: true, scale: 0.5 },
+    { src: 'game/cropped/plant_sunflower_bud.png', aspect: 96 / 104, colStart: 3, colEnd: 3, bottomRow: 24, matchWidth: true, scale: 0.6 },
   ];
 }
 
@@ -391,7 +403,7 @@ function renderObjects() {
     if (obj.sprite) {
       el.classList.add('character');
       if (obj.tree) el.classList.add('tree');
-      else if (!HUMAN_CHARACTERS.includes(obj) && obj.id !== 'pablo') el.classList.add('small');
+      else if (obj.small) el.classList.add('small');
       const img = document.createElement('img');
       img.src = `game/cropped/${obj.sprite}.png`;
       img.alt = '';
