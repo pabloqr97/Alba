@@ -30,6 +30,9 @@ const HUMAN_CHARACTERS = [
   { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Tu hermana',
     text: '¡Hermana! Como te echaba de menos, por fin llegas, papá se ha puesto ya con la barbacoa y Nuka no para de mordisquear piedras... ¡Pasa pasa, que luego jugamos al Voley! Por cierto, Pablo me ha contado algo de tu regalo, creo que te va a gustar, creo que era algo como de un viaje a... ¿Canadá?',
     clue: 'Un viaje a Canadá.', clueInline: true },
+  { id: 'abuela1', col: 7, row: 13, sprite: 'abuela1_down', label: 'Tu otra abuela',
+    text: '(Diálogo profundo por escribir.)',
+    clue: 'Pablo me dijo que estaba pensando regalarte un fin de semana en un balneario.' },
 ];
 
 // El abuelo que murió: vive dentro del invernadero, junto a Sando. Su
@@ -231,13 +234,21 @@ function mainStructures() {
       colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.05 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
       colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25 },
-    // Árboles decorativos (sin diálogo, solo ambientación), pegados al
-    // borde de la valla — el interior de la parcela (junto a la piscina)
-    // se deja solo para el madroño.
-    { src: 'game/cropped/deco_tree_round.png', aspect: 135 / 177,
-      colStart: 1, colEnd: 1, bottomRow: 4, matchWidth: true, scale: 1.37 },
-    { src: 'game/cropped/deco_tree_willow.png', aspect: 156 / 180,
-      colStart: 12, colEnd: 12, bottomRow: 21, matchWidth: true, scale: 1.56 },
+    // Árboles/plantas decorativas (sin diálogo, solo ambientación —
+    // el único árbol interactuable por ahora es el madroño).
+    // Parras junto a la valla derecha, cada 4 bloques desde la entrada.
+    ...([21, 17, 13, 9, 5, 1].map(row => ({
+      src: 'game/cropped/parra_title.png', aspect: 1675 / 1311,
+      colStart: 12, colEnd: 12, bottomRow: row + 1, matchWidth: true, scale: 1.66, sway: true,
+    }))),
+    // Almendros a cada lado del invernadero
+    { src: 'game/cropped/almendro_title.png', aspect: 1571 / 1394,
+      colStart: 2, colEnd: 2, bottomRow: 17, matchWidth: true, scale: 2.0, sway: true },
+    { src: 'game/cropped/almendro_title.png', aspect: 1571 / 1394,
+      colStart: 9, colEnd: 9, bottomRow: 17, matchWidth: true, scale: 2.0, sway: true },
+    // Olivo en el lado izquierdo del campo de cultivo
+    { src: 'game/cropped/olivo_title.png', aspect: 1579 / 1399,
+      colStart: 1, colEnd: 1, bottomRow: 22, matchWidth: true, scale: 2.0, sway: true },
   ];
 }
 
@@ -356,7 +367,7 @@ function renderStructures() {
     const height = width / s.aspect;
     const centerCol = (s.colStart + s.colEnd + 1) / 2;
     const el = document.createElement('div');
-    el.className = 'map-structure';
+    el.className = 'map-structure' + (s.sway ? ' sway' : '');
     el.style.width = width + 'px';
     el.style.height = height + 'px';
     el.style.left = (centerCol * tileSize - width / 2) + 'px';
