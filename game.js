@@ -34,7 +34,7 @@ const HUMAN_CHARACTERS = [
   { id: 'abuela2', col: 9, row: 21, sprite: 'abuela2_down', label: 'Abuela Sofi',
     text: '¡Pero bueno qué sorpresa Alba! ¿Cómo están vuestras plantas? Si llego a saber que vienes te hubiese cortado un poquito del helecho que está bárbaro. Pasa pasa, Pablo está dentro, me había dicho que no te dijese nada de lo que te va a regalar por tu cumpleaños, pero yo creo que tiene algo que ver con un Mak? Mac? Uy no sé....',
     clue: 'Un Mac (ordenador).', clueInline: true },
-  { id: 'abuelo2', col: 9, row: 4, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
+  { id: 'abuelo2', col: 10, row: 4, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
     text: '(Diálogo profundo por escribir.)',
     clue: 'Pablo me dijo que estaba pensando regalarte una noche de cine en casa.' },
   { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Hermanita',
@@ -72,8 +72,8 @@ const MAP_COLS = 14;
 const MAP_ROWS = 26;
 const VIEW_COLS = 8;
 const VIEW_ROWS = 9;
-// La escalera ocupa dos casillas (5 y 6): las dos suben a la puerta
-const HOUSE_DOOR_KEYS = ['5,3', '6,3'];
+// La escalera ocupa dos casillas (6 y 7): las dos suben a la puerta
+const HOUSE_DOOR_KEYS = ['6,3', '7,3'];
 const GREENHOUSE_ROWS = [16];
 const GREENHOUSE_DOOR_COL = 8;
 
@@ -322,11 +322,11 @@ function buildMainGrid() {
   // dibujados, así que el suelo debajo se deja en asfalto normal)
   // La colisión sigue el relieve: filas 1-3 bloqueadas en todo el ancho
   // (salvo las puertas); se puede pisar la fila 4: la base, la escalera y,
-  // en los extremos sin porche (cols 3, 8, 9), el pie de la pared.
-  for (let r = 1; r <= 2; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'H';
+  // en los extremos sin porche (cols 4, 9, 10), el pie de la pared.
+  for (let r = 1; r <= 2; r++) for (let c = 4; c <= 10; c++) g[r][c] = 'H';
   // (extremos sin porche: solo hasta la fila 4, si no parece que se sube a la casa)
-  for (let c = 3; c <= 9; c++) g[3][c] = 'H';
-  g[3][5] = 'O'; g[3][6] = 'O';   // puertas (una por cada escalón)
+  for (let c = 4; c <= 10; c++) g[3][c] = 'H';
+  g[3][6] = 'O'; g[3][7] = 'O';   // puertas (una por cada escalón)
 
   // Caseta de barbacoa + alacena (una sola estructura, imagen real
   // encima); césped al otro lado, en vez del asfalto suelto que quedaba
@@ -351,6 +351,8 @@ function buildMainGrid() {
 
   // Camino largo (asfalto) a lo largo de todo el lateral derecho
   for (let r = 1; r <= 24; r++) { g[r][10] = 'P'; g[r][11] = 'P'; }
+  // La casa invade la primera columna del camino, arriba del todo
+  for (let r = 1; r <= 3; r++) g[r][10] = 'H';
 
   // Franja de tierra-plantas junto a la valla izquierda (se salta la caseta
   // y el hueco de césped justo debajo de ella)
@@ -409,9 +411,9 @@ function mainStructures() {
     { src: 'game/cropped/puerta_title.png', aspect: 1200 / 498,
       colStart: 10, colEnd: 11, bottomRow: 26, matchWidth: true, scale: 1.3 },
     // Casa nueva (ancha, 7 casillas): las dos versiones comparten lienzo, así
-    // que al abrirse no se mueve nada. Escalera en la casilla (6,4), puerta en (6,3).
+    // que al abrirse no se mueve nada. Escaleras en las casillas (6,4) y (7,4), puertas en (6,3) y (7,3).
     { src: houseUnlocked() ? 'game/cropped/casa_abierta.png' : 'game/cropped/casa.png',
-      aspect: 1408 / 996, colStart: 3, colEnd: 9, bottomRow: 5, matchWidth: true, scale: 1.0 },
+      aspect: 1408 / 996, colStart: 4, colEnd: 10, bottomRow: 5, matchWidth: true, scale: 1.0 },
     { src: 'game/cropped/invernadero_title.png', aspect: 1400 / 525,
       colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.1 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
