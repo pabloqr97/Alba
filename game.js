@@ -157,7 +157,7 @@ const SETTINGS = [
     levels: [
       'Desactivado — el rifle de perdigones está encima de la mesa (mala idea)',
       'Vigilado — el rifle está en el armario, pero con la llave puesta',
-      'Activo — rifle de perdigones guardado bajo llave (sí, hay uno en la parcela)',
+      'Activo — rifle de perdigones guardado bajo llave',
     ],
   },
 ];

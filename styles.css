@@ -127,7 +127,7 @@ html, body {
   from { transform: translateY(0); }
   to { transform: translateY(var(--pan-dist, 0px)); }
 }
-.menu-wrap { position: relative; z-index: 2; width: min(460px, 92vw); --menu-t: clamp(26px, 8.4vw, 60px); }
+.menu-wrap { position: relative; z-index: 2; width: min(680px, 96vw); --menu-t: clamp(26px, 8.4vw, 60px); }
 .game-title {
   font-family: 'Press Start 2P', monospace;
   font-size: var(--menu-t);
