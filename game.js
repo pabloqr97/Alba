@@ -452,7 +452,7 @@ const AREAS = {
 };
 
 let currentArea = 'main';
-const player = { col: 11, row: 23, facing: 'up' };
+const player = { col: 11, row: 23, facing: 'up', walkFrame: 0 };
 let currentTarget = null;
 let pendingOverlayAction = null;
 
@@ -606,20 +606,29 @@ function renderPlayerPosition() {
   updateCamera();
 }
 
-// Precarga las 3 imágenes del jugador para que al girar no se vea un
-// fotograma con la dirección equivocada mientras carga la nueva.
-['down', 'up', 'left'].forEach(f => { new Image().src = `game/cropped/player_${f}.png`; });
+// Precarga las imágenes del jugador (quieto y 2 fotogramas de andar por
+// dirección) para que al girar no se vea un fotograma equivocado.
+['down', 'up', 'left'].forEach(f => {
+  ['', '_walk1', '_walk2'].forEach(s => { new Image().src = `game/cropped/player_${f}${s}.png`; });
+});
 
+// walkFrame: 0 = quieta; 1/2 = fotogramas de andar (un pie por delante y luego el otro)
 function renderPlayerSprite() {
   const img = document.getElementById('player-img');
   const sprite = document.getElementById('player-sprite');
-  if (player.facing === 'right') {
-    img.src = 'game/cropped/player_left.png';
-    sprite.classList.add('mirror');
-  } else {
-    img.src = `game/cropped/player_${player.facing}.png`;
-    sprite.classList.remove('mirror');
-  }
+  const base = player.facing === 'right' ? 'left' : player.facing;
+  const suffix = player.walkFrame ? `_walk${player.walkFrame}` : '';
+  img.src = `game/cropped/player_${base}${suffix}.png`;
+  sprite.classList.toggle('mirror', player.facing === 'right');
+}
+
+let walkTimer = null;
+let stepMs = 300;
+function stepWalkFrame() {
+  player.walkFrame = player.walkFrame === 1 ? 2 : 1;
+  renderPlayerSprite();
+  clearTimeout(walkTimer);
+  walkTimer = setTimeout(() => { player.walkFrame = 0; renderPlayerSprite(); }, stepMs + 120);
 }
 
 function isBlocked(col, row) {
@@ -657,6 +666,7 @@ function tryMove(dx, dy, forcedFacing) {
   if (!isBlocked(targetCol, targetRow)) {
     player.col = targetCol;
     player.row = targetRow;
+    stepWalkFrame();
     const sprite = document.getElementById('player-sprite');
     sprite.classList.remove('stepping');
     void sprite.offsetWidth;
@@ -1003,7 +1013,8 @@ function startMoveLoop(dir, facing, repeatMs) {
   currentDir = dir;
   clearInterval(moveInterval);
   // el deslizamiento dura lo que un paso, para caminar fluido y sin tirones
-  document.documentElement.style.setProperty('--step-ms', (repeatMs || MOVE_REPEAT_MS) + 'ms');
+  stepMs = repeatMs || MOVE_REPEAT_MS;
+  document.documentElement.style.setProperty('--step-ms', stepMs + 'ms');
   moveForDir(dir, facing);
   moveInterval = setInterval(() => moveForDir(dir, facing), repeatMs || MOVE_REPEAT_MS);
 }
