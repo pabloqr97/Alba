@@ -93,14 +93,13 @@ function runBoot() {
   const fill = document.getElementById('loadbar-fill');
   const flavor = document.getElementById('boot-flavor');
   const messages = [
-    'Cargando cariño...',
-    'Plantando fresas...',
-    'Espantando vecinos de la isla...',
-    'Puliendo los muebles de la parcela...',
+    'Plantando tomates...',
+    'Recogiendo patatas...',
+    'Aplastando bicho de la patata...',
+    'Preparando la barbacoa...',
+    'Llenando la piscina...',
+    'Partiendo almendras...',
     'Regando el huerto...',
-    'Calentando el invernadero...',
-    'Cociendo algo en el mortero...',
-    'Repasando fotos antiguas...',
     'Casi está...',
   ];
   const totalSteps = 12;

@@ -62,25 +62,22 @@ html, body {
   background: radial-gradient(circle at 50% 30%, #2b2f26, #14150f 75%);
   color: var(--cream);
 }
-.boot-wrap { max-width: 480px; }
+.boot-wrap { --boot-t: clamp(28px, 9vw, 52px); max-width: 600px; }
 .boot-studio {
   font-family: 'Press Start 2P', monospace;
-  font-size: 11px;
-  letter-spacing: 2px;
+  /* más corto que el título: 23 letras al ~30% del tamaño de las 10 del título */
+  font-size: calc(var(--boot-t) * 0.3);
+  letter-spacing: 1px;
+  white-space: nowrap;
   opacity: 0.75;
   margin-bottom: 18px;
 }
 .boot-title {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(16px, 4vw, 26px);
-  line-height: 1.6;
-  margin: 0 0 10px;
-  text-shadow: 0 3px 0 rgba(0,0,0,0.4);
-}
-.boot-subtitle {
-  font-size: 14px;
-  opacity: 0.8;
-  margin: 0 0 40px;
+  font-size: var(--boot-t);
+  line-height: 1.4;
+  margin: 0 0 44px;
+  text-shadow: 0 4px 0 rgba(0,0,0,0.4);
 }
 .loadbar-track {
   width: 280px;
