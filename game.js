@@ -2,12 +2,21 @@
 // CONFIGURACIÓN EDITABLE — cambia aquí el contenido sin tocar el resto
 // ============================================================
 
-// Objetos con los que Alba puede hablar para desbloquear un recuerdo
-// (sin pista de regalo). Los que no tienen "sprite" muestran un marcador
-// neutro (sin emoji) hasta que tengan arte propio.
+// RECUERDOS (se consiguen interactuando con objetos y con los perros; las
+// personas NO dan recuerdos, dan pistas). Los que no tienen "sprite" solo
+// muestran el brillo hasta que tengan arte propio.
 const OBJECT_MEMORIES = [
   { id: 'madrono', col: 8, row: 9, sprite: 'madroño_title', tree: true, label: 'El madroño',
     text: 'El madroño de la parcela.\n(Recuerdo por escribir.)' },
+  // El bicho de la patata (sobre la mata que está frente a Hermanita): al
+  // tocarlo, es ella quien salta, se acerca y habla; luego vuelve a su sitio.
+  { id: 'patata', col: 5, row: 20, sprite: 'bicho_title', item: true, label: 'Bicho de la patata',
+    speaker: 'hermana',
+    text: '¡Hermana mira cuántos bichos de la patata he atrapado! Corre, coge los tuyos y vamos al camino a aplastarlos. ¿Te acuerdas de todos los que aplastamos de pequeñas?' },
+  { id: 'almendro', col: 9, row: 14, sprite: 'almendra_title', item: true, label: 'El almendro',
+    text: 'Una almendra caída del almendro.\n(Recuerdo por escribir.)' },
+  { id: 'tomatera', col: 6, row: 22, label: 'La tomatera',
+    text: 'Una tomatera del huerto.\n(Recuerdo por escribir.)' },
 ];
 
 // Personas de la familia: cada una da un recuerdo profundo Y una pista de
@@ -48,7 +57,7 @@ const GREENHOUSE_SANDO = {
   text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, jugando con el abuelo.',
 };
 
-// Perros de la familia: solo recuerdo, sin pista de regalo.
+// Perros de la familia: cuentan como recuerdo, sin pista de regalo.
 const DOG_MEMORIES = [
   { id: 'turka', col: 5, row: 7, sprite: 'turka_down', label: 'Turka', small: true,
     text: 'Pensamiento de Alba: «No le quita ojo a las alitas de la barbacoa».\nTurka se acerca a ti para que la acaricies.' },
@@ -287,7 +296,8 @@ function buildMainGrid() {
   g[10][2] = 'G'; g[11][2] = 'G'; g[12][2] = 'G';
 
   // Piscina: solo agua, sin bordillo, 6 cuadrados (2x3), un poco elevada
-  for (let r = 10; r <= 11; r++) for (let c = 4; c <= 6; c++) g[r][c] = 'W';
+  // (la imagen de la piscina cubre las filas 11 y 12; la 10 queda de césped)
+  for (let c = 4; c <= 6; c++) { g[10][c] = 'G'; g[11][c] = 'W'; }
   // Césped donde antes había piscina (fila de arriba y columna de la izquierda)
   for (let c = 3; c <= 6; c++) g[9][c] = 'G';
   g[10][3] = 'G'; g[11][3] = 'G'; g[12][3] = 'G';
@@ -330,8 +340,8 @@ function mainTileClass(type) {
     case 'O': return 'tile-asphalt';
     case 'K': return 'tile-shed';
     case 'I': return 'tile-greenhouse-floor';
-    case 'W': return 'tile-pool';
-    case 'B': return 'tile-poolcurb';
+    case 'W': return 'tile-grass';   // el suelo real lo dibuja la imagen de la piscina
+    case 'B': return 'tile-grass';
     case 'P': return 'tile-path';
     case 'C': return 'tile-crop';
     case 'G': return 'tile-grass';
@@ -354,6 +364,9 @@ function mainStructures() {
       colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.05 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
       colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25 },
+    // Piscina elevada (imagen real): ocupa las filas 11-12, cols 4-6
+    { src: 'game/cropped/pool_title.png', aspect: 1200 / 548,
+      colStart: 4, colEnd: 6, bottomRow: 13, matchWidth: true, scale: 1.3 },
     // Árboles decorativos (sin diálogo, solo ambientación —
     // el único árbol interactuable por ahora es el madroño).
     // Parras junto a la valla derecha, cada 2 bloques desde la entrada.
@@ -458,6 +471,8 @@ let pendingOverlayAction = null;
 
 let collectedClues = []; // { text, isKarolG }
 const talkedTo = new Set();
+const memoriesFound = new Set(); // recuerdos (objetos y perros), no personas
+let inputLocked = false;      // durante escenas guiadas (p. ej. la de la patata)
 
 function area() { return AREAS[currentArea]; }
 
@@ -557,11 +572,14 @@ function renderObjects() {
     const el = document.createElement('div');
     el.className = 'map-object';
     el.dataset.id = obj.id;
+    if (obj.clue) el.classList.add('person');
+    else if (isMemoryObj(obj) && !memoriesFound.has(obj.id)) el.classList.add('memory');
     el.style.left = obj.col * tileSize + 'px';
     el.style.top = obj.row * tileSize + 'px';
 
     if (obj.sprite) {
       el.classList.add('character');
+      if (obj.item) el.classList.add('item');
       if (obj.tree) el.classList.add('tree');
       else {
         if (obj.small) el.classList.add('small');
@@ -846,7 +864,6 @@ function openOverlay(text, closeLabel, name) {
   dialogueCloseLabel = closeLabel || 'Cerrar';
   dialoguePages = paginateDialogue(text);
   dialoguePageIndex = 0;
-  document.getElementById('dialogue-hint').textContent = IS_TOUCH ? '' : 'Enter';
   document.getElementById('interaction-overlay').classList.add('active');
   document.getElementById('scene-overworld').classList.add('dialogue-open');
   showDialoguePage();
@@ -898,10 +915,15 @@ function handleTalk(obj) {
 
   const isNew = !talkedTo.has(obj.id);
   talkedTo.add(obj.id);
-  document.getElementById('hud-memories').textContent = talkedTo.size;
+
+  // Recuerdo (objeto o perro): cuenta para "Recuerdos" y deja de brillar
+  if (isMemoryObj(obj)) markMemoryFound(obj);
+
+  if (obj.speaker) { runSpeakerScene(obj); return; }
 
   let text = obj.text;
   if (obj.clue) {
+    // Persona: cuenta para "Pistas", no para "Recuerdos"
     if (isNew) collectedClues.push({ text: obj.clue, isKarolG: !!obj.isKarolG });
     if (!obj.clueInline) text += `\n\n"${obj.clue}"`;
     document.getElementById('hud-clues').textContent = collectedClues.length;
@@ -911,23 +933,122 @@ function handleTalk(obj) {
   openOverlay(text, 'Cerrar', obj.label);
 }
 
+function isMemoryObj(obj) { return !obj.clue && !obj.pabloTrigger; }
+
+function markMemoryFound(obj) {
+  memoriesFound.add(obj.id);
+  document.getElementById('hud-memories').textContent = memoriesFound.size;
+  const el = document.querySelector(`.map-object[data-id="${obj.id}"]`);
+  if (el) el.classList.remove('memory');
+}
+
+// ---- Escena guiada: otro personaje habla por el objeto (el bicho de la
+// patata -> Hermanita salta, se acerca, habla y luego vuelve a su sitio) ----
+const STEP_WALK_MS = 300;
+
+function findPath(from, to, isFree) {
+  const key = (c, r) => `${c},${r}`;
+  const prev = new Map([[key(from.col, from.row), null]]);
+  const queue = [from];
+  while (queue.length) {
+    const cur = queue.shift();
+    if (cur.col === to.col && cur.row === to.row) break;
+    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dc, dr]) => {
+      const n = { col: cur.col + dc, row: cur.row + dr };
+      const k = key(n.col, n.row);
+      if (prev.has(k) || !isFree(n.col, n.row)) return;
+      prev.set(k, cur);
+      queue.push(n);
+    });
+  }
+  const tk = key(to.col, to.row);
+  if (!prev.has(tk)) return null;
+  const path = [];
+  for (let n = to; n; n = prev.get(key(n.col, n.row))) path.unshift(n);
+  return path.slice(1);
+}
+
+function walkElement(el, path, done) {
+  const ts = getTileSizePx();
+  el.classList.add('walking');
+  let i = 0;
+  const next = () => {
+    if (i >= path.length) { done(); return; }
+    el.style.left = path[i].col * ts + 'px';
+    el.style.top = path[i].row * ts + 'px';
+    i++;
+    setTimeout(next, STEP_WALK_MS);
+  };
+  next();
+}
+
+function hopElement(el) {
+  if (!el || el.classList.contains('tree')) return;
+  el.classList.remove('hop');
+  void el.offsetWidth;
+  el.classList.add('hop');
+  el.addEventListener('animationend', () => el.classList.remove('hop'), { once: true });
+}
+
+function runSpeakerScene(obj) {
+  const speaker = HUMAN_CHARACTERS.find(h => h.id === obj.speaker);
+  const speakerEl = document.querySelector(`.map-object[data-id="${speaker.id}"]`);
+  const origin = { col: speaker.col, row: speaker.row };
+  inputLocked = true;
+  stopMoveLoop();
+  document.getElementById('action-btn').style.display = 'none';
+  // Alba mira hacia el bicho; este y Hermanita saltan de alegría
+  const dx = obj.col - player.col, dy = obj.row - player.row;
+  player.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+  renderPlayerSprite();
+  hopElement(document.querySelector(`.map-object[data-id="${obj.id}"]`));
+  hopElement(speakerEl);
+
+  setTimeout(() => {
+    // casilla libre junto a Alba, la más cercana a Hermanita
+    const free = (c, r) => (c === origin.col && r === origin.row) ||
+      (!isBlocked(c, r) && !(c === player.col && r === player.row));
+    const spots = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+      .map(([dc, dr]) => ({ col: player.col + dc, row: player.row + dr }))
+      .filter(p => free(p.col, p.row))
+      .map(p => ({ p, path: findPath(origin, p, free) }))
+      .filter(x => x.path)
+      .sort((a, b) => a.path.length - b.path.length);
+    const best = spots[0];
+    const goal = best ? best.p : origin;
+    const arrive = () => {
+      speakerEl.classList.remove('walking');
+      inputLocked = false;
+      zoomCameraTo(goal);
+      pendingOverlayAction = () => returnSpeakerHome(speakerEl, goal, origin, free);
+      openOverlay(obj.text, 'Cerrar', speaker.label);
+    };
+    if (best && best.path.length) walkElement(speakerEl, best.path, arrive);
+    else arrive();
+  }, 750);
+}
+
+function returnSpeakerHome(el, from, origin, free) {
+  const path = findPath(from, origin, free) || [];
+  if (!path.length) return;
+  walkElement(el, path, () => {
+    el.classList.remove('walking');
+    el.style.left = origin.col * getTileSizePx() + 'px';
+    el.style.top = origin.row * getTileSizePx() + 'px';
+  });
+}
+
 // Alba mira al personaje, este da un saltito de alegría y la cámara se acerca
 function reactToTalk(obj) {
   const dx = obj.col - player.col, dy = obj.row - player.row;
   player.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
   renderPlayerSprite();
-  const el = document.querySelector(`.map-object[data-id="${obj.id}"]`);
-  if (el && !el.classList.contains('tree')) {
-    el.classList.remove('hop');
-    void el.offsetWidth; // reinicia la animación si ya estaba puesta
-    el.classList.add('hop');
-    el.addEventListener('animationend', () => el.classList.remove('hop'), { once: true });
-  }
+  hopElement(document.querySelector(`.map-object[data-id="${obj.id}"]`));
   zoomCameraTo(obj);
 }
 
 function handleInteract() {
-  if (!currentTarget) return;
+  if (inputLocked || !currentTarget) return;
   handleTalk(currentTarget);
 }
 
@@ -943,6 +1064,7 @@ const heldDirs = [];
 
 document.addEventListener('keydown', (e) => {
   if (!document.getElementById('scene-overworld').classList.contains('active')) return;
+  if (inputLocked) { e.preventDefault(); return; }
   if (overlayActive()) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) advanceDialogue(); }
     else if (e.key === 'Escape') { e.preventDefault(); dialoguePageIndex = dialoguePages.length - 1; finishTyping(); document.getElementById('interaction-close').click(); }
@@ -1009,7 +1131,7 @@ function moveForDir(dir, facing) {
   else if (dir === 'right') tryMove(1, 0, facing);
 }
 function startMoveLoop(dir, facing, repeatMs) {
-  if (currentDir === dir) return;
+  if (inputLocked || currentDir === dir) return;
   currentDir = dir;
   clearInterval(moveInterval);
   // el deslizamiento dura lo que un paso, para caminar fluido y sin tirones
@@ -1057,7 +1179,7 @@ function initOverworld() {
   renderPlayerPosition();
   updateProximity();
   document.getElementById('hud-memories-total').textContent =
-    OBJECT_MEMORIES.length + HUMAN_CHARACTERS.length + DOG_MEMORIES.length + 2; // +2 = abuelo y Sando del invernadero
+    OBJECT_MEMORIES.length + DOG_MEMORIES.length + 1; // +1 = Sando (invernadero)
   document.getElementById('hud-clues-total').textContent = TOTAL_CLUE_GIVERS;
 }
 
@@ -1066,6 +1188,7 @@ function resetOverworld() {
   player.col = 11; player.row = 23; player.facing = 'up';
   collectedClues = [];
   talkedTo.clear();
+  memoriesFound.clear();
   document.getElementById('hud-memories').textContent = '0';
   document.getElementById('hud-clues').textContent = '0';
   buildMapDOM();
