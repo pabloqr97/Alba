@@ -749,8 +749,11 @@ function updateProximity() {
   const el = document.querySelector(`.map-object[data-id="${found.id}"]`);
   if (el) el.classList.add('near');
   btn.style.display = 'inline-block';
-  btn.textContent = 'Hablar';
-  hint.textContent = IS_TOUCH ? 'Hay alguien aquí. Toca "Hablar".' : 'Hay alguien aquí. Pulsa Espacio o "Hablar".';
+  // Personas: "Hablar". Objetos y perros: "Interactuar".
+  const verb = isMemoryObj(found) ? 'Interactuar' : 'Hablar';
+  btn.textContent = verb;
+  const what = isMemoryObj(found) ? 'Hay algo aquí' : 'Hay alguien aquí';
+  hint.textContent = IS_TOUCH ? `${what}. Toca "${verb}".` : `${what}. Pulsa Espacio o "${verb}".`;
 }
 
 // ---- Cuadro de diálogo: escritura letra a letra + zoom de cámara ----
