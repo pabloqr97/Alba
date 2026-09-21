@@ -744,11 +744,14 @@ function tryMove(dx, dy, forcedFacing) {
 
 function fadeToArea(name, enter) {
   const fade = document.getElementById('scene-fade');
+  // Sin movimiento mientras dura todo el fundido (salida, cambio y entrada)
+  inputLocked = true;
   stopMoveLoop();
   fade.classList.add('active');
   setTimeout(() => {
     enterArea(name, enter);
     setTimeout(() => fade.classList.remove('active'), 200);
+    setTimeout(() => { inputLocked = false; }, 200 + 450); // 0,4s del fundido de vuelta
   }, 420);
 }
 
@@ -757,11 +760,19 @@ function enterArea(name, enter) {
   player.col = enter.col;
   player.row = enter.row;
   player.facing = enter.facing;
+  // El cambio de sitio ocurre en negro: sin deslizar cámara ni jugador
+  const camera = document.getElementById('map-camera');
+  const sprite = document.getElementById('player-sprite');
+  camera.style.transition = 'none';
+  sprite.style.transition = 'none';
   buildMapDOM();
   renderObjects();
   renderPlayerSprite();
   renderPlayerPosition();
   updateProximity();
+  void camera.offsetWidth;
+  camera.style.transition = '';
+  sprite.style.transition = '';
 }
 
 function updateProximity() {
@@ -1175,6 +1186,7 @@ function moveDirFromAngle(angle) {
   return 'up';
 }
 function moveForDir(dir, facing) {
+  if (inputLocked) return;
   if (dir === 'up') tryMove(0, -1, facing);
   else if (dir === 'down') tryMove(0, 1, facing);
   else if (dir === 'left') tryMove(-1, 0, facing);
@@ -1188,6 +1200,8 @@ function startMoveLoop(dir, facing, repeatMs) {
   stepMs = repeatMs || MOVE_REPEAT_MS;
   document.documentElement.style.setProperty('--step-ms', stepMs + 'ms');
   moveForDir(dir, facing);
+  // si ese primer paso disparó un fundido (puerta), no arrancar el bucle
+  if (inputLocked) { currentDir = null; return; }
   moveInterval = setInterval(() => moveForDir(dir, facing), repeatMs || MOVE_REPEAT_MS);
 }
 function stopMoveLoop() {
