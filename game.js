@@ -320,12 +320,12 @@ function buildMainGrid() {
 
   // Casa: cuerpo (la imagen real ya trae su propio porche y escalera
   // dibujados, así que el suelo debajo se deja en asfalto normal)
-  // La colisión sigue el relieve: filas 1-2 en todo el ancho; en el porche
-  // (cols 4-7) también la fila 3 (y se puede pisar la 4, la base y la
-  // escalera); en los extremos sin porche (cols 3, 8, 9) se puede llegar
-  // hasta la fila 3, casi pegado a la pared.
+  // La colisión sigue el relieve: filas 1-3 bloqueadas en todo el ancho
+  // (salvo las puertas); se puede pisar la fila 4: la base, la escalera y,
+  // en los extremos sin porche (cols 3, 8, 9), el pie de la pared.
   for (let r = 1; r <= 2; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'H';
-  for (let c = 4; c <= 7; c++) g[3][c] = 'H';
+  // (extremos sin porche: solo hasta la fila 4, si no parece que se sube a la casa)
+  for (let c = 3; c <= 9; c++) g[3][c] = 'H';
   g[3][5] = 'O'; g[3][6] = 'O';   // puertas (una por cada escalón)
 
   // Caseta de barbacoa + alacena (una sola estructura, imagen real
