@@ -14,7 +14,7 @@ const OBJECT_MEMORIES = [
   { id: 'patata', col: 5, row: 20, label: 'Bicho de la patata',
     showcase: 'bicho_title', speaker: 'hermana',
     text: '¡Hermana mira cuántos bichos de la patata he atrapado! Corre, coge los tuyos y vamos al camino a aplastarlos. ¿Te acuerdas de todos los que aplastamos de pequeñas?' },
-  { id: 'almendro', col: 9, row: 14, label: 'El almendro', showcase: 'almendra_title',
+  { id: 'almendro', col: 9, row: 15, label: 'El almendro', showcase: 'almendra_title',
     text: 'Una almendra caída del almendro.\n(Recuerdo por escribir.)' },
   { id: 'tomatera', col: 5, row: 24, label: 'La tomatera',
     text: 'Una tomatera del huerto.\n(Recuerdo por escribir.)' },
@@ -410,7 +410,7 @@ function mainStructures() {
     // Almendros flanqueando la entrada del invernadero, un poco más
     // separados (uno un bloque más arriba, el otro un bloque más abajo).
     { src: 'game/cropped/almendro_title.png', aspect: 700 / 620,
-      colStart: 9, colEnd: 9, bottomRow: 15, blockRow: 14, matchWidth: true, scale: 2.0, sway: true },
+      colStart: 9, colEnd: 9, bottomRow: 16, blockRow: 15, matchWidth: true, scale: 2.0, sway: true },
     { src: 'game/cropped/almendro_title.png', aspect: 700 / 620,
       colStart: 9, colEnd: 9, bottomRow: 19, blockRow: 18, matchWidth: true, scale: 2.0, sway: true },
     // Olivo en el lado izquierdo del campo de cultivo
@@ -490,7 +490,7 @@ const AREAS = {
     tileClass: t => t === '#' ? 'tile-interior-wall' : (t === 'D' ? 'tile-door-warp' : 'tile-interior-floor-crop'),
     objects: () => [
       { ...GREENHOUSE_ABUELO, col: 1, row: 2 },
-      { ...GREENHOUSE_SANDO, col: 2, row: 3 },
+      { ...GREENHOUSE_SANDO, col: 2, row: 1 },
     ],
     structures: () => [],
     warps: { '5,2': { area: 'main', enter: { col: 10, row: 16, facing: 'right' } } },
