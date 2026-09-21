@@ -920,20 +920,29 @@ html, body {
 /* Andar de un personaje durante una escena (paso a paso) */
 .map-object.walking { transition: left 0.3s linear, top 0.3s linear, filter 0.2s ease; }
 
-/* Objeto que "aparece" sobre el cuadro de diálogo (p. ej. el bicho de la patata) */
+/* Objeto que "aparece" sobre el cuadro de diálogo (p. ej. el bicho de la patata):
+   va dentro de un medallón crema con borde oscuro para que se distinga siempre,
+   sea cual sea el color del suelo que haya detrás */
 .dialogue-showcase {
   display: none;
   position: absolute;
-  right: 28px;
-  bottom: calc(100% - 6px);
-  height: 118px;
-  width: auto;
+  right: 26px;
+  bottom: calc(100% - 4px);
+  width: 124px;
+  height: 124px;
+  padding: 14px;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  border: 4px solid var(--ink);
+  border-radius: 50%;
+  box-shadow: 0 6px 0 var(--shadow);
   transform-origin: 50% 100%;
-  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.35));
   pointer-events: none;
 }
+.dialogue-showcase img { max-width: 100%; max-height: 100%; width: auto; height: auto; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3)); }
 .dialogue-showcase.on {
-  display: block;
+  display: flex;
   animation: showcase-pop 0.6s 0.55s cubic-bezier(.2,1.4,.4,1) both,
              showcase-wiggle 2.4s 1.2s ease-in-out infinite;
 }
@@ -945,7 +954,7 @@ html, body {
   0%, 100% { transform: rotate(-3deg); }
   50% { transform: rotate(3deg); }
 }
-@media (max-width: 420px) { .dialogue-showcase { height: 92px; right: 16px; } }
+@media (max-width: 420px) { .dialogue-showcase { width: 100px; height: 100px; padding: 11px; right: 16px; } }
 
 /* ---------- CÓMO SE JUEGA (fundido al empezar) ---------- */
 .intro-panel {

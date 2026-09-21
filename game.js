@@ -34,7 +34,7 @@ const HUMAN_CHARACTERS = [
   { id: 'abuela2', col: 9, row: 21, sprite: 'abuela2_down', label: 'Abuela Sofi',
     text: '¡Pero bueno qué sorpresa Alba! ¿Cómo están vuestras plantas? Si llego a saber que vienes te hubiese cortado un poquito del helecho que está bárbaro. Pasa pasa, Pablo está dentro, me había dicho que no te dijese nada de lo que te va a regalar por tu cumpleaños, pero yo creo que tiene algo que ver con un Mak? Mac? Uy no sé....',
     clue: 'Un Mac (ordenador).', clueInline: true },
-  { id: 'abuelo2', col: 9, row: 6, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
+  { id: 'abuelo2', col: 9, row: 4, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
     text: '(Diálogo profundo por escribir.)',
     clue: 'Pablo me dijo que estaba pensando regalarte una noche de cine en casa.' },
   { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Hermanita',
@@ -72,7 +72,8 @@ const MAP_COLS = 14;
 const MAP_ROWS = 26;
 const VIEW_COLS = 8;
 const VIEW_ROWS = 9;
-const HOUSE_DOOR_KEY = '6,3';
+// La escalera ocupa dos casillas (5 y 6): las dos suben a la puerta
+const HOUSE_DOOR_KEYS = ['5,3', '6,3'];
 const GREENHOUSE_ROWS = [16];
 const GREENHOUSE_DOOR_COL = 8;
 
@@ -319,9 +320,13 @@ function buildMainGrid() {
 
   // Casa: cuerpo (la imagen real ya trae su propio porche y escalera
   // dibujados, así que el suelo debajo se deja en asfalto normal)
-  for (let r = 1; r <= 4; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'H';
-  g[4][6] = '.';   // escalera
-  g[3][6] = 'O';   // puerta
+  // La colisión sigue el relieve: filas 1-2 en todo el ancho; en el porche
+  // (cols 4-7) también la fila 3 (y se puede pisar la 4, la base y la
+  // escalera); en los extremos sin porche (cols 3, 8, 9) se puede llegar
+  // hasta la fila 3, casi pegado a la pared.
+  for (let r = 1; r <= 2; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'H';
+  for (let c = 4; c <= 7; c++) g[3][c] = 'H';
+  g[3][5] = 'O'; g[3][6] = 'O';   // puertas (una por cada escalón)
 
   // Caseta de barbacoa + alacena (una sola estructura, imagen real
   // encima); césped al otro lado, en vez del asfalto suelto que quedaba
@@ -368,7 +373,7 @@ function mainTileClass(type) {
     case 'X': return 'tile-fence-hedge';
     case 'Q': return 'tile-fence-hedge-h';
     case 'Y': return 'tile-fence-vine';
-    case 'Z': return 'tile-gate';
+    case 'Z': return 'tile-asphalt';   // bajo la verja: el mismo suelo que alrededor
     case 'H': return 'tile-asphalt';   // bajo la casa: el mismo suelo que alrededor
     case 'O': return 'tile-asphalt';
     case 'K': return 'tile-asphalt';   // bajo la caseta: idem
@@ -385,19 +390,24 @@ function mainTileClass(type) {
   }
 }
 
-const MAIN_OBSTACLES = new Set(['H', 'K', 'I', 'W', 'S', 'X', 'Y', 'B', 'Q']);
+const MAIN_OBSTACLES = new Set(['H', 'K', 'I', 'W', 'S', 'X', 'Y', 'B', 'Q', 'Z']); // Z = verja cerrada
 
 // Aviso informativo: solo se ve cerca de la puerta mientras la casa está cerrada
 function nearClosedDoor() {
   if (currentArea !== 'main' || houseUnlocked()) return false;
-  const [dc, dr] = HOUSE_DOOR_KEY.split(',').map(Number);
-  return Math.abs(player.col - dc) + Math.abs(player.row - dr) <= 3;
+  return HOUSE_DOOR_KEYS.some(k => {
+    const [dc, dr] = k.split(',').map(Number);
+    return Math.abs(player.col - dc) + Math.abs(player.row - dr) <= 3;
+  });
 }
 
 function houseUnlocked() { return collectedClues.length >= TOTAL_CLUE_GIVERS; }
 
 function mainStructures() {
   return [
+    // Verja de entrada a la parcela (cerrada, con colisión), en la fila inferior
+    { src: 'game/cropped/puerta_title.png', aspect: 1200 / 498,
+      colStart: 10, colEnd: 11, bottomRow: 26, matchWidth: true, scale: 1.3 },
     // Casa nueva (ancha, 7 casillas): las dos versiones comparten lienzo, así
     // que al abrirse no se mueve nada. Escalera en la casilla (6,4), puerta en (6,3).
     { src: houseUnlocked() ? 'game/cropped/casa_abierta.png' : 'game/cropped/casa.png',
@@ -444,7 +454,8 @@ function mainObjects() {
   return [...OBJECT_MEMORIES, ...HUMAN_CHARACTERS, ...DOG_MEMORIES];
 }
 
-const MAIN_WARPS = { [HOUSE_DOOR_KEY]: { area: 'house', enter: { col: 2, row: 3, facing: 'up' } } };
+const MAIN_WARPS = {};
+HOUSE_DOOR_KEYS.forEach(k => { MAIN_WARPS[k] = { area: 'house', enter: { col: 2, row: 3, facing: 'up' } }; });
 GREENHOUSE_ROWS.forEach(r => {
   MAIN_WARPS[`${GREENHOUSE_DOOR_COL},${r}`] = { area: 'greenhouse', enter: { col: 4, row: 2, facing: 'left' } };
 });
@@ -655,8 +666,10 @@ function getTileSizePx() {
 // acompañara a Alba al entrar
 function stairsZoomActive() {
   if (currentArea !== 'main' || !houseUnlocked()) return false;
-  const [dc, dr] = HOUSE_DOOR_KEY.split(',').map(Number);
-  return player.col === dc && (player.row === dr || player.row === dr + 1);
+  return HOUSE_DOOR_KEYS.some(k => {
+    const [dc, dr] = k.split(',').map(Number);
+    return player.col === dc && (player.row === dr || player.row === dr + 1);
+  });
 }
 
 let stairsZoomOn = false;
@@ -745,7 +758,7 @@ function tryMove(dx, dy, forcedFacing) {
   }
 
   const key = `${targetCol},${targetRow}`;
-  if (currentArea === 'main' && key === HOUSE_DOOR_KEY && !houseUnlocked()) {
+  if (currentArea === 'main' && HOUSE_DOOR_KEYS.includes(key) && !houseUnlocked()) {
     // Puerta cerrada: no se entra, pero sin cuadro que cerrar (el aviso
     // informativo aparece solo, junto a la puerta; ver updateProximity)
     renderPlayerPosition();
@@ -949,7 +962,7 @@ function openOverlay(text, closeLabel, name, showcase) {
   document.getElementById('interaction-name').textContent = name || '';
   const showEl = document.getElementById('dialogue-showcase');
   showEl.classList.toggle('on', !!showcase);
-  if (showcase) showEl.src = `game/cropped/${showcase}.png`;
+  if (showcase) document.getElementById('dialogue-showcase-img').src = `game/cropped/${showcase}.png`;
   dialogueCloseLabel = closeLabel || 'Cerrar';
   dialoguePages = paginateDialogue(text);
   dialoguePageIndex = 0;
