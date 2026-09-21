@@ -10,11 +10,14 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap"></noscript>
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
 <div id="app">
+
+  <!-- Fondo compartido por menú, configuración y créditos -->
+  <div class="menu-bg" id="menu-bg" aria-hidden="true"></div>
 
   <!-- ESCENA 1: BOOT / CARGA -->
   <section class="scene active" id="scene-boot">
@@ -30,7 +33,6 @@
 
   <!-- ESCENA 2: MENÚ PRINCIPAL -->
   <section class="scene" id="scene-menu">
-    <div class="menu-bg" id="menu-bg" aria-hidden="true"></div>
     <div class="menu-wrap">
       <h1 class="game-title">La Parcela</h1>
       <p class="game-subtitle">Edición Cumpleaños de Alba</p>
@@ -46,45 +48,28 @@
 
   <!-- ESCENA 3: CONFIGURACIÓN (broma) -->
   <section class="scene" id="scene-settings">
-    <div class="panel">
-      <h2 class="panel-title">Configuración</h2>
-      <ul class="settings-list">
-        <li>
-          <span class="setting-label">Vecinos en la isla</span>
-          <div class="slider"><div class="slider-fill" style="width:0%"></div></div>
-          <span class="setting-value">0% — ajustado por Alba, no tocar</span>
-        </li>
-        <li>
-          <span class="setting-label">Nivel de decoración</span>
-          <div class="slider"><div class="slider-fill" style="width:100%"></div></div>
-          <span class="setting-value">100% — al máximo, como siempre</span>
-        </li>
-        <li>
-          <span class="setting-label">Nivel de sorpresa</span>
-          <div class="slider"><div class="slider-fill" style="width:100%"></div></div>
-          <span class="setting-value">100% — bloqueado, no se puede bajar</span>
-        </li>
-        <li>
-          <span class="setting-label">Modo seguro</span>
-          <div class="slider"><div class="slider-fill" style="width:100%"></div></div>
-          <span class="setting-value">Activo — sin armas cerca, esto no se convierte en un juego de matar</span>
-        </li>
-      </ul>
-      <button class="btn-back" data-target="scene-menu">◀ Volver</button>
+    <div class="page-wrap">
+      <h2 class="page-title">Configuración</h2>
+      <div class="panel">
+        <ul class="settings-list" id="settings-list"></ul>
+        <button class="menu-item back" data-target="scene-menu"><span class="cursor">◀</span> Volver</button>
+      </div>
     </div>
   </section>
 
   <!-- ESCENA 4: CRÉDITOS -->
   <section class="scene" id="scene-credits">
-    <div class="panel">
-      <h2 class="panel-title">Créditos</h2>
-      <ul class="credits-list">
-        <li><strong>Un juego de</strong> Pabolito</li>
-        <li><strong>Dirección de arte</strong> Alba (sin saberlo)</li>
-        <li><strong>Ubicación</strong> La Parcela</li>
-        <li><strong>Motor del juego</strong> HTML, CSS, JS y mucho cariño</li>
-      </ul>
-      <button class="btn-back" data-target="scene-menu">◀ Volver</button>
+    <div class="page-wrap">
+      <h2 class="page-title">Créditos</h2>
+      <div class="panel">
+        <ul class="credits-list">
+          <li><strong>Un juego de</strong> Pabolito</li>
+          <li><strong>Dirección de arte</strong> Alba (sin saberlo)</li>
+          <li><strong>Ubicación</strong> La Parcela</li>
+          <li><strong>Motor del juego</strong> HTML, CSS, JS y mucho cariño</li>
+        </ul>
+        <button class="menu-item back" data-target="scene-menu"><span class="cursor">◀</span> Volver</button>
+      </div>
     </div>
   </section>
 
@@ -170,6 +155,6 @@
     }
   }, 8000);
 </script>
-<script src="game.js?v=5"></script>
+<script src="game.js?v=6"></script>
 </body>
 </html>

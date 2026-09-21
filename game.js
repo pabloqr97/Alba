@@ -70,10 +70,13 @@ const GREENHOUSE_DOOR_COL = 8;
 // NAVEGACIÓN ENTRE ESCENAS
 // ============================================================
 
+const BACKDROP_SCENES = ['scene-menu', 'scene-settings', 'scene-credits'];
+
 function showScene(id) {
   document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(id);
   if (target) target.classList.add('active');
+  document.getElementById('app').classList.toggle('with-backdrop', BACKDROP_SCENES.includes(id));
 }
 
 document.querySelectorAll('[data-target]').forEach(el => {
@@ -118,6 +121,98 @@ function runBoot() {
     }
   }, stepMs);
 }
+
+// ============================================================
+// CONFIGURACIÓN — sliders de broma que siempre vuelven a su sitio
+// ============================================================
+
+// 3 niveles por ajuste. `initial` es el nivel al que vuelve al soltar.
+const SETTINGS = [
+  {
+    label: 'Topillos en el huerto', initial: 0,
+    levels: [
+      '0 — ni uno, el huerto respira tranquilo',
+      '12 — alguno asoma la cabeza entre las patatas',
+      '300 — han montado una comunidad de vecinos',
+    ],
+  },
+  {
+    label: 'Kg de carne para la barbacoa', initial: 1,
+    levels: [
+      '5 kg — un picoteo, casi un aperitivo',
+      '30 kg — lo justo para que nadie pase hambre',
+      '120 kg — hay que avisar a todo el pueblo',
+    ],
+  },
+  {
+    label: 'Nivel de sorpresa', initial: 2,
+    levels: [
+      '0% — cero sorpresa, qué aburrimiento',
+      '50% — hay algo, pero no sabes qué',
+      '100% — al máximo, como siempre',
+    ],
+  },
+  {
+    label: 'Modo seguro', initial: 2,
+    levels: [
+      'Desactivado — el rifle de perdigones está encima de la mesa (mala idea)',
+      'Vigilado — el rifle está en el armario, pero con la llave puesta',
+      'Activo — rifle de perdigones guardado bajo llave (sí, hay uno en la parcela)',
+    ],
+  },
+];
+
+function buildSettings() {
+  const list = document.getElementById('settings-list');
+  list.innerHTML = '';
+  SETTINGS.forEach(setting => {
+    const li = document.createElement('li');
+    const label = document.createElement('span');
+    label.className = 'setting-label';
+    label.textContent = setting.label;
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'setting-slider';
+    slider.min = 0; slider.max = 2; slider.step = 'any';
+    slider.setAttribute('aria-label', setting.label);
+    const value = document.createElement('span');
+    value.className = 'setting-value';
+
+    const paint = () => {
+      slider.style.setProperty('--fill', (slider.value / 2 * 100) + '%');
+      value.textContent = setting.levels[Math.round(slider.value)];
+    };
+    let raf = null;
+    const springBack = () => {
+      cancelAnimationFrame(raf);
+      const from = parseFloat(slider.value);
+      const start = performance.now();
+      const step = now => {
+        const t = Math.min(1, (now - start) / 220);
+        const eased = 1 - Math.pow(1 - t, 3);
+        slider.value = from + (setting.initial - from) * eased;
+        paint();
+        if (t < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    };
+    let dragging = false;
+    slider.addEventListener('pointerdown', () => { dragging = true; cancelAnimationFrame(raf); });
+    slider.addEventListener('input', paint);
+    const release = () => { if (dragging) { dragging = false; springBack(); } };
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    slider.addEventListener('keydown', () => cancelAnimationFrame(raf));
+    slider.addEventListener('keyup', springBack);
+
+    slider.value = setting.initial;
+    paint();
+    li.append(label, slider, value);
+    list.appendChild(li);
+  });
+}
+
+buildSettings();
 
 // ============================================================
 // LA PARCELA — mapa principal
