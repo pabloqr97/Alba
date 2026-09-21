@@ -31,7 +31,7 @@ const HUMAN_CHARACTERS = [
   { id: 'madre', col: 3, row: 13, sprite: 'madre_down', label: 'Mamá',
     text: '¡Alba! Por fin llegas, te tengo preparadas unas lentejas que te vas a chupar los dedos, las alitas hoy se las dejamos a Pabolito jejejeje. Por cierto, ¿he escuchado que te va a regalar el nuevo iPhone?',
     clue: 'El nuevo iPhone.', clueInline: true },
-  { id: 'abuela2', col: 9, row: 23, sprite: 'abuela2_down', label: 'Abuela Sofi',
+  { id: 'abuela2', col: 9, row: 21, sprite: 'abuela2_down', label: 'Abuela Sofi',
     text: '¡Pero bueno qué sorpresa Alba! ¿Cómo están vuestras plantas? Si llego a saber que vienes te hubiese cortado un poquito del helecho que está bárbaro. Pasa pasa, Pablo está dentro, me había dicho que no te dijese nada de lo que te va a regalar por tu cumpleaños, pero yo creo que tiene algo que ver con un Mak? Mac? Uy no sé....',
     clue: 'Un Mac (ordenador).', clueInline: true },
   { id: 'abuelo2', col: 9, row: 2, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
@@ -94,6 +94,36 @@ function showScene(id) {
 // Jugar: fundido a negro, tarjeta de título y fundido de vuelta al mapa,
 // como la pantalla de inicio de un juego (en vez de que todo aparezca de golpe).
 let gameTransitioning = false;
+let introShown = false;
+let introOpen = false;
+function showIntro() {
+  if (introShown) return;
+  introShown = true;
+  const key = IS_TOUCH ? 'toca' : 'pulsa Espacio o';
+  const lines = [
+    IS_TOUCH
+      ? 'Arrastra el joystick de abajo a la izquierda para moverte por la parcela.'
+      : 'Muévete por la parcela con las flechas del teclado o con WASD.',
+    `Acércate a las personas y ${key} "Hablar" para conversar con ellas.`,
+    `Los perros y las cosas que brillan guardan recuerdos: ${key} "Interactuar".`,
+    'Habla con toda la familia y la casa se abrirá.',
+  ];
+  document.getElementById('intro-list').innerHTML = lines.map(l => `<li>${l}</li>`).join('');
+  inputLocked = true;
+  introOpen = true;
+  stopMoveLoop();
+  document.getElementById('intro-panel').classList.add('on');
+  document.getElementById('scene-overworld').classList.add('dialogue-open');
+}
+function closeIntro() {
+  if (!introOpen) return;
+  introOpen = false;
+  document.getElementById('intro-panel').classList.remove('on');
+  document.getElementById('scene-overworld').classList.remove('dialogue-open');
+  inputLocked = false;
+}
+document.getElementById('intro-close').addEventListener('click', closeIntro);
+
 function startGameTransition() {
   if (gameTransitioning) return;
   gameTransitioning = true;
@@ -107,6 +137,7 @@ function startGameTransition() {
   setTimeout(() => {
     fade.classList.remove('on');
     gameTransitioning = false;
+    setTimeout(showIntro, 650);
   }, 2350);
 }
 
@@ -337,9 +368,9 @@ function mainTileClass(type) {
     case 'Q': return 'tile-fence-hedge-h';
     case 'Y': return 'tile-fence-vine';
     case 'Z': return 'tile-gate';
-    case 'H': return 'tile-wall';
+    case 'H': return 'tile-asphalt';   // bajo la casa: el mismo suelo que alrededor
     case 'O': return 'tile-asphalt';
-    case 'K': return 'tile-shed';
+    case 'K': return 'tile-asphalt';   // bajo la caseta: idem
     case 'I': return 'tile-greenhouse-floor';
     case 'W': return 'tile-grass';   // el suelo real lo dibuja la imagen de la piscina
     case 'B': return 'tile-grass';
@@ -364,7 +395,8 @@ function mainStructures() {
     { src: 'game/cropped/greenhouse_tile.png', aspect: 2646 / 1341,
       colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.05 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
-      colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25 },
+      colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25,
+      smoke: { x: 24.5, y: 2 } }, // humo por la chimenea (posición en % de la imagen)
     // Piscina elevada (imagen real): ocupa las filas 11-12, cols 4-6
     { src: 'game/cropped/pool_title.png', aspect: 1200 / 548,
       colStart: 4, colEnd: 6, bottomRow: 13, matchWidth: true, scale: 1.3 },
@@ -526,6 +558,14 @@ function fillStructures(container, tileSize, structures) {
     el.style.left = (centerCol * tileSize - width / 2) + 'px';
     el.style.top = (s.bottomRow * tileSize - height) + 'px';
     el.innerHTML = `<img src="${s.src}" alt="">`;
+    if (s.smoke) {
+      const smoke = document.createElement('div');
+      smoke.className = 'smoke';
+      smoke.style.left = s.smoke.x + '%';
+      smoke.style.top = s.smoke.y + '%';
+      smoke.innerHTML = '<i></i><i></i><i></i>';
+      el.appendChild(smoke);
+    }
     container.appendChild(el);
   });
 }
@@ -741,9 +781,7 @@ function updateProximity() {
   const hint = document.getElementById('overworld-hint');
   if (!found) {
     btn.style.display = 'none';
-    hint.textContent = currentArea === 'main'
-      ? (IS_TOUCH ? 'Muévete por la parcela y explora todo lo que puedas.' : 'Muévete con las flechas o WASD y explora todo lo que puedas.')
-      : '';
+    hint.textContent = '';
     return;
   }
   const el = document.querySelector(`.map-object[data-id="${found.id}"]`);
@@ -1072,6 +1110,10 @@ const heldDirs = [];
 
 document.addEventListener('keydown', (e) => {
   if (!document.getElementById('scene-overworld').classList.contains('active')) return;
+  if (introOpen) {
+    if (['Enter', ' ', 'Escape'].includes(e.key)) { e.preventDefault(); if (!e.repeat) closeIntro(); }
+    return;
+  }
   if (inputLocked) { e.preventDefault(); return; }
   if (overlayActive()) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) advanceDialogue(); }
