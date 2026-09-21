@@ -370,56 +370,69 @@ html, body {
   --map-rows: 26;
 }
 #scene-overworld {
-  background: linear-gradient(180deg, #cdeccb, #eaf7e9);
-  padding: 10px;
+  background: #1d2a1a;
+  padding: 0;
+  overflow: hidden;
   justify-content: flex-start;
-  gap: 8px;
 }
+/* Interfaz superpuesta al mapa: cuadros crema con borde oscuro (como los
+   diálogos del juego) para que se lean sobre cualquier color del suelo */
 .overworld-hud {
-  width: 100%;
-  max-width: 480px;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 6px;
+  gap: 10px;
+  pointer-events: none;
 }
-.hud-menu-btn {
+.hud-menu-btn, .hud-counters {
+  pointer-events: auto;
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 2px solid var(--hd-wheat-dark);
+  font-size: 14px;
+  color: var(--ink);
   background: var(--cream);
-  cursor: pointer;
-}
-.hud-counters {
-  display: flex;
-  gap: 12px;
-  font-weight: 800;
-  font-size: 12px;
-  background: var(--cream);
-  padding: 6px 12px;
+  border: 3px solid var(--ink);
   border-radius: 999px;
-  border: 2px solid var(--hd-wheat-dark);
+  box-shadow: 0 4px 0 var(--shadow);
 }
+.hud-menu-btn { padding: 6px 16px; cursor: pointer; }
+.hud-menu-btn:hover { background: var(--hd-wheat); }
+.hud-counters { display: flex; gap: 14px; padding: 6px 16px; }
 .overworld-hint {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--hd-brown);
+  position: absolute;
+  top: 62px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: 92vw;
   margin: 0;
-  min-height: 16px;
+  padding: 5px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  background: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 var(--shadow);
   text-align: center;
+  pointer-events: none;
+}
+.overworld-hint:empty { display: none; }
+@media (min-width: 900px) {
+  .overworld-hud { top: 18px; left: 22px; right: 22px; }
+  .hud-menu-btn, .hud-counters { font-size: 17px; }
+  .overworld-hint { top: 72px; font-size: 16px; padding: 6px 20px; }
 }
 .map-viewport {
-  position: relative;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
-  width: calc(var(--tile-size) * var(--view-cols));
-  height: calc(var(--tile-size) * var(--view-rows));
-  max-width: 94vw;
-  border: 4px solid var(--hd-brown);
-  border-radius: var(--radius-md);
-  box-shadow: 0 6px 0 var(--shadow);
 }
 .scene-fade {
   position: absolute;
@@ -598,31 +611,38 @@ html, body {
 .action-btn {
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
-  font-size: 15px;
-  padding: 10px 20px;
+  font-size: 17px;
+  padding: 10px 24px;
   border-radius: 999px;
-  border: 3px solid var(--gold);
-  background: #fff6d8;
+  border: 3px solid var(--ink);
+  background: var(--hd-wheat);
   color: var(--ink);
   cursor: pointer;
   box-shadow: 0 4px 0 var(--shadow);
-  position: fixed;
-  bottom: 108px;
-  right: 20px;
+  position: absolute;
+  bottom: 28px;
+  right: 28px;
   z-index: 20;
 }
+.action-btn:hover { background: #ffd98a; }
 
+/* El joystick solo existe en pantallas táctiles (móvil/tablet) */
 .joystick {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
+  display: none;
+  position: absolute;
+  bottom: 28px;
+  left: 28px;
   width: 116px;
   height: 116px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  border: 3px solid var(--hd-brown);
+  background: rgba(255, 250, 241, 0.55);
+  border: 3px solid var(--ink);
   z-index: 20;
   touch-action: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  .joystick { display: block; }
+  .action-btn { bottom: 62px; right: 24px; }
 }
 .joystick-knob {
   position: absolute;
@@ -632,7 +652,7 @@ html, body {
   height: 50px;
   border-radius: 50%;
   background: var(--hd-wheat);
-  border: 3px solid var(--hd-wheat-dark);
+  border: 3px solid var(--ink);
   box-shadow: 0 3px 0 var(--shadow);
   transform: translate(-50%, -50%);
   pointer-events: none;

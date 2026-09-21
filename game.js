@@ -70,6 +70,7 @@ const GREENHOUSE_DOOR_COL = 8;
 // NAVEGACIÓN ENTRE ESCENAS
 // ============================================================
 
+const IS_TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 const BACKDROP_SCENES = ['scene-menu', 'scene-settings', 'scene-credits'];
 
 function showScene(id) {
@@ -77,6 +78,7 @@ function showScene(id) {
   const target = document.getElementById(id);
   if (target) target.classList.add('active');
   document.getElementById('app').classList.toggle('with-backdrop', BACKDROP_SCENES.includes(id));
+  if (id === 'scene-overworld') updateCamera();
 }
 
 document.querySelectorAll('[data-target]').forEach(el => {
@@ -440,13 +442,14 @@ const talkedTo = new Set();
 
 function area() { return AREAS[currentArea]; }
 
+// El mapa ocupa toda la ventana. Apaisado (ordenador): ~8,5 casillas de
+// alto; vertical (móvil): 8 casillas de ancho.
 function computeTileSize() {
-  const isLandscape = window.innerWidth > window.innerHeight;
-  const maxTile = isLandscape ? 100 : 60;
-  const viewportW = isLandscape ? window.innerWidth * 0.92 : Math.min(window.innerWidth, 600);
-  const viewportH = window.innerHeight * (isLandscape ? 0.88 : 0.8);
-  const size = Math.floor(Math.min(maxTile, (viewportW - 16) / VIEW_COLS, viewportH / VIEW_ROWS));
-  document.documentElement.style.setProperty('--tile-size', Math.max(32, size) + 'px');
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const isLandscape = vw > vh;
+  const raw = isLandscape ? vh / 8.5 : vw / VIEW_COLS;
+  const size = Math.floor(Math.min(raw, isLandscape ? 140 : 100));
+  document.documentElement.style.setProperty('--tile-size', Math.max(36, size) + 'px');
 }
 
 function buildMapDOM() {
@@ -565,8 +568,9 @@ function updateCamera() {
   const mapH = a.rows * tileSize;
   let camX = player.col * tileSize + tileSize / 2 - viewportRect.width / 2;
   let camY = player.row * tileSize + tileSize / 2 - viewportRect.height / 2;
-  camX = Math.max(0, Math.min(camX, Math.max(0, mapW - viewportRect.width)));
-  camY = Math.max(0, Math.min(camY, Math.max(0, mapH - viewportRect.height)));
+  // Si el mapa cabe entero en pantalla, se centra en vez de pegarse al borde
+  camX = mapW <= viewportRect.width ? (mapW - viewportRect.width) / 2 : Math.max(0, Math.min(camX, mapW - viewportRect.width));
+  camY = mapH <= viewportRect.height ? (mapH - viewportRect.height) / 2 : Math.max(0, Math.min(camY, mapH - viewportRect.height));
   camera.style.transform = `translate(${-camX}px, ${-camY}px)`;
 }
 
@@ -680,14 +684,16 @@ function updateProximity() {
   const hint = document.getElementById('overworld-hint');
   if (!found) {
     btn.style.display = 'none';
-    hint.textContent = currentArea === 'main' ? 'Muévete por la parcela y explora todo lo que puedas.' : '';
+    hint.textContent = currentArea === 'main'
+      ? (IS_TOUCH ? 'Muévete por la parcela y explora todo lo que puedas.' : 'Muévete con las flechas o WASD y explora todo lo que puedas.')
+      : '';
     return;
   }
   const el = document.querySelector(`.map-object[data-id="${found.id}"]`);
   if (el) el.classList.add('near');
   btn.style.display = 'inline-block';
   btn.textContent = 'Hablar';
-  hint.textContent = 'Hay alguien aquí. Toca "Hablar".';
+  hint.textContent = IS_TOUCH ? 'Hay alguien aquí. Toca "Hablar".' : 'Hay alguien aquí. Pulsa Espacio o "Hablar".';
 }
 
 function openOverlay(avatarHtml, text, closeLabel) {
