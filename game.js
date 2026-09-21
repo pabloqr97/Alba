@@ -563,7 +563,12 @@ function renderObjects() {
     if (obj.sprite) {
       el.classList.add('character');
       if (obj.tree) el.classList.add('tree');
-      else if (obj.small) el.classList.add('small');
+      else {
+        if (obj.small) el.classList.add('small');
+        // respiración suave, desfasada para que no se muevan todos a la vez
+        el.style.animationDuration = (2.9 + Math.random() * 1.2).toFixed(2) + 's';
+        el.style.animationDelay = (-Math.random() * 4).toFixed(2) + 's';
+      }
       const img = document.createElement('img');
       img.src = `game/cropped/${obj.sprite}.png`;
       img.alt = '';
@@ -600,6 +605,10 @@ function renderPlayerPosition() {
   sprite.style.top = player.row * tileSize + 'px';
   updateCamera();
 }
+
+// Precarga las 3 imágenes del jugador para que al girar no se vea un
+// fotograma con la dirección equivocada mientras carga la nueva.
+['down', 'up', 'left'].forEach(f => { new Image().src = `game/cropped/player_${f}.png`; });
 
 function renderPlayerSprite() {
   const img = document.getElementById('player-img');
@@ -641,7 +650,7 @@ function tryMove(dx, dy, forcedFacing) {
 
   const key = `${targetCol},${targetRow}`;
   if (currentArea === 'main' && key === HOUSE_DOOR_KEY && !houseUnlocked()) {
-    openOverlay('!', `La casa está cerrada.\nVuelve cuando hayas hablado con toda la familia (${collectedClues.length}/${TOTAL_CLUE_GIVERS}).`, 'Vale');
+    openOverlay(`La casa está cerrada.\nVuelve cuando hayas hablado con toda la familia (${collectedClues.length}/${TOTAL_CLUE_GIVERS}).`, 'Vale');
     return;
   }
 
@@ -715,20 +724,145 @@ function updateProximity() {
   hint.textContent = IS_TOUCH ? 'Hay alguien aquí. Toca "Hablar".' : 'Hay alguien aquí. Pulsa Espacio o "Hablar".';
 }
 
-function openOverlay(avatarHtml, text, closeLabel) {
+// ---- Cuadro de diálogo: escritura letra a letra + zoom de cámara ----
+const TYPE_START_DELAY = 450; // deja ver el saltito y el zoom antes de hablar
+let typing = null; // { full, i, timer }
+let dialoguePages = [];
+let dialoguePageIndex = 0;
+let dialogueCloseLabel = 'Cerrar';
+
+// Trocea un texto largo en "páginas" cortas (por frases) para que el cuadro
+// se quede bajo y rectangular, como en Animal Crossing.
+function paginateDialogue(text) {
+  const maxChars = window.innerWidth < 600 ? 110 : 190;
+  const pages = [];
+  let cur = '';
+  text.split(/\n+/).forEach(par => {
+    par = par.trim();
+    if (!par) return;
+    const sentences = par.match(/[^.!?]+[.!?]+["”»]?\s*|[^.!?]+$/g) || [par];
+    sentences.forEach((s, idx) => {
+      s = s.trim();
+      const sep = idx === 0 ? '\n' : ' ';
+      if (cur && (cur + sep + s).length > maxChars) { pages.push(cur); cur = s; }
+      else cur = cur ? cur + sep + s : s;
+    });
+  });
+  if (cur) pages.push(cur);
+  return pages.length ? pages : [text];
+}
+
+function showDialoguePage() {
+  const last = dialoguePageIndex >= dialoguePages.length - 1;
+  document.getElementById('interaction-close').textContent = last ? dialogueCloseLabel : 'Siguiente ▶';
+  typeText(dialoguePages[dialoguePageIndex]);
+}
+
+function renderTyped(full, i) {
+  const el = document.getElementById('interaction-text');
+  el.innerHTML = '';
+  // La parte aún sin escribir se mantiene (invisible) para que el cuadro no cambie de tamaño
+  const shown = document.createElement('span');
+  shown.textContent = full.slice(0, i);
+  const rest = document.createElement('span');
+  rest.textContent = full.slice(i);
+  rest.style.visibility = 'hidden';
+  el.append(shown, rest);
+}
+
+function setDialogueDone(done) {
+  document.getElementById('dialogue-box').classList.toggle('typing', !done);
+}
+
+function finishTyping() {
+  if (!typing) return;
+  clearTimeout(typing.timer);
+  renderTyped(typing.full, typing.full.length);
+  typing = null;
+  setDialogueDone(true);
+}
+
+function typeText(full) {
+  clearTimeout(typing && typing.timer);
+  typing = { full, i: 0, timer: null };
+  setDialogueDone(false);
+  renderTyped(full, 0);
+  const tick = () => {
+    if (!typing) return;
+    typing.i++;
+    renderTyped(full, typing.i);
+    if (typing.i >= full.length) { typing = null; setDialogueDone(true); return; }
+    const ch = full[typing.i - 1];
+    const pause = '.!?'.includes(ch) ? 260 : (ch === ',' || ch === ':') ? 120 : ch === '\n' ? 200 : 24;
+    typing.timer = setTimeout(tick, pause);
+  };
+  typing.timer = setTimeout(tick, TYPE_START_DELAY);
+}
+
+let cameraZoomed = false;
+function zoomCameraTo(obj) {
+  const camera = document.getElementById('map-camera');
+  const vp = document.querySelector('.map-viewport').getBoundingClientRect();
+  const a = area();
+  const ts = getTileSizePx();
+  const s = 1.45;
+  const cx = (obj.col + 0.5) * ts;
+  const cy = (obj.row + 0.15) * ts;
+  let tx = vp.width / 2 - cx * s;
+  let ty = vp.height * 0.36 - cy * s;
+  const mapW = a.cols * ts * s, mapH = a.rows * ts * s;
+  tx = mapW <= vp.width ? (vp.width - mapW) / 2 : Math.max(vp.width - mapW, Math.min(0, tx));
+  ty = mapH <= vp.height ? (vp.height - mapH) / 2 : Math.max(vp.height - mapH, Math.min(0, ty));
+  // que el personaje quede siempre por encima del cuadro de diálogo
+  const maxY = vp.height - 230;
+  if (cy * s + ty > maxY) ty = maxY - cy * s;
+  camera.classList.add('zoom');
+  camera.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+  cameraZoomed = true;
+}
+
+function zoomCameraOut() {
+  if (!cameraZoomed) return;
+  cameraZoomed = false;
+  const camera = document.getElementById('map-camera');
+  updateCamera();
+  setTimeout(() => { if (!cameraZoomed) camera.classList.remove('zoom'); }, 550);
+}
+
+function openOverlay(text, closeLabel, name) {
   stopMoveLoop();
-  const avatarEl = document.getElementById('interaction-avatar');
-  avatarEl.innerHTML = avatarHtml;
-  document.getElementById('interaction-text').textContent = text;
-  document.getElementById('interaction-close').textContent = closeLabel || 'Cerrar';
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  document.getElementById('interaction-name').textContent = name || '';
+  dialogueCloseLabel = closeLabel || 'Cerrar';
+  dialoguePages = paginateDialogue(text);
+  dialoguePageIndex = 0;
+  document.getElementById('dialogue-hint').textContent = IS_TOUCH ? '' : 'Enter';
   document.getElementById('interaction-overlay').classList.add('active');
+  document.getElementById('scene-overworld').classList.add('dialogue-open');
+  showDialoguePage();
 }
 
 function closeOverlay() {
+  if (typing) { clearTimeout(typing.timer); typing = null; }
   document.getElementById('interaction-overlay').classList.remove('active');
+  document.getElementById('scene-overworld').classList.remove('dialogue-open');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  zoomCameraOut();
+}
+
+function overlayActive() {
+  return document.getElementById('interaction-overlay').classList.contains('active');
+}
+
+// Enter/Espacio/clic: primero completa el texto, luego cierra
+function advanceDialogue() {
+  if (typing) { finishTyping(); return; }
+  document.getElementById('interaction-close').click();
 }
 
 document.getElementById('interaction-close').addEventListener('click', () => {
+  if (typing) { finishTyping(); return; }
+  if (dialoguePageIndex < dialoguePages.length - 1) { dialoguePageIndex++; showDialoguePage(); return; }
   closeOverlay();
   if (pendingOverlayAction) {
     const fn = pendingOverlayAction;
@@ -737,10 +871,9 @@ document.getElementById('interaction-close').addEventListener('click', () => {
   }
 });
 
-function avatarFor(obj) {
-  if (obj.sprite) return `<img src="game/cropped/${obj.sprite}.png" alt="">`;
-  return '!';
-}
+document.getElementById('dialogue-box').addEventListener('click', (e) => {
+  if (typing && e.target.id !== 'interaction-close') finishTyping();
+});
 
 function handleTalk(obj) {
   if (obj.pabloTrigger) {
@@ -748,7 +881,8 @@ function handleTalk(obj) {
       showScene('scene-wheel');
       prepareWheelFromCollectedClues();
     };
-    openOverlay(avatarFor(obj), 'Has hablado con toda la familia... ahora toca decidir.\nTira de la ruleta para ver qué regalo te llevas de verdad.', 'Girar la ruleta ▶');
+    reactToTalk(obj);
+    openOverlay('Has hablado con toda la familia... ahora toca decidir.\nTira de la ruleta para ver qué regalo te llevas de verdad.', 'Girar la ruleta ▶', obj.label);
     return;
   }
 
@@ -756,14 +890,30 @@ function handleTalk(obj) {
   talkedTo.add(obj.id);
   document.getElementById('hud-memories').textContent = talkedTo.size;
 
-  let text = `${obj.label}\n\n${obj.text}`;
+  let text = obj.text;
   if (obj.clue) {
     if (isNew) collectedClues.push({ text: obj.clue, isKarolG: !!obj.isKarolG });
     if (!obj.clueInline) text += `\n\n"${obj.clue}"`;
     document.getElementById('hud-clues').textContent = collectedClues.length;
     if (currentArea === 'main') renderStructures();
   }
-  openOverlay(avatarFor(obj), text, 'Cerrar');
+  reactToTalk(obj);
+  openOverlay(text, 'Cerrar', obj.label);
+}
+
+// Alba mira al personaje, este da un saltito de alegría y la cámara se acerca
+function reactToTalk(obj) {
+  const dx = obj.col - player.col, dy = obj.row - player.row;
+  player.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+  renderPlayerSprite();
+  const el = document.querySelector(`.map-object[data-id="${obj.id}"]`);
+  if (el && !el.classList.contains('tree')) {
+    el.classList.remove('hop');
+    void el.offsetWidth; // reinicia la animación si ya estaba puesta
+    el.classList.add('hop');
+    el.addEventListener('animationend', () => el.classList.remove('hop'), { once: true });
+  }
+  zoomCameraTo(obj);
 }
 
 function handleInteract() {
@@ -783,8 +933,12 @@ const heldDirs = [];
 
 document.addEventListener('keydown', (e) => {
   if (!document.getElementById('scene-overworld').classList.contains('active')) return;
-  if (document.getElementById('interaction-overlay').classList.contains('active')) return;
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInteract(); return; }
+  if (overlayActive()) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) advanceDialogue(); }
+    else if (e.key === 'Escape') { e.preventDefault(); dialoguePageIndex = dialoguePages.length - 1; finishTyping(); document.getElementById('interaction-close').click(); }
+    return;
+  }
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) handleInteract(); return; }
   const dir = KEY_DIR[e.key];
   if (!dir) return;
   e.preventDefault();
@@ -818,8 +972,8 @@ let joystickActive = false;
 let joystickCenter = { x: 0, y: 0 };
 let moveInterval = null;
 let currentDir = null;
-const MOVE_REPEAT_MS = 220;
-const JOYSTICK_MOVE_REPEAT_MS = 300;
+const MOVE_REPEAT_MS = 300;
+const JOYSTICK_MOVE_REPEAT_MS = 360;
 const JOYSTICK_MAX = 40;
 const JOYSTICK_DEADZONE = 12;
 
@@ -848,6 +1002,8 @@ function startMoveLoop(dir, facing, repeatMs) {
   if (currentDir === dir) return;
   currentDir = dir;
   clearInterval(moveInterval);
+  // el deslizamiento dura lo que un paso, para caminar fluido y sin tirones
+  document.documentElement.style.setProperty('--step-ms', (repeatMs || MOVE_REPEAT_MS) + 'ms');
   moveForDir(dir, facing);
   moveInterval = setInterval(() => moveForDir(dir, facing), repeatMs || MOVE_REPEAT_MS);
 }
