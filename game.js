@@ -81,10 +81,29 @@ function showScene(id) {
   if (id === 'scene-overworld') updateCamera();
 }
 
+// Jugar: fundido a negro, tarjeta de título y fundido de vuelta al mapa,
+// como la pantalla de inicio de un juego (en vez de que todo aparezca de golpe).
+let gameTransitioning = false;
+function startGameTransition() {
+  if (gameTransitioning) return;
+  gameTransitioning = true;
+  const fade = document.getElementById('screen-fade');
+  fade.classList.add('on');
+  setTimeout(() => {
+    showScene('scene-overworld');
+    fade.classList.add('card');
+  }, 550);
+  setTimeout(() => fade.classList.remove('card'), 2000);
+  setTimeout(() => {
+    fade.classList.remove('on');
+    gameTransitioning = false;
+  }, 2350);
+}
+
 document.querySelectorAll('[data-target]').forEach(el => {
   el.addEventListener('click', () => {
+    if (el.dataset.target === 'scene-overworld') { startGameTransition(); return; }
     showScene(el.dataset.target);
-    if (el.dataset.target === 'scene-overworld') updateCamera();
   });
 });
 
