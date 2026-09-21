@@ -8,12 +8,13 @@
 const OBJECT_MEMORIES = [
   { id: 'madrono', col: 8, row: 9, sprite: 'madroño_title', tree: true, label: 'El madroño',
     text: 'El madroño de la parcela.\n(Recuerdo por escribir.)' },
-  // El bicho de la patata (sobre la mata que está frente a Hermanita): al
-  // tocarlo, es ella quien salta, se acerca y habla; luego vuelve a su sitio.
-  { id: 'patata', col: 5, row: 20, sprite: 'bicho_title', item: true, label: 'Bicho de la patata',
-    speaker: 'hermana',
+  // La mata de patata frente a Hermanita (el bicho NO se ve en el mapa: sale
+  // en pantalla, sobre el cuadro de diálogo, mientras se habla). Al tocarla,
+  // es Hermanita quien salta, se acerca y habla; luego vuelve a su sitio.
+  { id: 'patata', col: 5, row: 20, label: 'Bicho de la patata',
+    showcase: 'bicho_title', speaker: 'hermana',
     text: '¡Hermana mira cuántos bichos de la patata he atrapado! Corre, coge los tuyos y vamos al camino a aplastarlos. ¿Te acuerdas de todos los que aplastamos de pequeñas?' },
-  { id: 'almendro', col: 9, row: 14, sprite: 'almendra_title', item: true, label: 'El almendro',
+  { id: 'almendro', col: 9, row: 14, label: 'El almendro', showcase: 'almendra_title',
     text: 'Una almendra caída del almendro.\n(Recuerdo por escribir.)' },
   { id: 'tomatera', col: 6, row: 22, label: 'La tomatera',
     text: 'Una tomatera del huerto.\n(Recuerdo por escribir.)' },
@@ -857,10 +858,13 @@ function zoomCameraOut() {
   setTimeout(() => { if (!cameraZoomed) camera.classList.remove('zoom'); }, 550);
 }
 
-function openOverlay(text, closeLabel, name) {
+function openOverlay(text, closeLabel, name, showcase) {
   stopMoveLoop();
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   document.getElementById('interaction-name').textContent = name || '';
+  const showEl = document.getElementById('dialogue-showcase');
+  showEl.classList.toggle('on', !!showcase);
+  if (showcase) showEl.src = `game/cropped/${showcase}.png`;
   dialogueCloseLabel = closeLabel || 'Cerrar';
   dialoguePages = paginateDialogue(text);
   dialoguePageIndex = 0;
@@ -872,6 +876,7 @@ function openOverlay(text, closeLabel, name) {
 function closeOverlay() {
   if (typing) { clearTimeout(typing.timer); typing = null; }
   document.getElementById('interaction-overlay').classList.remove('active');
+  document.getElementById('dialogue-showcase').classList.remove('on');
   document.getElementById('scene-overworld').classList.remove('dialogue-open');
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   zoomCameraOut();
@@ -930,7 +935,7 @@ function handleTalk(obj) {
     if (currentArea === 'main') renderStructures();
   }
   reactToTalk(obj);
-  openOverlay(text, 'Cerrar', obj.label);
+  openOverlay(text, 'Cerrar', obj.label, obj.showcase);
 }
 
 function isMemoryObj(obj) { return !obj.clue && !obj.pabloTrigger; }
@@ -1021,7 +1026,7 @@ function runSpeakerScene(obj) {
       inputLocked = false;
       zoomCameraTo(goal);
       pendingOverlayAction = () => returnSpeakerHome(speakerEl, goal, origin, free);
-      openOverlay(obj.text, 'Cerrar', speaker.label);
+      openOverlay(obj.text, 'Cerrar', speaker.label, obj.showcase);
     };
     if (best && best.path.length) walkElement(speakerEl, best.path, arrive);
     else arrive();

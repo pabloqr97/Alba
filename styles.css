@@ -921,3 +921,30 @@ html, body {
 
 /* Andar de un personaje durante una escena (paso a paso) */
 .map-object.walking { transition: left 0.3s linear, top 0.3s linear, filter 0.2s ease; }
+
+/* Objeto que "aparece" sobre el cuadro de diálogo (p. ej. el bicho de la patata) */
+.dialogue-showcase {
+  display: none;
+  position: absolute;
+  right: 28px;
+  bottom: calc(100% - 6px);
+  height: 118px;
+  width: auto;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+}
+.dialogue-showcase.on {
+  display: block;
+  animation: showcase-pop 0.6s 0.55s cubic-bezier(.2,1.4,.4,1) both,
+             showcase-wiggle 2.4s 1.2s ease-in-out infinite;
+}
+@keyframes showcase-pop {
+  from { opacity: 0; transform: translateY(24px) scale(0.2) rotate(-25deg); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes showcase-wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@media (max-width: 420px) { .dialogue-showcase { height: 92px; right: 16px; } }
