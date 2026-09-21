@@ -34,7 +34,7 @@ const HUMAN_CHARACTERS = [
   { id: 'abuela2', col: 9, row: 21, sprite: 'abuela2_down', label: 'Abuela Sofi',
     text: '¡Pero bueno qué sorpresa Alba! ¿Cómo están vuestras plantas? Si llego a saber que vienes te hubiese cortado un poquito del helecho que está bárbaro. Pasa pasa, Pablo está dentro, me había dicho que no te dijese nada de lo que te va a regalar por tu cumpleaños, pero yo creo que tiene algo que ver con un Mak? Mac? Uy no sé....',
     clue: 'Un Mac (ordenador).', clueInline: true },
-  { id: 'abuelo2', col: 9, row: 2, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
+  { id: 'abuelo2', col: 9, row: 6, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
     text: '(Diálogo profundo por escribir.)',
     clue: 'Pablo me dijo que estaba pensando regalarte una noche de cine en casa.' },
   { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Hermanita',
@@ -319,8 +319,9 @@ function buildMainGrid() {
 
   // Casa: cuerpo (la imagen real ya trae su propio porche y escalera
   // dibujados, así que el suelo debajo se deja en asfalto normal)
-  for (let r = 1; r <= 3; r++) for (let c = 4; c <= 8; c++) g[r][c] = 'H';
-  g[3][6] = 'O';
+  for (let r = 1; r <= 4; r++) for (let c = 3; c <= 9; c++) g[r][c] = 'H';
+  g[4][6] = '.';   // escalera
+  g[3][6] = 'O';   // puerta
 
   // Caseta de barbacoa + alacena (una sola estructura, imagen real
   // encima); césped al otro lado, en vez del asfalto suelto que quedaba
@@ -386,12 +387,21 @@ function mainTileClass(type) {
 
 const MAIN_OBSTACLES = new Set(['H', 'K', 'I', 'W', 'S', 'X', 'Y', 'B', 'Q']);
 
+// Aviso informativo: solo se ve cerca de la puerta mientras la casa está cerrada
+function nearClosedDoor() {
+  if (currentArea !== 'main' || houseUnlocked()) return false;
+  const [dc, dr] = HOUSE_DOOR_KEY.split(',').map(Number);
+  return Math.abs(player.col - dc) + Math.abs(player.row - dr) <= 3;
+}
+
 function houseUnlocked() { return collectedClues.length >= TOTAL_CLUE_GIVERS; }
 
 function mainStructures() {
   return [
-    { src: houseUnlocked() ? 'game/cropped/house_open.png' : 'game/cropped/house.png',
-      aspect: 1368 / 1776, colStart: 4, colEnd: 8, bottomRow: 5 },
+    // Casa nueva (ancha, 7 casillas): las dos versiones comparten lienzo, así
+    // que al abrirse no se mueve nada. Escalera en la casilla (6,4), puerta en (6,3).
+    { src: houseUnlocked() ? 'game/cropped/casa_abierta.png' : 'game/cropped/casa.png',
+      aspect: 1408 / 996, colStart: 3, colEnd: 9, bottomRow: 5, matchWidth: true, scale: 1.0 },
     { src: 'game/cropped/invernadero_title.png', aspect: 1400 / 525,
       colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.1 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
@@ -641,20 +651,38 @@ function getTileSizePx() {
   return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'));
 }
 
+// Al subir la escalera de la casa (abierta) la cámara se acerca, como si
+// acompañara a Alba al entrar
+function stairsZoomActive() {
+  if (currentArea !== 'main' || !houseUnlocked()) return false;
+  const [dc, dr] = HOUSE_DOOR_KEY.split(',').map(Number);
+  return player.col === dc && (player.row === dr || player.row === dr + 1);
+}
+
+let stairsZoomOn = false;
 function updateCamera() {
   const a = area();
   const tileSize = getTileSizePx();
   const viewport = document.querySelector('.map-viewport');
   const camera = document.getElementById('map-camera');
   const viewportRect = viewport.getBoundingClientRect();
-  const mapW = a.cols * tileSize;
-  const mapH = a.rows * tileSize;
-  let camX = player.col * tileSize + tileSize / 2 - viewportRect.width / 2;
-  let camY = player.row * tileSize + tileSize / 2 - viewportRect.height / 2;
+  const zoomed = stairsZoomActive();
+  const s = zoomed ? 1.4 : 1;
+  const mapW = a.cols * tileSize * s;
+  const mapH = a.rows * tileSize * s;
+  const px = (player.col * tileSize + tileSize / 2) * s;
+  const py = (player.row * tileSize + tileSize / 2) * s;
+  let camX = px - viewportRect.width / 2;
+  let camY = py - viewportRect.height / 2;
   // Si el mapa cabe entero en pantalla, se centra en vez de pegarse al borde
   camX = mapW <= viewportRect.width ? (mapW - viewportRect.width) / 2 : Math.max(0, Math.min(camX, mapW - viewportRect.width));
   camY = mapH <= viewportRect.height ? (mapH - viewportRect.height) / 2 : Math.max(0, Math.min(camY, mapH - viewportRect.height));
-  camera.style.transform = `translate(${-camX}px, ${-camY}px)`;
+  if (zoomed !== stairsZoomOn) {
+    stairsZoomOn = zoomed;
+    camera.classList.add('zoom');
+    setTimeout(() => { if (!cameraZoomed && stairsZoomOn === zoomed) camera.classList.remove('zoom'); }, 600);
+  }
+  camera.style.transform = `translate(${-camX}px, ${-camY}px) scale(${s})`;
 }
 
 function renderPlayerPosition() {
@@ -718,7 +746,10 @@ function tryMove(dx, dy, forcedFacing) {
 
   const key = `${targetCol},${targetRow}`;
   if (currentArea === 'main' && key === HOUSE_DOOR_KEY && !houseUnlocked()) {
-    openOverlay(`La casa está cerrada.\nVuelve cuando hayas hablado con toda la familia (${collectedClues.length}/${TOTAL_CLUE_GIVERS}).`, 'Vale');
+    // Puerta cerrada: no se entra, pero sin cuadro que cerrar (el aviso
+    // informativo aparece solo, junto a la puerta; ver updateProximity)
+    renderPlayerPosition();
+    updateProximity();
     return;
   }
 
@@ -792,7 +823,9 @@ function updateProximity() {
   const hint = document.getElementById('overworld-hint');
   if (!found) {
     btn.style.display = 'none';
-    hint.textContent = '';
+    hint.textContent = nearClosedDoor()
+      ? `La casa está cerrada. Habla primero con toda la familia (${collectedClues.length}/${TOTAL_CLUE_GIVERS}).`
+      : '';
     return;
   }
   const el = document.querySelector(`.map-object[data-id="${found.id}"]`);
