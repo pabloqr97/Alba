@@ -102,76 +102,99 @@ html, body {
 }
 
 /* ---------- MENU ---------- */
-#scene-menu {
-  background: linear-gradient(180deg, var(--ac-sky) 0%, var(--ac-sky-2) 55%, #e3d59a 100%);
+#scene-menu { background: #6fae63; overflow: hidden; }
+.menu-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.menu-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 250, 241, 0.4);
 }
-.sky { position: absolute; inset: 0; z-index: 0; }
-.menu-wrap { position: relative; z-index: 2; max-width: 520px; }
+.menu-bg-map {
+  position: absolute;
+  top: 0;
+  filter: blur(3px);
+  animation: menu-pan 70s ease-in-out infinite alternate;
+}
+@keyframes menu-pan {
+  from { transform: translateY(0); }
+  to { transform: translateY(var(--pan-dist, 0px)); }
+}
+.menu-wrap { position: relative; z-index: 2; width: min(460px, 92vw); --menu-t: clamp(26px, 8.4vw, 60px); }
 .game-title {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(16px, 4.2vw, 24px);
-  line-height: 1.7;
-  color: var(--ac-leaf-dark);
-  text-shadow: 2px 2px 0 var(--cream);
-  margin-bottom: 8px;
+  font-size: var(--menu-t);
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--cream);
+  margin: 0 0 12px;
+  text-shadow:
+    -3px -3px 0 var(--ink), 3px -3px 0 var(--ink), -3px 3px 0 var(--ink), 3px 3px 0 var(--ink),
+    0 -3px 0 var(--ink), 0 3px 0 var(--ink), -3px 0 0 var(--ink), 3px 0 0 var(--ink),
+    0 8px 0 rgba(58, 50, 38, 0.35);
 }
 .game-subtitle {
-  font-weight: 700;
-  color: var(--hd-brown);
-  margin: 0 0 6px;
-  font-size: 15px;
-}
-.menu-studio {
   font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  color: var(--hd-wheat-dark);
-  opacity: 0.8;
-  margin: 0 0 28px;
+  /* 26 letras al ~30% del tamaño del título: más corto que "La Parcela" */
+  font-size: calc(var(--menu-t) * 0.3);
+  color: var(--hd-wheat);
+  margin: 0 0 30px;
+  text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink),
+    2px 2px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink);
+  white-space: nowrap;
 }
+/* Mismo look que los cuadros de diálogo del juego */
 .menu-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
   align-items: stretch;
   width: min(320px, 80vw);
   margin: 0 auto;
+  padding: 14px;
+  background: var(--cream);
+  border: 4px solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--shadow);
 }
 .menu-item {
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
   font-size: 18px;
-  padding: 14px 20px;
-  border-radius: 999px;
-  border: 3px solid var(--hd-wheat-dark);
-  background: var(--cream);
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
   color: var(--ink);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 0 var(--shadow);
-  transition: transform 0.15s ease, background 0.15s ease;
+  gap: 12px;
+  text-align: left;
 }
-.menu-item .cursor { opacity: 0; transition: opacity 0.15s ease; color: var(--ac-leaf-dark); }
+.menu-item .cursor { opacity: 0; color: var(--ac-leaf-dark); width: 1em; }
+/* La primera opción viene marcada; al pasar por otra, el cursor se muda */
+.menu-list:not(:hover) .menu-item:first-child,
 .menu-item:hover, .menu-item:focus-visible {
-  background: #fff;
-  transform: translateY(-2px);
+  background: var(--hd-wheat);
+  outline: none;
 }
+.menu-list:not(:hover) .menu-item:first-child .cursor,
 .menu-item:hover .cursor, .menu-item:focus-visible .cursor { opacity: 1; }
-.menu-item:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--shadow); }
-.menu-item.disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  background: #efe8d6;
-}
-.menu-item.disabled:hover { transform: none; background: #efe8d6; }
-.menu-item.disabled .cursor { opacity: 1; }
-.menu-hint {
-  margin-top: 30px;
-  font-size: 13px;
+.menu-list:hover .menu-item:first-child:not(:hover) { background: transparent; }
+.menu-list:hover .menu-item:first-child:not(:hover) .cursor { opacity: 0; }
+.menu-item:active { transform: translateY(1px); }
+.menu-item.disabled { opacity: 0.5; cursor: not-allowed; }
+.menu-item.disabled:hover { background: transparent; }
+.menu-item.disabled .cursor { opacity: 0; }
+.menu-item.disabled:hover .cursor { opacity: 1; }
+.menu-studio {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
   color: var(--hd-brown);
-  opacity: 0.85;
+  margin: 30px 0 0;
+  text-shadow: 0 1px 0 var(--cream), 0 -1px 0 var(--cream), 1px 0 0 var(--cream), -1px 0 0 var(--cream);
 }
 
 /* ---------- PANEL (settings / credits) ---------- */
@@ -671,5 +694,4 @@ html, body {
 
 @media (max-width: 420px) {
   .dialogue-text { font-size: 15px; }
-  .game-title { font-size: 14px; }
 }

@@ -375,10 +375,13 @@ function buildMapDOM() {
 }
 
 function renderStructures() {
-  const tileSize = getTileSizePx();
   const container = document.getElementById('map-structures');
+  fillStructures(container, getTileSizePx(), area().structures());
+}
+
+function fillStructures(container, tileSize, structures) {
   container.innerHTML = '';
-  area().structures().forEach(s => {
+  structures.forEach(s => {
     const footprintWidth = (s.colEnd - s.colStart + 1) * tileSize;
     const width = s.matchWidth ? footprintWidth * (s.scale != null ? s.scale : 1.18) : footprintWidth;
     const height = width / s.aspect;
@@ -392,6 +395,41 @@ function renderStructures() {
     el.innerHTML = `<img src="${s.src}" alt="">`;
     container.appendChild(el);
   });
+}
+
+// Fondo del menú: el mapa real de la parcela (sin personajes) recorrido
+// despacio de arriba abajo, al estilo del pueblo en Animal Crossing.
+function buildMenuBackdrop() {
+  const bg = document.getElementById('menu-bg');
+  const a = AREAS.main;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const tileSize = Math.max(40, Math.ceil(vw / a.cols));
+  const mapW = tileSize * a.cols, mapH = tileSize * a.rows;
+  bg.innerHTML = '';
+  const map = document.createElement('div');
+  map.className = 'menu-bg-map';
+  map.style.setProperty('--tile-size', tileSize + 'px');
+  map.style.setProperty('--map-cols', a.cols);
+  map.style.setProperty('--map-rows', a.rows);
+  map.style.width = mapW + 'px';
+  map.style.height = mapH + 'px';
+  map.style.left = ((vw - mapW) / 2) + 'px';
+  map.style.setProperty('--pan-dist', -Math.max(0, mapH - vh) + 'px');
+  const grid = document.createElement('div');
+  grid.className = 'map-grid';
+  for (let r = 0; r < a.rows; r++) {
+    for (let c = 0; c < a.cols; c++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile ' + a.tileClass(a.grid[r][c]);
+      grid.appendChild(tile);
+    }
+  }
+  const structs = document.createElement('div');
+  structs.className = 'map-structures';
+  map.appendChild(grid);
+  map.appendChild(structs);
+  bg.appendChild(map);
+  fillStructures(structs, tileSize, a.structures());
 }
 
 function renderObjects() {
@@ -859,3 +897,11 @@ document.getElementById('reveal-replay').addEventListener('click', () => {
 
 runBoot();
 initOverworld();
+buildMenuBackdrop();
+{
+  let menuBgTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(menuBgTimer);
+    menuBgTimer = setTimeout(buildMenuBackdrop, 200);
+  });
+}

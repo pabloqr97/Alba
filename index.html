@@ -10,7 +10,7 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap"></noscript>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
 
@@ -30,18 +30,17 @@
 
   <!-- ESCENA 2: MENÚ PRINCIPAL -->
   <section class="scene" id="scene-menu">
-    <div class="sky"></div>
+    <div class="menu-bg" id="menu-bg" aria-hidden="true"></div>
     <div class="menu-wrap">
       <h1 class="game-title">La Parcela</h1>
-      <p class="game-subtitle">— Edición Cumpleaños de Alba —</p>
-      <p class="menu-studio">PABOLITO GAMES</p>
+      <p class="game-subtitle">Edición Cumpleaños de Alba</p>
       <nav class="menu-list" id="menu-list">
         <button class="menu-item" data-target="scene-overworld"><span class="cursor">▶</span> Jugar</button>
         <button class="menu-item disabled" disabled><span class="cursor">✕</span> Cargar partida</button>
         <button class="menu-item" data-target="scene-settings"><span class="cursor">▶</span> Configuración</button>
         <button class="menu-item" data-target="scene-credits"><span class="cursor">▶</span> Créditos</button>
       </nav>
-      <p class="menu-hint">27.09.1998 — hoy sube de nivel</p>
+      <p class="menu-studio">PABOLITO GAMES</p>
     </div>
   </section>
 
@@ -171,6 +170,6 @@
     }
   }, 8000);
 </script>
-<script src="game.js"></script>
+<script src="game.js?v=5"></script>
 </body>
 </html>
