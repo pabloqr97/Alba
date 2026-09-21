@@ -16,7 +16,7 @@ const OBJECT_MEMORIES = [
     text: '¡Hermana mira cuántos bichos de la patata he atrapado! Corre, coge los tuyos y vamos al camino a aplastarlos. ¿Te acuerdas de todos los que aplastamos de pequeñas?' },
   { id: 'almendro', col: 9, row: 14, label: 'El almendro', showcase: 'almendra_title',
     text: 'Una almendra caída del almendro.\n(Recuerdo por escribir.)' },
-  { id: 'tomatera', col: 6, row: 22, label: 'La tomatera',
+  { id: 'tomatera', col: 5, row: 24, label: 'La tomatera',
     text: 'Una tomatera del huerto.\n(Recuerdo por escribir.)' },
 ];
 
@@ -371,7 +371,7 @@ function mainTileClass(type) {
     case 'H': return 'tile-asphalt';   // bajo la casa: el mismo suelo que alrededor
     case 'O': return 'tile-asphalt';
     case 'K': return 'tile-asphalt';   // bajo la caseta: idem
-    case 'I': return 'tile-greenhouse-floor';
+    case 'I': return 'tile-grass';   // bajo el invernadero: el mismo suelo que alrededor
     case 'W': return 'tile-grass';   // el suelo real lo dibuja la imagen de la piscina
     case 'B': return 'tile-grass';
     case 'P': return 'tile-path';
@@ -392,8 +392,8 @@ function mainStructures() {
   return [
     { src: houseUnlocked() ? 'game/cropped/house_open.png' : 'game/cropped/house.png',
       aspect: 1368 / 1776, colStart: 4, colEnd: 8, bottomRow: 5 },
-    { src: 'game/cropped/greenhouse_tile.png', aspect: 2646 / 1341,
-      colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.05 },
+    { src: 'game/cropped/invernadero_title.png', aspect: 1400 / 525,
+      colStart: 3, colEnd: 8, bottomRow: 18, matchWidth: true, scale: 1.1 },
     { src: 'game/cropped/caseta_title.png', aspect: 1121 / 2338,
       colStart: 1, colEnd: 2, bottomRow: 10, matchWidth: true, scale: 1.25,
       smoke: { x: 24.5, y: 2 } }, // humo por la chimenea (posición en % de la imagen)
