@@ -470,6 +470,33 @@ html, body {
   z-index: 50;
 }
 .scene-fade.active { opacity: 1; }
+
+/* Sombra de un avión sobrevolando la parcela (hay un aeropuerto cerca),
+   sincronizada con el sonido: cruza la pantalla cuando suena más fuerte. */
+.plane-shadow {
+  position: absolute;
+  top: 6%;
+  left: 122%;
+  width: 46%;
+  height: 15%;
+  background: radial-gradient(ellipse at center, rgba(10, 12, 8, 0.4) 0%, rgba(10, 12, 8, 0.22) 55%, rgba(10, 12, 8, 0) 78%);
+  filter: blur(6px);
+  mix-blend-mode: multiply;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 8;
+  transform: rotate(8deg);
+}
+.plane-shadow.flying { animation: plane-fly 11s linear; }
+/* De derecha a izquierda, como el sonido (ver planePanner en game.js) */
+@keyframes plane-fly {
+  0%   { left: 122%; top: 4%;  opacity: 0; }
+  10%  { opacity: 0.9; }
+  50%  { top: 42%; }
+  90%  { opacity: 0.9; }
+  100% { left: -32%; top: 80%; opacity: 0; }
+}
+
 .map-camera {
   position: absolute;
   top: 0;
@@ -847,6 +874,17 @@ html, body {
 @keyframes breathe {
   0%, 100% { transform: scale(1, 1); }
   50% { transform: scale(0.988, 1.035); }
+}
+/* Mientras camina (p. ej. Hermanita yendo hacia Alba en la escena del
+   bicho de la patata) se sustituye la respiración por un vaivén de paso,
+   ya que no hay fotogramas de andar dibujados para estos personajes. */
+.map-object.character.walking {
+  animation: walk-bob 0.3s ease-in-out infinite;
+  transform-origin: 50% 96%;
+}
+@keyframes walk-bob {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-6%) scale(0.97, 1.03); }
 }
 /* Saltito de alegría al hablar con ellos */
 .map-object.character.hop {

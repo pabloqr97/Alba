@@ -1,11 +1,13 @@
 // ============================================================
-// SONIDO — ambiente de la parcela + pasos según el terreno
+// SONIDO — ambiente, pasos según el terreno, charla y avión de fondo
 // ============================================================
 const SFX_FILES = {
   ambient: 'game/sfx/ambiente.mp3',
   cesped: 'game/sfx/pasos_cesped.mp3',
   tierra: 'game/sfx/pasos_tierra.mp3',
   hormigon: 'game/sfx/pasos_hormigon.mp3',
+  plane: 'game/sfx/avion.mp3',
+  talk: 'game/sfx/charla.mp3',
 };
 const SFX = {};
 Object.entries(SFX_FILES).forEach(([key, src]) => {
@@ -15,9 +17,60 @@ Object.entries(SFX_FILES).forEach(([key, src]) => {
   SFX[key] = audio;
 });
 SFX.ambient.volume = 0.32;
-SFX.cesped.volume = 0.55;
-SFX.tierra.volume = 0.5;
-SFX.hormigon.volume = 0.4;
+SFX.plane.loop = false; // pasa una vez y se reprograma el siguiente sobrevuelo
+SFX.plane.volume = 0.55;
+SFX.talk.volume = 0.6;
+// Los pasos se retriggerean nosotros mismos en cada zancada (ver
+// playFootstep), así que no necesitan repetirse solos.
+SFX.cesped.loop = false;
+SFX.tierra.loop = false;
+SFX.hormigon.loop = false;
+// El volumen nativo (0-1) no basta para nivelar los 3 pasos entre sí: la
+// grabación de tierra es de por sí mucho más floja que la de césped y,
+// sobre todo, que la de hormigón (comprobado por amplitud real de cada
+// archivo). Se dejan al máximo aquí y se equilibran de verdad con
+// ganancia de Web Audio en FOOTSTEP_GAIN, que si hace falta puede subir
+// de 1 (el volumen nativo nunca puede).
+SFX.cesped.volume = 1;
+SFX.tierra.volume = 1;
+SFX.hormigon.volume = 1;
+
+// ---- Web Audio: contexto compartido para nivelar los pasos y para
+// mover el sonido del avión de un lado a otro (ver más abajo) ----
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = Ctx ? new Ctx() : null;
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  return audioCtx;
+}
+
+const FOOTSTEP_GAIN = { cesped: 1.4, tierra: 2.9, hormigon: 0.3 };
+const footstepGainNodes = {};
+function routeFootstepThroughGain(category) {
+  const ctx = getAudioCtx();
+  if (!ctx || footstepGainNodes[category]) return;
+  try {
+    const source = ctx.createMediaElementSource(SFX[category]);
+    const gain = ctx.createGain();
+    gain.gain.value = soundMuted ? 0 : FOOTSTEP_GAIN[category];
+    source.connect(gain).connect(ctx.destination);
+    footstepGainNodes[category] = gain;
+  } catch (e) { /* navegador sin Web Audio: se queda con el volumen nativo */ }
+}
+
+let planePanner = null;
+function routePlaneThroughPanner() {
+  const ctx = getAudioCtx();
+  if (!ctx || planePanner || !ctx.createStereoPanner) return;
+  try {
+    const source = ctx.createMediaElementSource(SFX.plane);
+    planePanner = ctx.createStereoPanner();
+    source.connect(planePanner).connect(ctx.destination);
+  } catch (e) { /* sin panorama: sonará centrado, sin más */ }
+}
 
 // Qué pasos suenan según el tipo de suelo pisado (mismo mapeo para la
 // parcela y los interiores: suelo de tierra del invernadero -> tierra,
@@ -44,6 +97,9 @@ try { soundMuted = localStorage.getItem('parcelaMuted') === '1'; } catch (e) { /
 
 function applyMuted() {
   Object.values(SFX).forEach(a => { a.muted = soundMuted; });
+  Object.entries(footstepGainNodes).forEach(([category, gain]) => {
+    gain.gain.value = soundMuted ? 0 : FOOTSTEP_GAIN[category];
+  });
   document.querySelectorAll('.sound-toggle').forEach(b => {
     b.textContent = soundMuted ? '🔇' : '🔊';
     b.setAttribute('aria-label', soundMuted ? 'Activar sonido' : 'Silenciar');
@@ -61,18 +117,73 @@ function safePlay(audio) {
   if (p && p.catch) p.catch(() => { /* el navegador bloqueó el autoplay; se reintentará en el próximo gesto */ });
 }
 
-function startAmbient() { if (SFX.ambient.paused) safePlay(SFX.ambient); }
-function pauseAmbient() { SFX.ambient.pause(); }
+function startAmbient() {
+  if (SFX.ambient.paused) safePlay(SFX.ambient);
+  if (!planeTimer) schedulePlanePass(PLANE_FIRST_DELAY_MS);
+}
+function pauseAmbient() {
+  SFX.ambient.pause();
+  clearTimeout(planeTimer);
+  planeTimer = null;
+  SFX.plane.pause();
+  const shadow = document.getElementById('plane-shadow');
+  if (shadow) shadow.classList.remove('flying');
+}
+
+// ---- Avión de fondo: la parcela está cerca de un aeropuerto, así que de
+// vez en cuando pasa uno por encima. Cruza de derecha a izquierda, sonido
+// incluido (panorama estéreo), y la sombra aparece justo cuando el sonido
+// suena más fuerte (medido en el propio archivo: sube desde el segundo 0,
+// se mantiene alto entre el 9 y el 20, y decae hasta el final en el 41).
+// El siguiente sobrevuelo se programa 60s después de que termine el
+// anterior (no 60s entre el inicio de uno y el otro). ----
+const PLANE_GAP_AFTER_END_MS = 60000;
+const PLANE_FIRST_DELAY_MS = 25000; // el primero tarda un poco en aparecer
+const PLANE_SHADOW_DELAY_MS = 9200; // lo que tarda el sonido en hacerse fuerte
+const PLANE_SHADOW_DURATION_S = 11; // duración de esa parte fuerte (coincide con la animación CSS)
+let planeTimer = null;
+
+function schedulePlanePass(delayMs) {
+  clearTimeout(planeTimer);
+  planeTimer = setTimeout(triggerPlanePass, delayMs);
+}
+
+function triggerPlanePass() {
+  if (!document.getElementById('scene-overworld').classList.contains('active')) return;
+  routePlaneThroughPanner();
+  SFX.plane.currentTime = 0;
+  safePlay(SFX.plane);
+  if (planePanner && audioCtx) {
+    // Empieza sonando a la derecha y se desplaza a la izquierda justo
+    // durante el tramo en que se ve (y se oye más fuerte) la sombra.
+    const now = audioCtx.currentTime;
+    const panStart = now + PLANE_SHADOW_DELAY_MS / 1000;
+    planePanner.pan.cancelScheduledValues(now);
+    planePanner.pan.setValueAtTime(1, now);
+    planePanner.pan.setValueAtTime(1, panStart);
+    planePanner.pan.linearRampToValueAtTime(-1, panStart + PLANE_SHADOW_DURATION_S);
+  }
+  setTimeout(() => {
+    const shadow = document.getElementById('plane-shadow');
+    if (!shadow) return;
+    shadow.classList.remove('flying');
+    void shadow.offsetWidth;
+    shadow.classList.add('flying');
+  }, PLANE_SHADOW_DELAY_MS);
+}
+// El siguiente sobrevuelo se arma cuando el sonido termina de verdad
+// (no si se corta al salir de la parcela; eso lo controla pauseAmbient).
+SFX.plane.addEventListener('ended', () => schedulePlanePass(PLANE_GAP_AFTER_END_MS));
 
 let currentFootstep = null;
 function playFootstep(category) {
   if (!category) { stopFootsteps(); return; }
+  routeFootstepThroughGain(category);
   const audio = SFX[category];
-  if (currentFootstep === audio) {
-    if (audio.paused) safePlay(audio);
-    return;
-  }
-  stopFootsteps();
+  // Se retriggerea en cada zancada (no se deja correr sola en bucle), así
+  // el sonido queda pegado a la cadencia real de los pasos (300/360 ms)
+  // en vez de a la duración que tenga grabada cada archivo.
+  if (currentFootstep && currentFootstep !== audio) currentFootstep.pause();
   currentFootstep = audio;
   audio.currentTime = 0;
   safePlay(audio);
@@ -83,6 +194,30 @@ function stopFootsteps() {
 
 applyMuted();
 document.querySelectorAll('.sound-toggle').forEach(b => b.addEventListener('click', toggleMuted));
+
+// ---- Charla al estilo Animal Crossing: en vez de un pitido por letra,
+// se deja sonando en bucle un clip de charla mientras se escribe el
+// texto (con un tono/velocidad propios de cada personaje) y se pausa en
+// las pausas largas (final de frase, coma...), para que la cadencia de
+// la "voz" respire con la del texto en vez de sonar de corrido sin parar. ----
+function hashToRange(str, min, max) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return min + (h % (max - min));
+}
+
+function setTalkVoice(speakerKey) {
+  SFX.talk.playbackRate = hashToRange(speakerKey || 'default', 85, 128) / 100;
+}
+
+function startTalkAudio() {
+  if (soundMuted) return;
+  SFX.talk.currentTime = 0;
+  safePlay(SFX.talk);
+}
+function resumeTalkAudio() { if (SFX.talk.paused) safePlay(SFX.talk); }
+function pauseTalkAudio() { SFX.talk.pause(); }
+function stopTalkAudio() { SFX.talk.pause(); }
 
 // ============================================================
 // CONFIGURACIÓN EDITABLE — cambia aquí el contenido sin tocar el resto
@@ -874,7 +1009,10 @@ function tryMove(dx, dy, forcedFacing) {
     const warp = area().warps[key];
     if (warp) {
       renderPlayerPosition();
-      fadeToArea(warp.area, warp.enter);
+      // Deja ver a Alba llegar del todo a la puerta (con sus pasos)
+      // antes de fundir a negro, en vez de fundir a mitad del paso.
+      inputLocked = true;
+      setTimeout(() => fadeToArea(warp.area, warp.enter), stepMs + 90);
       return;
     }
   } else {
@@ -1005,6 +1143,7 @@ function finishTyping() {
   renderTyped(typing.full, typing.full.length);
   typing = null;
   setDialogueDone(true);
+  stopTalkAudio();
 }
 
 function typeText(full) {
@@ -1012,13 +1151,16 @@ function typeText(full) {
   typing = { full, i: 0, timer: null };
   setDialogueDone(false);
   renderTyped(full, 0);
+  startTalkAudio();
   const tick = () => {
     if (!typing) return;
+    resumeTalkAudio(); // por si la pausa anterior era de coma/punto
     typing.i++;
     renderTyped(full, typing.i);
-    if (typing.i >= full.length) { typing = null; setDialogueDone(true); return; }
+    if (typing.i >= full.length) { typing = null; setDialogueDone(true); stopTalkAudio(); return; }
     const ch = full[typing.i - 1];
     const pause = '.!?'.includes(ch) ? 260 : (ch === ',' || ch === ':') ? 120 : ch === '\n' ? 200 : 24;
+    if (pause > 60) pauseTalkAudio(); // respira en los puntos, comas y saltos de línea
     typing.timer = setTimeout(tick, pause);
   };
   typing.timer = setTimeout(tick, TYPE_START_DELAY);
@@ -1057,6 +1199,7 @@ function zoomCameraOut() {
 function openOverlay(text, closeLabel, name, showcase) {
   stopMoveLoop();
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  setTalkVoice(name);
   document.getElementById('interaction-name').textContent = name || '';
   const showEl = document.getElementById('dialogue-showcase');
   showEl.classList.toggle('on', !!showcase);
@@ -1071,6 +1214,7 @@ function openOverlay(text, closeLabel, name, showcase) {
 
 function closeOverlay() {
   if (typing) { clearTimeout(typing.timer); typing = null; }
+  stopTalkAudio();
   document.getElementById('interaction-overlay').classList.remove('active');
   document.getElementById('dialogue-showcase').classList.remove('on');
   document.getElementById('scene-overworld').classList.remove('dialogue-open');
@@ -1174,9 +1318,10 @@ function walkElement(el, path, done) {
   el.classList.add('walking');
   let i = 0;
   const next = () => {
-    if (i >= path.length) { done(); return; }
+    if (i >= path.length) { stopFootsteps(); done(); return; }
     el.style.left = path[i].col * ts + 'px';
     el.style.top = path[i].row * ts + 'px';
+    playFootstep(terrainSoundFor(path[i].col, path[i].row));
     i++;
     setTimeout(next, STEP_WALK_MS);
   };
