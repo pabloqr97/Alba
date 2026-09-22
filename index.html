@@ -10,7 +10,7 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap"></noscript>
-<link rel="stylesheet" href="styles.css?v=29">
+<link rel="stylesheet" href="styles.css?v=30">
 </head>
 <body>
 
@@ -83,7 +83,10 @@
   <!-- ESCENA 5: LA PARCELA (exploración — también aloja los interiores) -->
   <section class="scene" id="scene-overworld">
     <div class="overworld-hud">
-      <button class="hud-menu-btn" id="overworld-menu-btn">☰ Menú</button>
+      <div class="hud-left">
+        <button class="hud-menu-btn" id="overworld-menu-btn">☰ Menú</button>
+        <button class="sound-toggle" aria-label="Silenciar">🔊</button>
+      </div>
       <div class="hud-counters">
         <span>Recuerdos <span id="hud-memories">0</span>/<span id="hud-memories-total">0</span></span>
         <span>Pistas <span id="hud-clues">0</span>/<span id="hud-clues-total">0</span></span>
@@ -96,7 +99,7 @@
         <div class="map-grid" id="map-grid"></div>
         <div class="map-structures" id="map-structures"></div>
         <div class="map-objects" id="map-objects"></div>
-        <div class="player-sprite" id="player-sprite"><img id="player-img" src="game/cropped/player_down.png" alt=""></div>
+        <div class="player-sprite" id="player-sprite"><div class="sprite-shadow"></div><img id="player-img" src="game/cropped/player_down.png" alt=""></div>
       </div>
       <div class="scene-fade" id="scene-fade"></div>
     </div>
@@ -173,6 +176,6 @@
     }
   }, 8000);
 </script>
-<script src="game.js?v=29"></script>
+<script src="game.js?v=30"></script>
 </body>
 </html>

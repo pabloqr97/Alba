@@ -401,7 +401,8 @@ html, body {
   gap: 10px;
   pointer-events: none;
 }
-.hud-menu-btn, .hud-counters {
+.hud-left { display: flex; align-items: center; gap: 8px; pointer-events: none; }
+.hud-menu-btn, .hud-counters, .sound-toggle {
   pointer-events: auto;
   font-family: 'Baloo 2', sans-serif;
   font-weight: 800;
@@ -412,9 +413,21 @@ html, body {
   border-radius: 999px;
   box-shadow: 0 4px 0 var(--shadow);
 }
-.hud-menu-btn { padding: 6px 16px; cursor: pointer; }
+.hud-menu-btn { padding: 6px 16px; cursor: pointer; white-space: nowrap; flex: none; }
 .hud-menu-btn:hover { background: var(--hd-wheat); }
 .hud-counters { display: flex; gap: 14px; padding: 6px 16px; }
+.sound-toggle {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  line-height: 1;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sound-toggle:hover { background: var(--hd-wheat); }
 .overworld-hint {
   position: absolute;
   top: 62px;
@@ -439,6 +452,7 @@ html, body {
 @media (min-width: 900px) {
   .overworld-hud { top: 18px; left: 22px; right: 22px; }
   .hud-menu-btn, .hud-counters { font-size: 17px; }
+  .sound-toggle { width: 42px; height: 42px; font-size: 18px; }
   .overworld-hint { top: 72px; font-size: 16px; padding: 6px 20px; }
 }
 .map-viewport {
@@ -584,6 +598,24 @@ html, body {
 }
 .map-object.character.small img { height: calc(var(--tile-size) * 1.1); }
 .map-object.character.tree img { height: calc(var(--tile-size) * 2.1); }
+
+/* Sombra en el suelo de personas y animales (los árboles no la llevan) */
+.sprite-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  width: calc(var(--tile-size) * 0.56);
+  height: calc(var(--tile-size) * 0.22);
+  margin-left: calc(var(--tile-size) * -0.28);
+  background: radial-gradient(ellipse at center, rgba(20, 20, 12, 0.4) 0%, rgba(20, 20, 12, 0.4) 35%, rgba(20, 20, 12, 0) 72%);
+  pointer-events: none;
+}
+.map-object.character.small .sprite-shadow {
+  width: calc(var(--tile-size) * 0.4);
+  height: calc(var(--tile-size) * 0.15);
+  margin-left: calc(var(--tile-size) * -0.2);
+  bottom: 5%;
+}
 .player-sprite.mirror img,
 .map-object.mirror img { transform: translateX(-50%) scaleX(-1); }
 .player-sprite.stepping img { animation: step-pulse 0.18s ease-out; }

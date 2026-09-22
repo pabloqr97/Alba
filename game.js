@@ -1,4 +1,90 @@
 // ============================================================
+// SONIDO — ambiente de la parcela + pasos según el terreno
+// ============================================================
+const SFX_FILES = {
+  ambient: 'game/sfx/ambiente.mp3',
+  cesped: 'game/sfx/pasos_cesped.mp3',
+  tierra: 'game/sfx/pasos_tierra.mp3',
+  hormigon: 'game/sfx/pasos_hormigon.mp3',
+};
+const SFX = {};
+Object.entries(SFX_FILES).forEach(([key, src]) => {
+  const audio = new Audio(src);
+  audio.loop = true;
+  audio.preload = 'auto';
+  SFX[key] = audio;
+});
+SFX.ambient.volume = 0.32;
+SFX.cesped.volume = 0.55;
+SFX.tierra.volume = 0.5;
+SFX.hormigon.volume = 0.4;
+
+// Qué pasos suenan según el tipo de suelo pisado (mismo mapeo para la
+// parcela y los interiores: suelo de tierra del invernadero -> tierra,
+// suelo de la casa -> hormigón)
+const TERRAIN_SOUND = {
+  'tile-grass': 'cesped',
+  'tile-crop': 'tierra',
+  'tile-dirtplants': 'tierra',
+  'tile-curbdirt-r': 'tierra',
+  'tile-curbdirt-l': 'tierra',
+  'tile-interior-floor-crop': 'tierra',
+  'tile-asphalt': 'hormigon',
+  'tile-path': 'hormigon',
+  'tile-interior-floor': 'hormigon',
+};
+function terrainSoundFor(col, row) {
+  const a = area();
+  if (row < 0 || row >= a.rows || col < 0 || col >= a.cols) return null;
+  return TERRAIN_SOUND[a.tileClass(a.grid[row][col])] || null;
+}
+
+let soundMuted = false;
+try { soundMuted = localStorage.getItem('parcelaMuted') === '1'; } catch (e) { /* Safari privado, etc. */ }
+
+function applyMuted() {
+  Object.values(SFX).forEach(a => { a.muted = soundMuted; });
+  document.querySelectorAll('.sound-toggle').forEach(b => {
+    b.textContent = soundMuted ? '🔇' : '🔊';
+    b.setAttribute('aria-label', soundMuted ? 'Activar sonido' : 'Silenciar');
+  });
+}
+
+function toggleMuted() {
+  soundMuted = !soundMuted;
+  try { localStorage.setItem('parcelaMuted', soundMuted ? '1' : '0'); } catch (e) { /* ignorar */ }
+  applyMuted();
+}
+
+function safePlay(audio) {
+  const p = audio.play();
+  if (p && p.catch) p.catch(() => { /* el navegador bloqueó el autoplay; se reintentará en el próximo gesto */ });
+}
+
+function startAmbient() { if (SFX.ambient.paused) safePlay(SFX.ambient); }
+function pauseAmbient() { SFX.ambient.pause(); }
+
+let currentFootstep = null;
+function playFootstep(category) {
+  if (!category) { stopFootsteps(); return; }
+  const audio = SFX[category];
+  if (currentFootstep === audio) {
+    if (audio.paused) safePlay(audio);
+    return;
+  }
+  stopFootsteps();
+  currentFootstep = audio;
+  audio.currentTime = 0;
+  safePlay(audio);
+}
+function stopFootsteps() {
+  if (currentFootstep) { currentFootstep.pause(); currentFootstep = null; }
+}
+
+applyMuted();
+document.querySelectorAll('.sound-toggle').forEach(b => b.addEventListener('click', toggleMuted));
+
+// ============================================================
 // CONFIGURACIÓN EDITABLE — cambia aquí el contenido sin tocar el resto
 // ============================================================
 
@@ -89,7 +175,8 @@ function showScene(id) {
   const target = document.getElementById(id);
   if (target) target.classList.add('active');
   document.getElementById('app').classList.toggle('with-backdrop', BACKDROP_SCENES.includes(id));
-  if (id === 'scene-overworld') updateCamera();
+  if (id === 'scene-overworld') { updateCamera(); }
+  else { pauseAmbient(); stopFootsteps(); }
 }
 
 // Jugar: fundido a negro, tarjeta de título y fundido de vuelta al mapa,
@@ -128,6 +215,7 @@ document.getElementById('intro-close').addEventListener('click', closeIntro);
 function startGameTransition() {
   if (gameTransitioning) return;
   gameTransitioning = true;
+  startAmbient(); // clic = gesto del usuario, momento seguro para arrancar el audio
   const fade = document.getElementById('screen-fade');
   fade.classList.add('on');
   setTimeout(() => {
@@ -149,7 +237,7 @@ document.querySelectorAll('[data-target]').forEach(el => {
   });
 });
 
-document.getElementById('overworld-menu-btn').addEventListener('click', () => showScene('scene-menu'));
+document.getElementById('overworld-menu-btn').addEventListener('click', () => { stopMoveLoop(); showScene('scene-menu'); });
 
 // ============================================================
 // ESCENA BOOT — barra de carga falsa (con tiempo para disfrutarla)
@@ -650,6 +738,10 @@ function renderObjects() {
         // respiración suave, desfasada para que no se muevan todos a la vez
         el.style.animationDuration = (2.9 + Math.random() * 1.2).toFixed(2) + 's';
         el.style.animationDelay = (-Math.random() * 4).toFixed(2) + 's';
+        // sombra en el suelo (personas y animales; los árboles no la llevan)
+        const shadow = document.createElement('div');
+        shadow.className = 'sprite-shadow';
+        el.appendChild(shadow);
       }
       const img = document.createElement('img');
       img.src = `game/cropped/${obj.sprite}.png`;
@@ -763,6 +855,7 @@ function tryMove(dx, dy, forcedFacing) {
   if (currentArea === 'main' && HOUSE_DOOR_KEYS.includes(key) && !houseUnlocked()) {
     // Puerta cerrada: no se entra, pero sin cuadro que cerrar (el aviso
     // informativo aparece solo, junto a la puerta; ver updateProximity)
+    stopFootsteps();
     renderPlayerPosition();
     updateProximity();
     return;
@@ -772,6 +865,7 @@ function tryMove(dx, dy, forcedFacing) {
     player.col = targetCol;
     player.row = targetRow;
     stepWalkFrame();
+    playFootstep(terrainSoundFor(player.col, player.row));
     const sprite = document.getElementById('player-sprite');
     sprite.classList.remove('stepping');
     void sprite.offsetWidth;
@@ -783,6 +877,8 @@ function tryMove(dx, dy, forcedFacing) {
       fadeToArea(warp.area, warp.enter);
       return;
     }
+  } else {
+    stopFootsteps();
   }
   renderPlayerPosition();
   updateProximity();
@@ -1256,6 +1352,7 @@ function stopMoveLoop() {
   clearInterval(moveInterval);
   moveInterval = null;
   currentDir = null;
+  stopFootsteps();
 }
 function handleJoystickPointer(e) {
   const dx = e.clientX - joystickCenter.x;
