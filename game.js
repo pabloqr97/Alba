@@ -1,11 +1,11 @@
 // ============================================================
 // SONIDO — ambiente, pasos según el terreno, charla y avión de fondo
 // ============================================================
+// Los pasos van aparte (FOOTSTEP_FILES, más abajo): se reproducen como
+// buffers de Web Audio, no como <audio>, para poder cortarlos entre
+// zancada y zancada sin el "clic" de rebobinar un <audio> a medio sonar.
 const SFX_FILES = {
   ambient: 'game/sfx/ambiente.mp3',
-  cesped: 'game/sfx/pasos_cesped.mp3',
-  tierra: 'game/sfx/pasos_tierra.mp3',
-  hormigon: 'game/sfx/pasos_hormigon.mp3',
   plane: 'game/sfx/avion.mp3',
   talk: 'game/sfx/charla.mp3',
 };
@@ -20,23 +20,9 @@ SFX.ambient.volume = 0.32;
 SFX.plane.loop = false; // pasa una vez y se reprograma el siguiente sobrevuelo
 SFX.plane.volume = 0.55;
 SFX.talk.volume = 0.6;
-// Los pasos se retriggerean nosotros mismos en cada zancada (ver
-// playFootstep), así que no necesitan repetirse solos.
-SFX.cesped.loop = false;
-SFX.tierra.loop = false;
-SFX.hormigon.loop = false;
-// El volumen nativo (0-1) no basta para nivelar los 3 pasos entre sí: la
-// grabación de tierra es de por sí mucho más floja que la de césped y,
-// sobre todo, que la de hormigón (comprobado por amplitud real de cada
-// archivo). Se dejan al máximo aquí y se equilibran de verdad con
-// ganancia de Web Audio en FOOTSTEP_GAIN, que si hace falta puede subir
-// de 1 (el volumen nativo nunca puede).
-SFX.cesped.volume = 1;
-SFX.tierra.volume = 1;
-SFX.hormigon.volume = 1;
 
-// ---- Web Audio: contexto compartido para nivelar los pasos y para
-// mover el sonido del avión de un lado a otro (ver más abajo) ----
+// ---- Web Audio: contexto compartido para los pasos, la charla y el
+// avión (paneo, ganancia por zancada, etc. — ver más abajo) ----
 let audioCtx = null;
 function getAudioCtx() {
   if (!audioCtx) {
@@ -47,19 +33,48 @@ function getAudioCtx() {
   return audioCtx;
 }
 
+// ---- Pasos: un fichero por terreno, decodificado una sola vez a un
+// AudioBuffer. Cada zancada dispara una copia nueva (no relanza ni
+// rebobina un <audio> que ya estaba sonando, que era lo que se oía como
+// un "tijeretazo" al cortar césped a medio clip), con:
+//  - un pie por altavoz (paneo alterno izquierda/derecha),
+//  - un pie algo más flojo que el otro,
+//  - una pizca de variación de tono en cada paso,
+// para que no suene todo el rato exactamente al mismo "clac" repetido.
+const FOOTSTEP_FILES = {
+  cesped: 'game/sfx/pasos_cesped.mp3',
+  tierra: 'game/sfx/pasos_tierra.mp3',
+  hormigon: 'game/sfx/pasos_hormigon.mp3',
+};
+// Nivel base por terreno: la grabación de tierra es de por sí mucho más
+// floja que la de césped y, sobre todo, que la de hormigón (comprobado
+// por amplitud real de cada archivo), así que se compensa aquí.
 const FOOTSTEP_GAIN = { cesped: 1.4, tierra: 2.9, hormigon: 0.3 };
-const footstepGainNodes = {};
-function routeFootstepThroughGain(category) {
+const footstepBuffers = {}; // category -> AudioBuffer (o null mientras carga)
+let footstepMasterGain = null;
+
+function ensureFootstepMasterGain() {
   const ctx = getAudioCtx();
-  if (!ctx || footstepGainNodes[category]) return;
-  try {
-    const source = ctx.createMediaElementSource(SFX[category]);
-    const gain = ctx.createGain();
-    gain.gain.value = soundMuted ? 0 : FOOTSTEP_GAIN[category];
-    source.connect(gain).connect(ctx.destination);
-    footstepGainNodes[category] = gain;
-  } catch (e) { /* navegador sin Web Audio: se queda con el volumen nativo */ }
+  if (!ctx) return null;
+  if (!footstepMasterGain) {
+    footstepMasterGain = ctx.createGain();
+    footstepMasterGain.gain.value = soundMuted ? 0 : 1;
+    footstepMasterGain.connect(ctx.destination);
+  }
+  return footstepMasterGain;
 }
+
+function ensureFootstepBuffer(category) {
+  const ctx = getAudioCtx();
+  if (!ctx || category in footstepBuffers) return;
+  footstepBuffers[category] = null; // marca "ya pedido" para no duplicar la carga
+  fetch(FOOTSTEP_FILES[category])
+    .then(r => r.arrayBuffer())
+    .then(data => ctx.decodeAudioData(data))
+    .then(buf => { footstepBuffers[category] = buf; })
+    .catch(() => { delete footstepBuffers[category]; });
+}
+function preloadFootstepBuffers() { Object.keys(FOOTSTEP_FILES).forEach(ensureFootstepBuffer); }
 
 let planePanner = null;
 function routePlaneThroughPanner() {
@@ -97,9 +112,7 @@ try { soundMuted = localStorage.getItem('parcelaMuted') === '1'; } catch (e) { /
 
 function applyMuted() {
   Object.values(SFX).forEach(a => { a.muted = soundMuted; });
-  Object.entries(footstepGainNodes).forEach(([category, gain]) => {
-    gain.gain.value = soundMuted ? 0 : FOOTSTEP_GAIN[category];
-  });
+  if (footstepMasterGain) footstepMasterGain.gain.value = soundMuted ? 0 : 1;
   document.querySelectorAll('.sound-toggle').forEach(b => {
     b.textContent = soundMuted ? '🔇' : '🔊';
     b.setAttribute('aria-label', soundMuted ? 'Activar sonido' : 'Silenciar');
@@ -120,6 +133,7 @@ function safePlay(audio) {
 function startAmbient() {
   if (SFX.ambient.paused) safePlay(SFX.ambient);
   if (!planeTimer) schedulePlanePass(PLANE_FIRST_DELAY_MS);
+  preloadFootstepBuffers(); // que estén listos antes de que Alba dé el primer paso
 }
 function pauseAmbient() {
   SFX.ambient.pause();
@@ -175,21 +189,56 @@ function triggerPlanePass() {
 // (no si se corta al salir de la parcela; eso lo controla pauseAmbient).
 SFX.plane.addEventListener('ended', () => schedulePlanePass(PLANE_GAP_AFTER_END_MS));
 
-let currentFootstep = null;
+let footstepFoot = 0;             // alterna 0/1 en cada zancada (izquierda/derecha)
+let currentFootstepNodes = null;  // { source, gain } del paso que suena ahora mismo
+
 function playFootstep(category) {
   if (!category) { stopFootsteps(); return; }
-  routeFootstepThroughGain(category);
-  const audio = SFX[category];
-  // Se retriggerea en cada zancada (no se deja correr sola en bucle), así
-  // el sonido queda pegado a la cadencia real de los pasos (300/360 ms)
-  // en vez de a la duración que tenga grabada cada archivo.
-  if (currentFootstep && currentFootstep !== audio) currentFootstep.pause();
-  currentFootstep = audio;
-  audio.currentTime = 0;
-  safePlay(audio);
+  const ctx = getAudioCtx();
+  ensureFootstepBuffer(category);
+  const buffer = footstepBuffers[category];
+  const master = ensureFootstepMasterGain();
+  if (!ctx || !buffer || !master) return; // aún decodificando (solo el primerísimo paso): se salta éste sin más
+
+  const now = ctx.currentTime;
+  // Corta el paso anterior con una salida corta en vez de en seco: cortar
+  // el <audio> a medio sonar (como se hacía antes) es lo que se oía como
+  // un "tijeretazo", sobre todo en césped.
+  if (currentFootstepNodes) {
+    const prev = currentFootstepNodes;
+    prev.gain.gain.cancelScheduledValues(now);
+    prev.gain.gain.setValueAtTime(prev.gain.gain.value, now);
+    prev.gain.gain.linearRampToValueAtTime(0.0001, now + 0.02);
+    try { prev.source.stop(now + 0.025); } catch (e) { /* ya estaba parado */ }
+  }
+
+  footstepFoot = footstepFoot ? 0 : 1;
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.playbackRate.value = 0.95 + Math.random() * 0.1; // pizca de variación, para que no suene siempre igual de clavado
+  const panner = ctx.createStereoPanner();
+  panner.pan.value = footstepFoot ? 0.32 : -0.32; // un pie por cada altavoz
+  const gain = ctx.createGain();
+  const target = FOOTSTEP_GAIN[category] * (footstepFoot ? 1 : 0.86); // un pie algo más flojo que el otro
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(target, now + 0.012); // ataque corto: sin clic al empezar tampoco
+  source.connect(panner).connect(gain).connect(master);
+  source.start(now);
+  currentFootstepNodes = { source, gain };
 }
+
 function stopFootsteps() {
-  if (currentFootstep) { currentFootstep.pause(); currentFootstep = null; }
+  if (!currentFootstepNodes) return;
+  const ctx = getAudioCtx();
+  const { source, gain } = currentFootstepNodes;
+  if (ctx) {
+    const now = ctx.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.linearRampToValueAtTime(0.0001, now + 0.03);
+    try { source.stop(now + 0.035); } catch (e) { /* ya estaba parado */ }
+  }
+  currentFootstepNodes = null;
 }
 
 applyMuted();
