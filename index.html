@@ -7,10 +7,10 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏡</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&display=swap"></noscript>
-<link rel="stylesheet" href="styles.css?v=33">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&family=Bungee&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&family=Bungee&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;700;800&family=Bungee&display=swap"></noscript>
+<link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
 
@@ -75,6 +75,7 @@
           <li><strong>Agradecimientos especiales</strong> Carmensita</li>
           <li><strong>Motor del juego</strong> HTML, CSS, JS y mucho cariño</li>
         </ul>
+        <p class="credits-note">De un mapa de bloques de colores sin nombre a esto: parras que se mecen con el viento, una escalera de verdad, un avión que pasa por el aeropuerto de al lado y hasta un paso distinto para cada suelo. Docenas de "sube, súbelo" después, aquí está — hecho a fuego lento, cambio a cambio.</p>
         <button class="menu-item back" data-target="scene-menu"><span class="cursor">◀</span> Volver</button>
       </div>
     </div>
@@ -133,31 +134,42 @@
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- ESCENA 6: RULETA -->
-  <section class="scene" id="scene-wheel">
-    <div class="wheel-wrap">
-      <h2 class="panel-title">La Ruleta de los Regalos</h2>
-      <p class="wheel-subtitle">Entre todo lo que has encontrado en la parcela, la ruleta decide qué te llevas.</p>
-      <div class="wheel-pointer">▼</div>
-      <div class="wheel" id="wheel"></div>
-      <button class="btn-next" id="wheel-spin">Girar la ruleta</button>
+    <!-- Ruleta de los regalos: overlay sobre la propia parcela (como si
+         estuviese encima de una mesa), se gira arrastrando con el dedo o
+         el ratón — nada de un botón de "girar". -->
+    <div class="wheel-overlay" id="wheel-overlay">
+      <div class="wheel-table" id="wheel-table">
+        <p class="wheel-title">La Ruleta de los Regalos</p>
+        <div class="wheel-rig">
+          <div class="wheel-pegs" id="wheel-pegs"></div>
+          <div class="wheel-disc" id="wheel-disc"></div>
+          <div class="wheel-hub"></div>
+          <div class="wheel-pointer" id="wheel-pointer">▼</div>
+        </div>
+        <p class="wheel-hint">Arrastra la ruleta para girarla</p>
+      </div>
     </div>
   </section>
 
-  <!-- ESCENA 7: REVELACIÓN -->
+  <!-- ESCENA 6: REVELACIÓN (mismo fondo difuminado que el menú) -->
   <section class="scene" id="scene-reveal">
     <div class="confetti-layer" id="confetti-layer"></div>
     <div class="reveal-card">
-      <p class="reveal-label">¡OBJETO OBTENIDO!</p>
-      <div class="ticket">
-        <p class="ticket-artist">KAROL G</p>
-        <p class="ticket-detail">27 · JUNIO · 2027</p>
-        <p class="ticket-detail">Madrid</p>
-        <p class="ticket-note">2 entradas</p>
+      <div class="poster">
+        <div class="poster-deco" aria-hidden="true"></div>
+        <p class="poster-eyebrow">¡Enhorabuena! Te ha tocado</p>
+        <p class="poster-artist">KAROL G</p>
+        <p class="poster-tour">Mañana Será Bonito Tour</p>
+        <div class="poster-details">
+          <span>27 · JUNIO · 2027</span>
+          <span>Madrid, España</span>
+          <span>2 ENTRADAS</span>
+        </div>
+        <div class="poster-barcode" aria-hidden="true"></div>
       </div>
-      <p class="reveal-message">Feliz cumpleaños, Albuchi.<br>Nivel 28 desbloqueado y... ¡misión cumplida!<br>Nos vamos a ver a Karol G.<br>Te quiero.<br>— Pabolito</p>
+      <p class="reveal-message">¡Feliz cumpleaños Albuchi! ¡Nos vamos a ver a la bichota! Sé que querías al Mac, pero no te preocupes, te dejaré usar el mío hasta que te compres uno.<br>Te quiero mucho :)<br>— Pabolito</p>
+      <button class="btn-back" id="reveal-credits">Ver créditos ▶</button>
       <button class="btn-back" id="reveal-replay">◀ Volver al menú</button>
     </div>
   </section>
@@ -177,6 +189,6 @@
     }
   }, 8000);
 </script>
-<script src="game.js?v=33"></script>
+<script src="game.js?v=34"></script>
 </body>
 </html>

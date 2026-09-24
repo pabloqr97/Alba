@@ -8,6 +8,10 @@ const SFX_FILES = {
   ambient: 'game/sfx/ambiente.mp3',
   plane: 'game/sfx/avion.mp3',
   talk: 'game/sfx/charla.mp3',
+  // Música de fondo estilo Animal Crossing: falta el archivo (ver nota en
+  // el chat sobre por qué no se ha bajado de YouTube). En cuanto Pablo
+  // añada game/sfx/musica.mp3 (loopeable), suena sola sin tocar nada más.
+  music: 'game/sfx/musica.mp3',
 };
 const SFX = {};
 Object.entries(SFX_FILES).forEach(([key, src]) => {
@@ -19,7 +23,8 @@ Object.entries(SFX_FILES).forEach(([key, src]) => {
 SFX.ambient.volume = 0.32;
 SFX.plane.loop = false; // pasa una vez y se reprograma el siguiente sobrevuelo
 SFX.plane.volume = 0.55;
-SFX.talk.volume = 0.6;
+SFX.talk.volume = 0.38;
+SFX.music.volume = 0.16; // bajita, pero presente
 
 // ---- Web Audio: contexto compartido para los pasos, la charla y el
 // avión (paneo, ganancia por zancada, etc. — ver más abajo) ----
@@ -50,6 +55,7 @@ const FOOTSTEP_FILES = {
 // floja que la de césped y, sobre todo, que la de hormigón (comprobado
 // por amplitud real de cada archivo), así que se compensa aquí.
 const FOOTSTEP_GAIN = { cesped: 1.4, tierra: 2.9, hormigon: 0.3 };
+const FOOTSTEP_MASTER_LEVEL = 0.55; // volumen general de los pasos (sin tocar el equilibrio entre ellos)
 const footstepBuffers = {}; // category -> AudioBuffer (o null mientras carga)
 let footstepMasterGain = null;
 
@@ -58,7 +64,7 @@ function ensureFootstepMasterGain() {
   if (!ctx) return null;
   if (!footstepMasterGain) {
     footstepMasterGain = ctx.createGain();
-    footstepMasterGain.gain.value = soundMuted ? 0 : 1;
+    footstepMasterGain.gain.value = soundMuted ? 0 : FOOTSTEP_MASTER_LEVEL;
     footstepMasterGain.connect(ctx.destination);
   }
   return footstepMasterGain;
@@ -112,7 +118,7 @@ try { soundMuted = localStorage.getItem('parcelaMuted') === '1'; } catch (e) { /
 
 function applyMuted() {
   Object.values(SFX).forEach(a => { a.muted = soundMuted; });
-  if (footstepMasterGain) footstepMasterGain.gain.value = soundMuted ? 0 : 1;
+  if (footstepMasterGain) footstepMasterGain.gain.value = soundMuted ? 0 : FOOTSTEP_MASTER_LEVEL;
   document.querySelectorAll('.sound-toggle').forEach(b => {
     b.textContent = soundMuted ? '🔇' : '🔊';
     b.setAttribute('aria-label', soundMuted ? 'Activar sonido' : 'Silenciar');
@@ -132,11 +138,13 @@ function safePlay(audio) {
 
 function startAmbient() {
   if (SFX.ambient.paused) safePlay(SFX.ambient);
+  if (SFX.music.paused) safePlay(SFX.music);
   if (!planeTimer) schedulePlanePass(PLANE_FIRST_DELAY_MS);
   preloadFootstepBuffers(); // que estén listos antes de que Alba dé el primer paso
 }
 function pauseAmbient() {
   SFX.ambient.pause();
+  SFX.music.pause();
   clearTimeout(planeTimer);
   planeTimer = null;
   SFX.plane.pause();
@@ -179,7 +187,10 @@ function triggerPlanePass() {
   }
   setTimeout(() => {
     const shadow = document.getElementById('plane-shadow');
-    if (!shadow) return;
+    // Solo se ve al aire libre: si para entonces Alba ya está dentro de
+    // la casa o el invernadero, no tendría sentido ver pasar la sombra
+    // por el techo.
+    if (!shadow || currentArea !== 'main') return;
     shadow.classList.remove('flying');
     void shadow.offsetWidth;
     shadow.classList.add('flying');
@@ -277,7 +288,7 @@ function stopTalkAudio() { SFX.talk.pause(); }
 // muestran el brillo hasta que tengan arte propio.
 const OBJECT_MEMORIES = [
   { id: 'madrono', col: 8, row: 9, sprite: 'madroño_title', tree: true, label: 'El madroño',
-    text: 'El madroño de la parcela.\n(Recuerdo por escribir.)' },
+    text: 'El madroño de la parcela, justo donde más fruta cae al suelo.\n«¡Otra vez se me ha pegado uno en la suela! Mi abuelo siempre decía que pisar madroños maduros era casi un deporte en esta casa.»' },
   // La mata de patata frente a Hermanita (el bicho NO se ve en el mapa: sale
   // en pantalla, sobre el cuadro de diálogo, mientras se habla). Al tocarla,
   // es Hermanita quien salta, se acerca y habla; luego vuelve a su sitio.
@@ -285,9 +296,9 @@ const OBJECT_MEMORIES = [
     showcase: 'bicho_title', speaker: 'hermana',
     text: '¡Hermana mira cuántos bichos de la patata he atrapado! Corre, coge los tuyos y vamos al camino a aplastarlos. ¿Te acuerdas de todos los que aplastamos de pequeñas?' },
   { id: 'almendro', col: 9, row: 15, label: 'El almendro', showcase: 'almendra_title',
-    text: 'Una almendra caída del almendro.\n(Recuerdo por escribir.)' },
+    text: 'El almendro donde tantas tardes pasabais recogiendo almendras.\n«Nos sentábamos en el suelo a golpearlas con una piedra hasta abrirlas, con los dedos manchados y el crujido de las cáscaras al romperse. Pocas cosas sabían tan bien como esas almendras recién partidas.»' },
   { id: 'tomatera', col: 5, row: 24, label: 'La tomatera',
-    text: 'Una tomatera del huerto.\n(Recuerdo por escribir.)' },
+    text: 'Una tomatera del huerto de siempre.\n«Estos son, sin duda, los mejores tomates que he comido en mi vida — los mismos que plantaba mi abuelo. Ojalá poder volver a probarlos tal y como sabían entonces.»' },
 ];
 
 // Personas de la familia: cada una da un recuerdo profundo Y una pista de
@@ -297,30 +308,30 @@ const OBJECT_MEMORIES = [
 const HUMAN_CHARACTERS = [
   { id: 'padre', col: 4, row: 7, sprite: 'padre_down', label: 'Papá',
     text: '¡Albita! Dame un abrazo, ¿has visto a Nukita? El otro día me la llevé al campo y agarró su primer conejo, lo tengo ahora en la barbacoa, ¡no se lo digas a tu tío Victor! Anda tráeme una cervecita del congelador. Por cierto, Pabolito está dentro de la casa, pero me ha dicho que no entres hasta que hables con todos, ¿es verdad que te va a regalar a Jeepito?',
-    clue: 'Jeepito (un jeep de coche).', clueInline: true },
+    clue: 'Jeepito (un jeep de coche).', clueInline: true, wheelLabel: 'Jeepito' },
   { id: 'madre', col: 3, row: 13, sprite: 'madre_down', label: 'Mamá',
     text: '¡Alba! Por fin llegas, te tengo preparadas unas lentejas que te vas a chupar los dedos, las alitas hoy se las dejamos a Pabolito jejejeje. Por cierto, ¿he escuchado que te va a regalar el nuevo iPhone?',
-    clue: 'El nuevo iPhone.', clueInline: true },
+    clue: 'El nuevo iPhone.', clueInline: true, wheelLabel: 'iPhone' },
   { id: 'abuela2', col: 9, row: 21, sprite: 'abuela2_down', label: 'Abuela Sofi',
     text: '¡Pero bueno qué sorpresa Alba! ¿Cómo están vuestras plantas? Si llego a saber que vienes te hubiese cortado un poquito del helecho que está bárbaro. Pasa pasa, Pablo está dentro, me había dicho que no te dijese nada de lo que te va a regalar por tu cumpleaños, pero yo creo que tiene algo que ver con un Mak? Mac? Uy no sé....',
-    clue: 'Un Mac (ordenador).', clueInline: true },
+    clue: 'Un Mac (ordenador).', clueInline: true, wheelLabel: 'Mac' },
   { id: 'abuelo2', col: 10, row: 4, sprite: 'abuelo2_down', label: 'Abuelo Andrés',
-    text: '(Diálogo profundo por escribir.)',
-    clue: 'Pablo me dijo que estaba pensando regalarte una noche de cine en casa.' },
+    text: '¿Qué pasa chata? (procede a cogerte la nariz) estaba leyendo un poco el periódico. ¿Qué tal te va por Granada? Por cierto, Pablo me ha dicho que te quería regalar una tarde de spa, ¿cuándo os vais?',
+    clue: 'Una tarde de spa.', clueInline: true, wheelLabel: 'Spa' },
   { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Hermanita',
     text: '¡Hermana! Como te echaba de menos, por fin llegas, papá se ha puesto ya con la barbacoa y Nuka no para de mordisquear piedras... ¡Pasa pasa, que luego jugamos al Voley! Por cierto, Pablo me ha contado algo de tu regalo, creo que te va a gustar, creo que era algo como de un viaje a... ¿Canadá?',
-    clue: 'Un viaje a Canadá.', clueInline: true },
+    clue: 'Un viaje a Canadá.', clueInline: true, wheelLabel: 'Canadá' },
   { id: 'abuela1', col: 7, row: 13, sprite: 'abuela1_down', label: 'Abuela Encarna',
-    text: '(Diálogo profundo por escribir.)',
-    clue: 'Pablo me dijo que estaba pensando regalarte un fin de semana en un balneario.' },
+    text: '¡Alba! Te tengo preparado el bocata de fuet. Tu padre me había de hacerlo él, ¡pero sé que luego te pone poca cantidad! Por cierto, Pablo ha mencionado algo de que te iba a regalar ir a cenar en el restaurante de Jordi Cruz. ¿Es verdad?',
+    clue: 'Cenar en el restaurante de Jordi Cruz.', clueInline: true, wheelLabel: 'Jordi Cruz' },
 ];
 
 // El abuelo que murió: vive dentro del invernadero, junto a Sando. Su
 // "pista" cuenta igual para desbloquear la casa.
 const GREENHOUSE_ABUELO = {
   id: 'abuelo', label: 'Abuelo Manolo', sprite: 'abuelo1_down',
-  text: 'En el huerto, donde siempre estaba tu abuelo.\nSigue aquí, en cada rincón de la parcela.',
-  clue: 'Pablo me dijo que tenía algo que ver con música... o un concierto. No quiso decir más.',
+  text: '¡Albuchi! ¿Cómo va todo? Cómo me alegro de verte. Me pregunto quién te cogerá el dedo gordo del pie y lo estrujará tan fuerte como hacía yo... Por cierto, he oído que Pablo te iba a regalar algo que tenía algo que ver con música... o un concierto.',
+  clue: 'Un concierto.', clueInline: true, wheelLabel: 'Concierto',
   isKarolG: true,
 };
 const GREENHOUSE_SANDO = {
@@ -352,7 +363,7 @@ const GREENHOUSE_DOOR_COL = 8;
 // ============================================================
 
 const IS_TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-const BACKDROP_SCENES = ['scene-menu', 'scene-settings', 'scene-credits'];
+const BACKDROP_SCENES = ['scene-menu', 'scene-settings', 'scene-credits', 'scene-reveal'];
 
 function showScene(id) {
   document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
@@ -801,6 +812,9 @@ let collectedClues = []; // { text, isKarolG }
 const talkedTo = new Set();
 const memoriesFound = new Set(); // recuerdos (objetos y perros), no personas
 let inputLocked = false;      // durante escenas guiadas (p. ej. la de la patata)
+let houseInterceptDone = false;    // Pablo ya salió a cortarle el paso a Alba
+let houseInterceptRunning = false;
+let pendingPabloHouseReveal = false; // dentro de casa: Pablo habla solo, sin que le hables tú
 
 function area() { return AREAS[currentArea]; }
 
@@ -1036,13 +1050,24 @@ function tryMove(dx, dy, forcedFacing) {
   }
 
   const key = `${targetCol},${targetRow}`;
-  if (currentArea === 'main' && HOUSE_DOOR_KEYS.includes(key) && !houseUnlocked()) {
-    // Puerta cerrada: no se entra, pero sin cuadro que cerrar (el aviso
-    // informativo aparece solo, junto a la puerta; ver updateProximity)
-    stopFootsteps();
-    renderPlayerPosition();
-    updateProximity();
-    return;
+  if (currentArea === 'main' && HOUSE_DOOR_KEYS.includes(key)) {
+    if (!houseUnlocked()) {
+      // Puerta cerrada: no se entra, pero sin cuadro que cerrar (el aviso
+      // informativo aparece solo, junto a la puerta; ver updateProximity)
+      stopFootsteps();
+      renderPlayerPosition();
+      updateProximity();
+      return;
+    }
+    if (!houseInterceptDone) {
+      // Primera vez con todas las pistas: Pablo sale a cortarle el paso
+      // antes de dejarla entrar (ver runHouseIntercept). Ella no llega a
+      // pisar la puerta; el resto de la entrada la lleva ese guion.
+      stopFootsteps();
+      renderPlayerPosition();
+      runHouseIntercept(targetCol, targetRow);
+      return;
+    }
   }
 
   if (!isBlocked(targetCol, targetRow)) {
@@ -1089,6 +1114,12 @@ function enterArea(name, enter) {
   player.col = enter.col;
   player.row = enter.row;
   player.facing = enter.facing;
+  // Si entra en un interior con el avión a medio pasar, se corta la
+  // sombra ahí mismo: no se ve bajo un techo.
+  if (name !== 'main') {
+    const shadow = document.getElementById('plane-shadow');
+    if (shadow) shadow.classList.remove('flying');
+  }
   // El cambio de sitio ocurre en negro: sin deslizar cámara ni jugador
   const camera = document.getElementById('map-camera');
   const sprite = document.getElementById('player-sprite');
@@ -1102,6 +1133,14 @@ function enterArea(name, enter) {
   void camera.offsetWidth;
   camera.style.transition = '';
   sprite.style.transition = '';
+
+  // Pablo la esperaba ahí dentro: habla él solo, sin que Alba tenga que
+  // acercarse ni pulsar nada.
+  if (name === 'house' && pendingPabloHouseReveal) {
+    pendingPabloHouseReveal = false;
+    const pabloObj = AREAS.house.objects().find(o => o.pabloTrigger);
+    if (pabloObj) setTimeout(() => handleTalk(pabloObj), 550);
+  }
 }
 
 function updateProximity() {
@@ -1299,11 +1338,11 @@ document.getElementById('dialogue-box').addEventListener('click', (e) => {
 function handleTalk(obj) {
   if (obj.pabloTrigger) {
     pendingOverlayAction = () => {
-      showScene('scene-wheel');
       prepareWheelFromCollectedClues();
+      openWheelOverlay();
     };
     reactToTalk(obj);
-    openOverlay('Has hablado con toda la familia... ahora toca decidir.\nTira de la ruleta para ver qué regalo te llevas de verdad.', 'Girar la ruleta ▶', obj.label);
+    openOverlay('Veo que todos en tu familia te han dado pistas de cosas que te iba a regalar... jummm, mira que les dije que guardasen el secreto. Bueno, como se han ido todos de la lengua, tendrá que ser a suertes. Menos mal que he traído esta ruleta jejejeje, venga, tira.', 'Tirar la ruleta ▶', obj.label);
     return;
   }
 
@@ -1318,7 +1357,7 @@ function handleTalk(obj) {
   let text = obj.text;
   if (obj.clue) {
     // Persona: cuenta para "Pistas", no para "Recuerdos"
-    if (isNew) collectedClues.push({ text: obj.clue, isKarolG: !!obj.isKarolG });
+    if (isNew) collectedClues.push({ text: obj.clue, isKarolG: !!obj.isKarolG, label: obj.wheelLabel || obj.label });
     if (!obj.clueInline) text += `\n\n"${obj.clue}"`;
     document.getElementById('hud-clues').textContent = collectedClues.length;
     if (currentArea === 'main') renderStructures();
@@ -1431,6 +1470,68 @@ function returnSpeakerHome(el, from, origin, free) {
     el.style.left = origin.col * getTileSizePx() + 'px';
     el.style.top = origin.row * getTileSizePx() + 'px';
   });
+}
+
+// Pablo temporal para la escena de fuera: no forma parte de mainObjects()
+// (no debe bloquear ni contar como recuerdo), solo un actor de attrezzo
+// para este momento concreto.
+function spawnTempPablo(col, row) {
+  const layer = document.getElementById('map-objects');
+  const el = document.createElement('div');
+  el.className = 'map-object character';
+  el.dataset.id = 'pablo-temp';
+  const ts = getTileSizePx();
+  el.style.left = col * ts + 'px';
+  el.style.top = row * ts + 'px';
+  el.style.animationDuration = '3.1s';
+  const shadow = document.createElement('div');
+  shadow.className = 'sprite-shadow';
+  el.appendChild(shadow);
+  const img = document.createElement('img');
+  img.src = 'game/cropped/pablo_down.png';
+  img.alt = '';
+  el.appendChild(img);
+  layer.appendChild(el);
+  return el;
+}
+
+// Pablo corta el paso justo antes de la puerta, una vez que Alba ya tiene
+// todas las pistas: ella retrocede un bloque del susto, él ocupa el
+// bloque que ella deja (delante, entre Alba y la puerta) y habla. Al
+// cerrar su diálogo, entran los dos juntos a la casa.
+function runHouseIntercept(doorCol, doorRow) {
+  if (houseInterceptDone || houseInterceptRunning) return;
+  houseInterceptRunning = true;
+  inputLocked = true;
+  stopMoveLoop();
+  document.getElementById('action-btn').style.display = 'none';
+  const stepCol = player.col, stepRow = player.row; // donde estaba Alba, justo bajo la puerta
+
+  player.facing = 'up';
+  renderPlayerSprite();
+  hopElement(document.getElementById('player-sprite'));
+
+  setTimeout(() => {
+    // Alba retrocede un bloque, sin dejar de mirar hacia la puerta
+    player.row = stepRow + 1;
+    stepWalkFrame();
+    playFootstep(terrainSoundFor(player.col, player.row));
+    renderPlayerPosition();
+
+    setTimeout(() => {
+      const pablo = spawnTempPablo(stepCol, stepRow);
+      hopElement(pablo);
+
+      setTimeout(() => {
+        houseInterceptDone = true;
+        houseInterceptRunning = false;
+        pendingPabloHouseReveal = true;
+        pendingOverlayAction = () => fadeToArea('house', { col: 2, row: 3, facing: 'up' });
+        zoomCameraTo({ col: stepCol, row: stepRow });
+        openOverlay('¡Albuchi! Por fin llegas, ¡corre que tengo que darte tu regalo!', 'Vale ▶', 'Pablo');
+      }, 650);
+    }, 380);
+  }, 600);
 }
 
 // Alba mira al personaje, este da un saltito de alegría y la cámara se acerca
@@ -1592,6 +1693,10 @@ function resetOverworld() {
   collectedClues = [];
   talkedTo.clear();
   memoriesFound.clear();
+  houseInterceptDone = false;
+  houseInterceptRunning = false;
+  pendingPabloHouseReveal = false;
+  closeWheelOverlay();
   document.getElementById('hud-memories').textContent = '0';
   document.getElementById('hud-clues').textContent = '0';
   buildMapDOM();
@@ -1609,76 +1714,209 @@ window.addEventListener('resize', () => {
 });
 
 // ============================================================
-// ESCENA RULETA (contenido dinámico según las pistas recogidas)
+// RULETA — overlay dentro de la parcela, se gira arrastrando (ratón o
+// dedo), con pistas de verdad en cada gajo en vez de números. Sigue
+// trucada para caer siempre en "Concierto" (Karol G), pero el giro en
+// sí es un arrastre real con inercia, no un botón.
 // ============================================================
 
-let WHEEL_PRIZES = [];
+let WHEEL_ITEMS = [];       // [{ label, isKarolG }]
 let WINNING_PRIZE_INDEX = 0;
 let wheelSpun = false;
+let wheelAngle = 0;         // rotación acumulada (sin acotar a 360)
+let wheelSliceAngle = 60;
+let wheelDragging = false;
+let wheelDragStartAngle = 0;
+let wheelDragStartRotation = 0;
+let wheelLastAngle = 0;
+let wheelLastMoveTime = 0;
+let wheelVelocity = 0;      // deg/ms, del último tramo de arrastre
+let wheelAnimFrame = null;
 
 function prepareWheelFromCollectedClues() {
-  WHEEL_PRIZES = collectedClues.map(p => p.text);
-  WINNING_PRIZE_INDEX = collectedClues.findIndex(p => p.isKarolG);
+  // Un gajo por pista (con nombre corto), evitando duplicados de label
+  const seen = new Set();
+  WHEEL_ITEMS = collectedClues.filter(c => {
+    if (seen.has(c.label)) return false;
+    seen.add(c.label);
+    return true;
+  }).map(c => ({ label: c.label, isKarolG: !!c.isKarolG }));
+  WINNING_PRIZE_INDEX = WHEEL_ITEMS.findIndex(p => p.isKarolG);
   if (WINNING_PRIZE_INDEX === -1) WINNING_PRIZE_INDEX = 0; // salvaguarda, no debería pasar
   wheelSpun = false;
-  document.getElementById('wheel-spin').disabled = false;
-  buildWheel();
+  wheelAngle = 0;
+  wheelSliceAngle = 360 / WHEEL_ITEMS.length;
 }
 
-function buildWheel() {
-  const wheel = document.getElementById('wheel');
-  wheel.innerHTML = '';
-  wheel.style.transform = 'rotate(0deg)';
-  const n = WHEEL_PRIZES.length;
-  const sliceAngle = 360 / n;
+function openWheelOverlay() {
+  inputLocked = true;
+  stopMoveLoop();
+  // El disco debe estar visible (display:flex) antes de medirlo para
+  // colocar las etiquetas, si no getBoundingClientRect() da 0 y quedan
+  // todas amontonadas en el centro.
+  document.getElementById('wheel-overlay').classList.add('active');
+  buildWheelDisc();
+}
+
+function closeWheelOverlay() {
+  document.getElementById('wheel-overlay').classList.remove('active');
+}
+
+function buildWheelDisc() {
+  const disc = document.getElementById('wheel-disc');
+  const pegsLayer = document.getElementById('wheel-pegs');
+  disc.innerHTML = '';
+  pegsLayer.innerHTML = '';
+  disc.style.transform = 'rotate(0deg)';
+  const n = WHEEL_ITEMS.length;
   const colors = ['#f4c26b', '#bfe8d9', '#f2a6b8', '#dcb96a', '#a9d8b4', '#e8c9e0', '#f6d98c'];
 
-  let gradientParts = [];
-  WHEEL_PRIZES.forEach((_, i) => {
-    const start = i * sliceAngle;
-    const end = start + sliceAngle;
-    gradientParts.push(`${colors[i % colors.length]} ${start}deg ${end}deg`);
+  const gradientParts = WHEEL_ITEMS.map((_, i) => {
+    const start = i * wheelSliceAngle, end = start + wheelSliceAngle;
+    return `${colors[i % colors.length]} ${start}deg ${end}deg`;
   });
-  wheel.style.background = `conic-gradient(${gradientParts.join(', ')})`;
+  disc.style.background = `conic-gradient(${gradientParts.join(', ')})`;
 
-  const radius = wheel.getBoundingClientRect().width / 2;
-  const labelRadius = radius * 0.68;
-
-  WHEEL_PRIZES.forEach((prize, i) => {
+  const labelRadius = disc.getBoundingClientRect().width * 0.32;
+  WHEEL_ITEMS.forEach((item, i) => {
     const label = document.createElement('div');
     label.className = 'wheel-slice-label';
-    const angle = sliceAngle * i + sliceAngle / 2;
+    const angle = wheelSliceAngle * i + wheelSliceAngle / 2;
     const rad = (angle * Math.PI) / 180;
-    const x = labelRadius * Math.sin(rad);
-    const y = -labelRadius * Math.cos(rad);
-    label.style.left = `calc(50% + ${x}px)`;
-    label.style.top = `calc(50% + ${y}px)`;
-    label.textContent = i + 1;
-    wheel.appendChild(label);
+    label.style.left = `calc(50% + ${labelRadius * Math.sin(rad)}px)`;
+    label.style.top = `calc(50% + ${-labelRadius * Math.cos(rad)}px)`;
+    label.textContent = item.label;
+    disc.appendChild(label);
+
+    const peg = document.createElement('div');
+    peg.className = 'wheel-peg';
+    peg.style.transform = `rotate(${i * wheelSliceAngle}deg)`;
+    pegsLayer.appendChild(peg);
   });
 }
 
-function spinWheel() {
-  if (wheelSpun) return;
-  wheelSpun = true;
-  const wheel = document.getElementById('wheel');
-  const n = WHEEL_PRIZES.length;
-  const sliceAngle = 360 / n;
-
-  const targetSliceCenter = WINNING_PRIZE_INDEX * sliceAngle + sliceAngle / 2;
-  const extraSpins = 5 * 360;
-  const finalRotation = extraSpins + (360 - targetSliceCenter);
-
-  wheel.style.transform = `rotate(${finalRotation}deg)`;
-  document.getElementById('wheel-spin').disabled = true;
-
-  setTimeout(() => {
-    launchConfetti();
-    showScene('scene-reveal');
-  }, 4700);
+function wheelPointerAngle(clientX, clientY) {
+  const rect = document.getElementById('wheel-disc').getBoundingClientRect();
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  return Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI;
 }
 
-document.getElementById('wheel-spin').addEventListener('click', spinWheel);
+function applyWheelAngle(angle) {
+  document.getElementById('wheel-disc').style.transform = `rotate(${angle}deg)`;
+}
+
+// Un "palo" pasa por la flecha fija cada vez que el ángulo cruza un
+// múltiplo del tamaño de gajo: un tic visual + un chasquido de sonido.
+function checkWheelPegTicks(prevAngle, newAngle) {
+  if (Math.floor(prevAngle / wheelSliceAngle) === Math.floor(newAngle / wheelSliceAngle)) return;
+  const pointer = document.getElementById('wheel-pointer');
+  pointer.classList.remove('tick');
+  void pointer.offsetWidth;
+  pointer.classList.add('tick');
+  playWheelTick();
+}
+
+function playWheelTick() {
+  if (soundMuted) return;
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1500, now);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.14, now + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  } catch (e) { /* sin Web Audio: sin chasquido, sin más */ }
+}
+
+function onWheelPointerDown(e) {
+  if (wheelSpun || !document.getElementById('wheel-overlay').classList.contains('active')) return;
+  cancelAnimationFrame(wheelAnimFrame);
+  wheelDragging = true;
+  document.getElementById('wheel-table').classList.remove('spinning');
+  document.getElementById('wheel-disc').setPointerCapture(e.pointerId);
+  wheelDragStartAngle = wheelPointerAngle(e.clientX, e.clientY);
+  wheelDragStartRotation = wheelAngle;
+  wheelLastAngle = wheelAngle;
+  wheelLastMoveTime = performance.now();
+  wheelVelocity = 0;
+}
+
+function onWheelPointerMove(e) {
+  if (!wheelDragging) return;
+  const now = performance.now();
+  const pointerAngle = wheelPointerAngle(e.clientX, e.clientY);
+  let delta = pointerAngle - wheelDragStartAngle;
+  const prevAngle = wheelAngle;
+  wheelAngle = wheelDragStartRotation + delta;
+  const dt = Math.max(1, now - wheelLastMoveTime);
+  wheelVelocity = (wheelAngle - wheelLastAngle) / dt;
+  wheelLastAngle = wheelAngle;
+  wheelLastMoveTime = now;
+  applyWheelAngle(wheelAngle);
+  checkWheelPegTicks(prevAngle, wheelAngle);
+}
+
+function onWheelPointerUp() {
+  if (!wheelDragging) return;
+  wheelDragging = false;
+  resolveWheelSpin();
+}
+
+function resolveWheelSpin() {
+  if (wheelSpun) return;
+  wheelSpun = true;
+  document.getElementById('wheel-table').classList.add('spinning');
+
+  const targetCenter = WINNING_PRIZE_INDEX * wheelSliceAngle + wheelSliceAngle / 2;
+  const targetMod = ((-targetCenter) % 360 + 360) % 360;
+  const currentMod = ((wheelAngle % 360) + 360) % 360;
+  const direction = wheelVelocity < 0 ? -1 : 1;
+  const extraTurns = 4;
+  let finalAngle;
+  if (direction === 1) {
+    const diff = ((targetMod - currentMod) % 360 + 360) % 360;
+    finalAngle = wheelAngle + diff + extraTurns * 360;
+  } else {
+    const diffBack = ((currentMod - targetMod) % 360 + 360) % 360;
+    finalAngle = wheelAngle - diffBack - extraTurns * 360;
+  }
+
+  const fromAngle = wheelAngle;
+  const total = finalAngle - fromAngle;
+  const duration = 3200;
+  const start = performance.now();
+  const step = now => {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 5); // deceleración larga, como si frenase por rozamiento
+    const prevAngle = wheelAngle;
+    wheelAngle = fromAngle + total * eased;
+    applyWheelAngle(wheelAngle);
+    checkWheelPegTicks(prevAngle, wheelAngle);
+    if (t < 1) {
+      wheelAnimFrame = requestAnimationFrame(step);
+    } else {
+      setTimeout(() => {
+        launchConfetti();
+        closeWheelOverlay();
+        showScene('scene-reveal');
+      }, 500);
+    }
+  };
+  wheelAnimFrame = requestAnimationFrame(step);
+}
+
+const wheelDiscEl = document.getElementById('wheel-disc');
+wheelDiscEl.addEventListener('pointerdown', onWheelPointerDown);
+wheelDiscEl.addEventListener('pointermove', onWheelPointerMove);
+wheelDiscEl.addEventListener('pointerup', onWheelPointerUp);
+wheelDiscEl.addEventListener('pointercancel', onWheelPointerUp);
 
 // ============================================================
 // ESCENA REVELACIÓN — confeti
@@ -1698,6 +1936,10 @@ function launchConfetti() {
     layer.appendChild(piece);
   }
 }
+
+document.getElementById('reveal-credits').addEventListener('click', () => {
+  showScene('scene-credits');
+});
 
 document.getElementById('reveal-replay').addEventListener('click', () => {
   resetOverworld();

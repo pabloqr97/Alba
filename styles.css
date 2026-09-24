@@ -299,6 +299,13 @@ html, body {
   font-size: 16px;
 }
 .credits-list li:last-child { border-bottom: none; }
+.credits-note {
+  font-size: 13px;
+  line-height: 1.55;
+  font-style: italic;
+  opacity: 0.8;
+  margin: 0 0 16px;
+}
 .menu-item.back { width: 100%; background: var(--hd-wheat); }
 .menu-item.back .cursor { opacity: 1; }
 .panel .menu-item.back { margin-top: 4px; }
@@ -472,28 +479,44 @@ html, body {
 .scene-fade.active { opacity: 1; }
 
 /* Sombra de un avión sobrevolando la parcela (hay un aeropuerto cerca),
-   sincronizada con el sonido: cruza la pantalla cuando suena más fuerte. */
+   sincronizada con el sonido: cruza la pantalla cuando suena más fuerte.
+   Solo se ve al aire libre (game.js la esconde en la casa/invernadero). */
 .plane-shadow {
   position: absolute;
   top: 6%;
   left: 122%;
-  width: 46%;
-  height: 15%;
-  background: radial-gradient(ellipse at center, rgba(10, 12, 8, 0.4) 0%, rgba(10, 12, 8, 0.22) 55%, rgba(10, 12, 8, 0) 78%);
-  filter: blur(6px);
-  mix-blend-mode: multiply;
+  width: 0;
+  height: 0;
   opacity: 0;
   pointer-events: none;
   z-index: 8;
-  transform: rotate(8deg);
 }
 .plane-shadow.flying { animation: plane-fly 11s linear; }
+/* Silueta de avión (fuselaje + alas + cola) en vez de una mancha sin forma */
+.plane-shadow::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(64px, 11vmin, 118px);
+  height: clamp(92px, 16vmin, 168px);
+  margin: calc(clamp(92px, 16vmin, 168px) / -2) 0 0 calc(clamp(64px, 11vmin, 118px) / -2);
+  background: rgba(8, 10, 6, 0.55);
+  filter: blur(3.5px);
+  mix-blend-mode: multiply;
+  transform: rotate(-116deg);
+  clip-path: polygon(
+    50% 0%, 61% 15%, 61% 38%, 93% 53%, 93% 61%, 62% 52%,
+    62% 78%, 78% 88%, 78% 95%, 50% 87%, 22% 95%, 22% 88%,
+    38% 78%, 38% 52%, 7% 61%, 7% 53%, 39% 38%, 39% 15%
+  );
+}
 /* De derecha a izquierda, como el sonido (ver planePanner en game.js) */
 @keyframes plane-fly {
   0%   { left: 122%; top: 4%;  opacity: 0; }
-  10%  { opacity: 0.9; }
+  10%  { opacity: 0.85; }
   50%  { top: 42%; }
-  90%  { opacity: 0.9; }
+  90%  { opacity: 0.85; }
   100% { left: -32%; top: 80%; opacity: 0; }
 }
 
@@ -610,6 +633,7 @@ html, body {
   width: var(--tile-size);
   height: var(--tile-size);
   transition: left var(--step-ms, 300ms) linear, top var(--step-ms, 300ms) linear;
+  transform-origin: 50% 96%;
   z-index: 5;
 }
 .player-sprite img,
@@ -732,43 +756,130 @@ html, body {
 }
 .interaction-overlay.active { display: flex; }
 
-/* ---------- WHEEL ---------- */
-#scene-wheel {
-  background: linear-gradient(180deg, #bfe8d9, #f6ecc9);
+/* ---------- RULETA (overlay in-game, no una escena aparte) ---------- */
+.wheel-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 16, 10, 0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
-.wheel-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.wheel-subtitle { font-size: 14px; color: var(--hd-brown); max-width: 340px; margin: -6px 0 4px; }
-.wheel-pointer { font-size: 26px; color: var(--hd-brown); }
-.wheel {
-  width: min(300px, 72vw);
-  height: min(300px, 72vw);
-  border-radius: 50%;
-  border: 6px solid var(--hd-brown);
+.wheel-overlay.active { display: flex; }
+.wheel-table {
+  width: min(420px, 100%);
+  padding: 22px 20px 26px;
+  border-radius: 26px;
+  text-align: center;
+  /* tablero de madera, para que parezca que la ruleta está sobre una mesa */
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0 3px, transparent 3px 26px),
+    linear-gradient(160deg, #b9793f, #8a552a);
+  box-shadow: 0 14px 0 rgba(0, 0, 0, 0.35), 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+.wheel-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  color: var(--cream);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  margin: 0 0 18px;
+}
+.wheel-rig {
   position: relative;
-  transition: transform 4.5s cubic-bezier(0.12, 0.72, 0.14, 1);
-  box-shadow: 0 8px 0 var(--shadow);
-  overflow: hidden;
+  width: min(300px, 76vw);
+  height: min(300px, 76vw);
+  margin: 0 auto;
 }
+.wheel-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 7px solid var(--cream);
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 3px rgba(0, 0, 0, 0.25);
+  cursor: grab;
+  touch-action: none;
+  will-change: transform;
+}
+.wheel-disc:active { cursor: grabbing; }
 .wheel-slice-label {
   position: absolute;
   transform: translate(-50%, -50%);
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 800;
+  line-height: 1.15;
   text-align: center;
   color: var(--ink);
-  background: rgba(255,255,255,0.75);
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 10px;
+  padding: 3px 6px;
+  max-width: 62px;
+  pointer-events: none;
+}
+.wheel-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--hd-wheat);
+  border: 4px solid var(--cream);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: 3;
 }
+/* Los "palos" alrededor de la ruleta que hacen tiquetiquetic contra la flecha */
+.wheel-pegs {
+  position: absolute;
+  inset: -3px;
+  pointer-events: none;
+  z-index: 2;
+}
+.wheel-peg {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 5px;
+  height: 13px;
+  margin-left: -2.5px;
+  background: var(--ink);
+  border-radius: 2px;
+  transform-origin: 50% calc(min(150px, 38vw) + 4px);
+}
+/* Flecha fija arriba, que se dobla un poco a cada "clac" de un palo */
+.wheel-pointer {
+  position: absolute;
+  left: 50%;
+  top: -22px;
+  transform: translateX(-50%);
+  font-size: 30px;
+  color: var(--cream);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  transform-origin: 50% 0%;
+  z-index: 4;
+}
+.wheel-pointer.tick { animation: wheel-tick 0.14s ease-out; }
+@keyframes wheel-tick {
+  0% { transform: translateX(-50%) rotate(0deg); }
+  40% { transform: translateX(-50%) rotate(-16deg); }
+  100% { transform: translateX(-50%) rotate(0deg); }
+}
+.wheel-hint {
+  margin: 16px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cream);
+  opacity: 0.85;
+}
+.wheel-table.spinning .wheel-hint { opacity: 0; }
 
-/* ---------- REVEAL ---------- */
-#scene-reveal {
-  background: radial-gradient(circle at 50% 20%, #fff0d6, #f2a6b8 120%);
-}
+/* ---------- REVEAL (mismo fondo difuminado que el menú) ---------- */
+#scene-reveal { background: transparent; }
 .confetti-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
 .confetti-piece {
   position: absolute;
@@ -782,51 +893,92 @@ html, body {
 }
 .reveal-card {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   background: var(--cream);
   border-radius: var(--radius-lg);
-  padding: 30px;
+  padding: 26px;
   width: min(420px, 90vw);
   box-shadow: 0 10px 0 var(--shadow);
 }
-.reveal-label {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 12px;
-  color: var(--gold);
-  margin-bottom: 18px;
-}
-.ticket {
-  background: linear-gradient(135deg, #2b2f26, #4a2f3a);
-  color: #fff;
-  border-radius: var(--radius-md);
-  padding: 22px;
-  margin-bottom: 20px;
+.reveal-card .btn-back { display: block; width: 100%; margin-top: 10px; }
+.reveal-card .btn-back:first-of-type { margin-top: 4px; }
+/* "Entrada" de concierto, ilustrada en vez de solo texto — inspirada en
+   un cartel de gira de verano, no una reproducción de ningún diseño real */
+.poster {
   position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  padding: 26px 20px 22px;
+  margin-bottom: 20px;
+  color: #fff8ec;
+  text-align: center;
+  background: linear-gradient(160deg, #ffb15c 0%, #f2795a 45%, #d8497a 75%, #6a3b8a 100%);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.25);
 }
-.ticket::before, .ticket::after {
-  content: "";
+.poster-deco {
   position: absolute;
-  width: 22px;
-  height: 22px;
-  background: var(--cream);
-  border-radius: 50%;
-  top: 50%;
-  transform: translateY(-50%);
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.9) 2px, transparent 2.5px),
+    radial-gradient(circle, rgba(255,255,255,0.6) 1.5px, transparent 2px);
+  background-size: 70px 70px, 46px 46px;
+  background-position: 6px 10px, 30px 52px;
+  opacity: 0.5;
 }
-.ticket::before { left: -11px; }
-.ticket::after { right: -11px; }
-.ticket-artist {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 20px;
-  margin: 0 0 12px;
-  letter-spacing: 1px;
+.poster-eyebrow {
+  position: relative;
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.9;
 }
-.ticket-detail { margin: 2px 0; font-weight: 700; }
-.ticket-note { margin-top: 10px; font-size: 13px; opacity: 0.85; }
+.poster-artist {
+  position: relative;
+  font-family: 'Bungee', 'Press Start 2P', monospace;
+  font-size: clamp(28px, 8vw, 38px);
+  line-height: 1.1;
+  margin: 0 0 4px;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+.poster-tour {
+  position: relative;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  margin: 0 0 16px;
+  opacity: 0.95;
+}
+.poster-details {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+.poster-details span {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.poster-barcode {
+  position: relative;
+  height: 30px;
+  margin: 0 auto;
+  width: 78%;
+  background: repeating-linear-gradient(90deg, #fff8ec 0 2px, transparent 2px 5px, #fff8ec 5px 6px, transparent 6px 9px);
+  opacity: 0.85;
+  border-radius: 3px;
+}
 .reveal-message {
   font-size: 15px;
   line-height: 1.7;
-  margin-bottom: 22px;
+  margin-bottom: 6px;
 }
 
 @media (max-width: 420px) {
@@ -886,8 +1038,9 @@ html, body {
   0%, 100% { transform: translateY(0) scale(1, 1); }
   50% { transform: translateY(-6%) scale(0.97, 1.03); }
 }
-/* Saltito de alegría al hablar con ellos */
-.map-object.character.hop {
+/* Saltito de alegría al hablar con ellos (también sirve para el saltito
+   de sorpresa de Alba en la escena de Pablo cortando el paso) */
+.map-object.character.hop, .player-sprite.hop {
   animation: hop 0.6s cubic-bezier(.3,.7,.4,1) 1 !important;
 }
 @keyframes hop {
