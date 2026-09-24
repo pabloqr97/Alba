@@ -306,6 +306,25 @@ html, body {
   opacity: 0.8;
   margin: 0 0 16px;
 }
+.credits-concept {
+  margin: 0 0 18px;
+  padding: 10px;
+  background: #fff;
+  border: 3px solid var(--hd-wheat-dark);
+  border-radius: var(--radius-md);
+}
+.credits-concept img {
+  display: block;
+  width: 100%;
+  border-radius: 10px;
+}
+.credits-concept figcaption {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hd-brown);
+  text-align: center;
+}
 .menu-item.back { width: 100%; background: var(--hd-wheat); }
 .menu-item.back .cursor { opacity: 1; }
 .panel .menu-item.back { margin-top: 4px; }
@@ -479,30 +498,32 @@ html, body {
 .scene-fade.active { opacity: 1; }
 
 /* Sombra de un avión sobrevolando la parcela (hay un aeropuerto cerca),
-   sincronizada con el sonido: cruza la pantalla cuando suena más fuerte.
-   Solo se ve al aire libre (game.js la esconde en la casa/invernadero). */
+   sincronizada con el sonido: cruza cuando suena más fuerte. Va DENTRO de
+   #map-camera (mundo, no pantalla): sigue un cruce fijo sobre el mapa,
+   siempre el mismo tramo, controlado por JS (flyPlaneShadowAcrossMap en
+   game.js) — no depende de dónde esté Alba ni de si anda o no. Solo se ve
+   al aire libre (game.js la esconde en la casa/invernadero). */
 .plane-shadow {
   position: absolute;
-  top: 6%;
-  left: 122%;
+  top: 0;
+  left: 0;
   width: 0;
   height: 0;
   opacity: 0;
   pointer-events: none;
-  z-index: 8;
+  z-index: 6;
 }
-.plane-shadow.flying { animation: plane-fly 11s linear; }
 /* Silueta de avión (fuselaje + alas + cola) en vez de una mancha sin forma */
 .plane-shadow::before {
   content: '';
   position: absolute;
   left: 50%;
   top: 50%;
-  width: clamp(64px, 11vmin, 118px);
-  height: clamp(92px, 16vmin, 168px);
-  margin: calc(clamp(92px, 16vmin, 168px) / -2) 0 0 calc(clamp(64px, 11vmin, 118px) / -2);
-  background: rgba(8, 10, 6, 0.55);
-  filter: blur(3.5px);
+  width: clamp(130px, 22vmin, 240px);
+  height: clamp(190px, 32vmin, 340px);
+  margin: calc(clamp(190px, 32vmin, 340px) / -2) 0 0 calc(clamp(130px, 22vmin, 240px) / -2);
+  background: rgba(8, 10, 6, 0.5);
+  filter: blur(5px);
   mix-blend-mode: multiply;
   transform: rotate(-116deg);
   clip-path: polygon(
@@ -510,14 +531,6 @@ html, body {
     62% 78%, 78% 88%, 78% 95%, 50% 87%, 22% 95%, 22% 88%,
     38% 78%, 38% 52%, 7% 61%, 7% 53%, 39% 38%, 39% 15%
   );
-}
-/* De derecha a izquierda, como el sonido (ver planePanner en game.js) */
-@keyframes plane-fly {
-  0%   { left: 122%; top: 4%;  opacity: 0; }
-  10%  { opacity: 0.85; }
-  50%  { top: 42%; }
-  90%  { opacity: 0.85; }
-  100% { left: -32%; top: 80%; opacity: 0; }
 }
 
 .map-camera {

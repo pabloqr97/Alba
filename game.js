@@ -8,10 +8,12 @@ const SFX_FILES = {
   ambient: 'game/sfx/ambiente.mp3',
   plane: 'game/sfx/avion.mp3',
   talk: 'game/sfx/charla.mp3',
-  // Música de fondo estilo Animal Crossing: falta el archivo (ver nota en
-  // el chat sobre por qué no se ha bajado de YouTube). En cuanto Pablo
-  // añada game/sfx/musica.mp3 (loopeable), suena sola sin tocar nada más.
-  music: 'game/sfx/musica.mp3',
+  // Música estilo Animal Crossing New Horizons (Prologue), recortada ya
+  // desde el segundo 11,54 para que el bucle empiece justo ahí sin que
+  // haga falta tocar el currentTime cada vez que se repite.
+  music: 'game/sfx/musica.m4a',
+  // Mismo tema, sin recortar, para el menú y los créditos.
+  menuMusic: 'game/sfx/prologo.m4a',
 };
 const SFX = {};
 Object.entries(SFX_FILES).forEach(([key, src]) => {
@@ -24,7 +26,23 @@ SFX.ambient.volume = 0.32;
 SFX.plane.loop = false; // pasa una vez y se reprograma el siguiente sobrevuelo
 SFX.plane.volume = 0.55;
 SFX.talk.volume = 0.38;
-SFX.music.volume = 0.16; // bajita, pero presente
+const MUSIC_TARGET_VOLUME = 0.1; // muy de fondo dentro de la parcela
+SFX.music.volume = 0;            // arranca en 0; startAmbient() la sube con un fade-in
+SFX.menuMusic.volume = 0.22;
+
+let musicFadeTimer = null;
+function fadeInMusic() {
+  clearInterval(musicFadeTimer);
+  SFX.music.volume = 0;
+  safePlay(SFX.music);
+  const steps = 30, stepMs = 90; // ~2,7s de fade-in suave
+  let i = 0;
+  musicFadeTimer = setInterval(() => {
+    i++;
+    SFX.music.volume = Math.min(MUSIC_TARGET_VOLUME, MUSIC_TARGET_VOLUME * (i / steps));
+    if (i >= steps) clearInterval(musicFadeTimer);
+  }, stepMs);
+}
 
 // ---- Web Audio: contexto compartido para los pasos, la charla y el
 // avión (paneo, ganancia por zancada, etc. — ver más abajo) ----
@@ -118,6 +136,7 @@ try { soundMuted = localStorage.getItem('parcelaMuted') === '1'; } catch (e) { /
 
 function applyMuted() {
   Object.values(SFX).forEach(a => { a.muted = soundMuted; });
+  Object.values(barkAudioCache).forEach(a => { a.muted = soundMuted; });
   if (footstepMasterGain) footstepMasterGain.gain.value = soundMuted ? 0 : FOOTSTEP_MASTER_LEVEL;
   document.querySelectorAll('.sound-toggle').forEach(b => {
     b.textContent = soundMuted ? '🔇' : '🔊';
@@ -138,18 +157,18 @@ function safePlay(audio) {
 
 function startAmbient() {
   if (SFX.ambient.paused) safePlay(SFX.ambient);
-  if (SFX.music.paused) safePlay(SFX.music);
+  if (SFX.music.paused) fadeInMusic();
   if (!planeTimer) schedulePlanePass(PLANE_FIRST_DELAY_MS);
   preloadFootstepBuffers(); // que estén listos antes de que Alba dé el primer paso
 }
 function pauseAmbient() {
   SFX.ambient.pause();
+  clearInterval(musicFadeTimer);
   SFX.music.pause();
   clearTimeout(planeTimer);
   planeTimer = null;
   SFX.plane.pause();
-  const shadow = document.getElementById('plane-shadow');
-  if (shadow) shadow.classList.remove('flying');
+  planeShadowFlying = false;
 }
 
 // ---- Avión de fondo: la parcela está cerca de un aeropuerto, así que de
@@ -162,8 +181,33 @@ function pauseAmbient() {
 const PLANE_GAP_AFTER_END_MS = 60000;
 const PLANE_FIRST_DELAY_MS = 25000; // el primero tarda un poco en aparecer
 const PLANE_SHADOW_DELAY_MS = 9200; // lo que tarda el sonido en hacerse fuerte
-const PLANE_SHADOW_DURATION_S = 11; // duración de esa parte fuerte (coincide con la animación CSS)
+const PLANE_SHADOW_DURATION_S = 11; // duración de esa parte fuerte
 let planeTimer = null;
+let planeShadowFlying = false;
+
+// Cruce fijo sobre EL MAPA (no sobre la pantalla ni sobre Alba): siempre
+// el mismo tramo, de esquina a esquina, para que no "seleccione" dónde
+// está el personaje ni se note raro si anda mientras pasa.
+function flyPlaneShadowAcrossMap() {
+  const shadow = document.getElementById('plane-shadow');
+  if (!shadow) return;
+  const ts = getTileSizePx();
+  const fromX = (MAP_COLS + 3) * ts, fromY = -3 * ts;
+  const toX = -5 * ts, toY = (MAP_ROWS + 3) * ts;
+  const duration = PLANE_SHADOW_DURATION_S * 1000;
+  const start = performance.now();
+  const myFlight = planeShadowFlying = {}; // token: si se corta, otra bandera ocupa este sitio
+  const step = now => {
+    if (planeShadowFlying !== myFlight || currentArea !== 'main') { shadow.style.opacity = '0'; return; }
+    const t = Math.min(1, (now - start) / duration);
+    shadow.style.left = (fromX + (toX - fromX) * t) + 'px';
+    shadow.style.top = (fromY + (toY - fromY) * t) + 'px';
+    shadow.style.opacity = (t < 0.12 ? t / 0.12 : t > 0.88 ? (1 - t) / 0.12 : 1) * 0.85;
+    if (t < 1) requestAnimationFrame(step);
+    else { shadow.style.opacity = '0'; planeShadowFlying = false; }
+  };
+  requestAnimationFrame(step);
+}
 
 function schedulePlanePass(delayMs) {
   clearTimeout(planeTimer);
@@ -186,14 +230,10 @@ function triggerPlanePass() {
     planePanner.pan.linearRampToValueAtTime(-1, panStart + PLANE_SHADOW_DURATION_S);
   }
   setTimeout(() => {
-    const shadow = document.getElementById('plane-shadow');
     // Solo se ve al aire libre: si para entonces Alba ya está dentro de
     // la casa o el invernadero, no tendría sentido ver pasar la sombra
     // por el techo.
-    if (!shadow || currentArea !== 'main') return;
-    shadow.classList.remove('flying');
-    void shadow.offsetWidth;
-    shadow.classList.add('flying');
+    if (currentArea === 'main') flyPlaneShadowAcrossMap();
   }, PLANE_SHADOW_DELAY_MS);
 }
 // El siguiente sobrevuelo se arma cuando el sonido termina de verdad
@@ -252,6 +292,16 @@ function stopFootsteps() {
   currentFootstepNodes = null;
 }
 
+// Ladridos: declarados aquí (antes del applyMuted() de arranque, unas
+// líneas más abajo) para que exista barkAudioCache cuando se llame.
+let currentBark = null;
+const BARK_FILES = {
+  perro_turka: 'game/sfx/perro_turka.mp3',
+  perro_nuka: 'game/sfx/perro_nuka.mp3',
+  perro_sando: 'game/sfx/perro_sando.mp3',
+};
+const barkAudioCache = {};
+
 applyMuted();
 document.querySelectorAll('.sound-toggle').forEach(b => b.addEventListener('click', toggleMuted));
 
@@ -279,6 +329,18 @@ function resumeTalkAudio() { if (SFX.talk.paused) safePlay(SFX.talk); }
 function pauseTalkAudio() { SFX.talk.pause(); }
 function stopTalkAudio() { SFX.talk.pause(); }
 
+// ---- Ladridos: Turka, Nuka y Sando tienen su propio sonido grabado, que
+// suena una vez al abrir su diálogo en vez de la charla en bucle
+// (currentBark/BARK_FILES/barkAudioCache están declarados más arriba). ----
+function playBarkSound(id) {
+  if (soundMuted || !BARK_FILES[id]) return;
+  let a = barkAudioCache[id];
+  if (!a) { a = new Audio(BARK_FILES[id]); barkAudioCache[id] = a; }
+  a.muted = soundMuted;
+  a.currentTime = 0;
+  safePlay(a);
+}
+
 // ============================================================
 // CONFIGURACIÓN EDITABLE — cambia aquí el contenido sin tocar el resto
 // ============================================================
@@ -288,7 +350,7 @@ function stopTalkAudio() { SFX.talk.pause(); }
 // muestran el brillo hasta que tengan arte propio.
 const OBJECT_MEMORIES = [
   { id: 'madrono', col: 8, row: 9, sprite: 'madroño_title', tree: true, label: 'El madroño',
-    text: 'El madroño de la parcela, justo donde más fruta cae al suelo.\n«¡Otra vez se me ha pegado uno en la suela! Mi abuelo siempre decía que pisar madroños maduros era casi un deporte en esta casa.»' },
+    text: 'El madroño de la parcela, justo donde más fruta cae al suelo.\n«¡Otra vez se me ha pegado uno en la suela! Este suelo es un peligro en cuanto maduran los madroños.»' },
   // La mata de patata frente a Hermanita (el bicho NO se ve en el mapa: sale
   // en pantalla, sobre el cuadro de diálogo, mientras se habla). Al tocarla,
   // es Hermanita quien salta, se acerca y habla; luego vuelve a su sitio.
@@ -322,7 +384,7 @@ const HUMAN_CHARACTERS = [
     text: '¡Hermana! Como te echaba de menos, por fin llegas, papá se ha puesto ya con la barbacoa y Nuka no para de mordisquear piedras... ¡Pasa pasa, que luego jugamos al Voley! Por cierto, Pablo me ha contado algo de tu regalo, creo que te va a gustar, creo que era algo como de un viaje a... ¿Canadá?',
     clue: 'Un viaje a Canadá.', clueInline: true, wheelLabel: 'Canadá' },
   { id: 'abuela1', col: 7, row: 13, sprite: 'abuela1_down', label: 'Abuela Encarna',
-    text: '¡Alba! Te tengo preparado el bocata de fuet. Tu padre me había de hacerlo él, ¡pero sé que luego te pone poca cantidad! Por cierto, Pablo ha mencionado algo de que te iba a regalar ir a cenar en el restaurante de Jordi Cruz. ¿Es verdad?',
+    text: '¡Alba! Te tengo preparado el bocata de fuet. Tu padre me había dicho de hacerlo él, ¡pero sé que luego te pone poca cantidad! Por cierto, Pablo ha mencionado algo de que te iba a regalar ir a cenar en el restaurante de Jordi Cruz. ¿Es verdad?',
     clue: 'Cenar en el restaurante de Jordi Cruz.', clueInline: true, wheelLabel: 'Jordi Cruz' },
 ];
 
@@ -330,20 +392,21 @@ const HUMAN_CHARACTERS = [
 // "pista" cuenta igual para desbloquear la casa.
 const GREENHOUSE_ABUELO = {
   id: 'abuelo', label: 'Abuelo Manolo', sprite: 'abuelo1_down',
-  text: '¡Albuchi! ¿Cómo va todo? Cómo me alegro de verte. Me pregunto quién te cogerá el dedo gordo del pie y lo estrujará tan fuerte como hacía yo... Por cierto, he oído que Pablo te iba a regalar algo que tenía algo que ver con música... o un concierto.',
+  text: '¡Albuchi! ¿Cómo va todo? Cómo me alegro de verte. Me pregunto quién te cogerá el dedo gordo del pie y lo estrujará tan fuerte como hacía yo... ¿Sigues siendo tan fan del ajo como lo era yo? ¡Sé que eso te viene de mí! Por cierto, he oído que Pablo te iba a regalar algo que tenía algo que ver con música... o un concierto.',
   clue: 'Un concierto.', clueInline: true, wheelLabel: 'Concierto',
   isKarolG: true,
 };
 const GREENHOUSE_SANDO = {
-  id: 'sando', label: 'Sandete', sprite: 'sando_down', small: true,
+  id: 'sando', label: 'Sandete', sprite: 'sando_down', small: true, bark: 'perro_sando',
   text: 'Sando, tu compañero más fiel.\nYa no está, pero sigue aquí, jugando con el abuelo.',
 };
 
-// Perros de la familia: cuentan como recuerdo, sin pista de regalo.
+// Perros de la familia: cuentan como recuerdo, sin pista de regalo. Cada
+// uno tiene su propio ladrido grabado (bark) en vez de la charla genérica.
 const DOG_MEMORIES = [
-  { id: 'turka', col: 5, row: 7, sprite: 'turka_down', label: 'Turka', small: true,
+  { id: 'turka', col: 5, row: 7, sprite: 'turka_down', label: 'Turka', small: true, bark: 'perro_turka',
     text: 'Pensamiento de Alba: «No le quita ojo a las alitas de la barbacoa».\nTurka se acerca a ti para que la acaricies.' },
-  { id: 'nuka', col: 2, row: 3, sprite: 'nuka_down', label: 'Nukita', small: true,
+  { id: 'nuka', col: 2, row: 3, sprite: 'nuka_down', label: 'Nukita', small: true, bark: 'perro_nuka',
     text: 'Nuka: «¡Guau! ¡Guau!»\nAlba: «¡Nuka, deja de morder!»' },
 ];
 
@@ -356,7 +419,10 @@ const VIEW_ROWS = 9;
 // La escalera ocupa dos casillas (6 y 7): las dos suben a la puerta
 const HOUSE_DOOR_KEYS = ['6,3', '7,3'];
 const GREENHOUSE_ROWS = [16];
-const GREENHOUSE_DOOR_COL = 8;
+// La entrada está en el césped de delante (col9), no en la columna del
+// invernadero (col8): esa se queda bloqueada como el resto del tejado,
+// para que Alba no pueda "subirse" a él antes de entrar.
+const GREENHOUSE_DOOR_COL = 9;
 
 // ============================================================
 // NAVEGACIÓN ENTRE ESCENAS
@@ -372,6 +438,9 @@ function showScene(id) {
   document.getElementById('app').classList.toggle('with-backdrop', BACKDROP_SCENES.includes(id));
   if (id === 'scene-overworld') { updateCamera(); }
   else { pauseAmbient(); stopFootsteps(); }
+  // Música del menú/créditos, aparte de la de la parcela
+  if (id === 'scene-menu' || id === 'scene-credits') { if (SFX.menuMusic.paused) safePlay(SFX.menuMusic); }
+  else { SFX.menuMusic.pause(); }
 }
 
 // Jugar: fundido a negro, tarjeta de título y fundido de vuelta al mapa,
@@ -629,7 +698,6 @@ function buildMainGrid() {
   // entra por la fila central de su lado derecho, las dos esquinas quedan
   // cerradas (si no, parece que se accede "por arte de magia" por ellas).
   for (let r = 15; r <= 17; r++) for (let c = 3; c <= 8; c++) g[r][c] = 'I';
-  GREENHOUSE_ROWS.forEach(r => { g[r][GREENHOUSE_DOOR_COL] = 'O'; });
   [12, 13, 14, 15, 16, 17].forEach(r => { g[r][9] = 'G'; });
 
   // Camino largo (asfalto) a lo largo de todo el lateral derecho
@@ -1114,12 +1182,8 @@ function enterArea(name, enter) {
   player.col = enter.col;
   player.row = enter.row;
   player.facing = enter.facing;
-  // Si entra en un interior con el avión a medio pasar, se corta la
-  // sombra ahí mismo: no se ve bajo un techo.
-  if (name !== 'main') {
-    const shadow = document.getElementById('plane-shadow');
-    if (shadow) shadow.classList.remove('flying');
-  }
+  // (el propio bucle de flyPlaneShadowAcrossMap comprueba currentArea en
+  // cada fotograma y se esconde solo si Alba entra en un interior)
   // El cambio de sitio ocurre en negro: sin deslizar cámara ni jugador
   const camera = document.getElementById('map-camera');
   const sprite = document.getElementById('player-sprite');
@@ -1239,16 +1303,17 @@ function typeText(full) {
   typing = { full, i: 0, timer: null };
   setDialogueDone(false);
   renderTyped(full, 0);
-  startTalkAudio();
+  // Los perros ladran (una vez, ver openOverlay) en vez de "hablar" en bucle
+  if (!currentBark) startTalkAudio();
   const tick = () => {
     if (!typing) return;
-    resumeTalkAudio(); // por si la pausa anterior era de coma/punto
+    if (!currentBark) resumeTalkAudio(); // por si la pausa anterior era de coma/punto
     typing.i++;
     renderTyped(full, typing.i);
     if (typing.i >= full.length) { typing = null; setDialogueDone(true); stopTalkAudio(); return; }
     const ch = full[typing.i - 1];
     const pause = '.!?'.includes(ch) ? 260 : (ch === ',' || ch === ':') ? 120 : ch === '\n' ? 200 : 24;
-    if (pause > 60) pauseTalkAudio(); // respira en los puntos, comas y saltos de línea
+    if (!currentBark && pause > 60) pauseTalkAudio(); // respira en los puntos, comas y saltos de línea
     typing.timer = setTimeout(tick, pause);
   };
   typing.timer = setTimeout(tick, TYPE_START_DELAY);
@@ -1284,10 +1349,11 @@ function zoomCameraOut() {
   setTimeout(() => { if (!cameraZoomed) camera.classList.remove('zoom'); }, 550);
 }
 
-function openOverlay(text, closeLabel, name, showcase) {
+function openOverlay(text, closeLabel, name, showcase, bark) {
   stopMoveLoop();
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-  setTalkVoice(name);
+  currentBark = bark || null;
+  if (bark) playBarkSound(bark); else setTalkVoice(name);
   document.getElementById('interaction-name').textContent = name || '';
   const showEl = document.getElementById('dialogue-showcase');
   showEl.classList.toggle('on', !!showcase);
@@ -1363,7 +1429,7 @@ function handleTalk(obj) {
     if (currentArea === 'main') renderStructures();
   }
   reactToTalk(obj);
-  openOverlay(text, 'Cerrar', obj.label, obj.showcase);
+  openOverlay(text, 'Cerrar', obj.label, obj.showcase, obj.bark);
 }
 
 function isMemoryObj(obj) { return !obj.clue && !obj.pabloTrigger; }
@@ -1557,6 +1623,16 @@ const KEY_DIR = {
   ArrowRight: 'right', d: 'right', D: 'right',
 };
 const heldDirs = [];
+let running = false; // Shift mantenido: Alba corre
+
+// Si ya está andando, cambia de velocidad sin cortar el movimiento (se
+// salta la guarda de startMoveLoop de "misma dirección" a propósito).
+function restartMoveLoopSpeed() {
+  if (!currentDir) return;
+  const dir = currentDir;
+  currentDir = null;
+  startMoveLoop(dir, dir, running ? RUN_REPEAT_MS : undefined);
+}
 
 document.addEventListener('keydown', (e) => {
   if (!document.getElementById('scene-overworld').classList.contains('active')) return;
@@ -1571,21 +1647,23 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) handleInteract(); return; }
+  if (e.key === 'Shift') { if (!running) { running = true; restartMoveLoopSpeed(); } return; }
   const dir = KEY_DIR[e.key];
   if (!dir) return;
   e.preventDefault();
   if (e.repeat) return;
   if (!heldDirs.includes(dir)) heldDirs.push(dir);
-  startMoveLoop(dir, dir);
+  startMoveLoop(dir, dir, running ? RUN_REPEAT_MS : undefined);
 });
 document.addEventListener('keyup', (e) => {
+  if (e.key === 'Shift') { running = false; restartMoveLoopSpeed(); return; }
   const dir = KEY_DIR[e.key];
   if (!dir) return;
   const idx = heldDirs.indexOf(dir);
   if (idx !== -1) heldDirs.splice(idx, 1);
   if (currentDir === dir) {
     const next = heldDirs[heldDirs.length - 1];
-    if (next) startMoveLoop(next, next);
+    if (next) startMoveLoop(next, next, running ? RUN_REPEAT_MS : undefined);
     else stopMoveLoop();
   }
 });
@@ -1605,6 +1683,7 @@ let joystickCenter = { x: 0, y: 0 };
 let moveInterval = null;
 let currentDir = null;
 const MOVE_REPEAT_MS = 300;
+const RUN_REPEAT_MS = 150; // con Shift mantenido, Alba corre al doble de velocidad
 const JOYSTICK_MOVE_REPEAT_MS = 360;
 const JOYSTICK_MAX = 40;
 const JOYSTICK_DEADZONE = 12;
