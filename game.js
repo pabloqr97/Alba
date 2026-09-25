@@ -14,10 +14,12 @@ const SFX_FILES = {
   music: 'game/sfx/musica.m4a',
   // Mismo tema, sin recortar, para el menú y los créditos.
   menuMusic: 'game/sfx/prologo.m4a',
-  // Falta el archivo de verdad (el que subiste llegó vacío, 0 bytes) —
-  // en cuanto vuelvas a añadir game/sfx/karolg.mp3 sonará solo, sin tocar
-  // nada más. Suena una vez, desde el segundo 58, en la revelación.
-  karolg: 'game/sfx/karolg.mp3',
+  // Recortada ya desde el segundo 58 (igual que la música de fondo): así
+  // no hace falta "buscar" ese punto al vuelo, que es justo lo que
+  // fallaba al probarlo (con la página servida sin soporte de peticiones
+  // por rangos, el navegador no dejaba saltar de sitio). Suena una vez,
+  // en la revelación.
+  karolg: 'game/sfx/karolg.m4a',
 };
 const SFX = {};
 Object.entries(SFX_FILES).forEach(([key, src]) => {
@@ -43,10 +45,8 @@ SFX.menuMusic.preload = 'metadata';
 SFX.karolg.preload = 'metadata';
 
 function playKarolGSong() {
-  const a = SFX.karolg;
-  const start = () => { try { a.currentTime = 58; } catch (e) { /* aún sin metadata */ } safePlay(a); };
-  if (a.readyState >= 1) start();
-  else a.addEventListener('loadedmetadata', start, { once: true });
+  SFX.karolg.currentTime = 0;
+  safePlay(SFX.karolg);
 }
 
 let musicFadeTimer = null;
