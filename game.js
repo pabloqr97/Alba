@@ -364,6 +364,22 @@ function playBarkSound(id) {
 // CONFIGURACIÓN EDITABLE — cambia aquí el contenido sin tocar el resto
 // ============================================================
 
+// Hermanita y el bicho de la patata comparten un mismo saludo inicial:
+// solo debe aparecer una vez, en lo primero de los dos que se toque. Si
+// se llega primero al bicho, el saludo va delante de su frase y ella, al
+// hablar después en persona, ya no lo repite (entra con otro pie). Si se
+// habla primero con ella en persona, el bicho se queda con su frase de
+// siempre, sin saludo.
+const HERMANITA_GREETING = '¡Hermana! Por fin llegas, cómo te echaba de menos.';
+const HERMANITA_BODY = 'Nuka me tiene loca, no para de mordisquear piedras, dile a Pabolito que controle a su enamorada. En fin, ¿qué tal estás? Pablo me ha contado que os vais de viaje a Canadá, ¿no? Que envidia, ¿nos podemos acoplar Antonio y yo?';
+const PATATA_BODY = '¡Oye mira cuántos bichos de la patata he atrapado! Corre, coge los tuyos y vamos al camino a aplastarlos. ¿Te acuerdas de todos los que aplastamos de pequeñas?';
+function hermanaDialogueText() {
+  return talkedTo.has('patata') ? `Oye hermanita, ${HERMANITA_BODY}` : `${HERMANITA_GREETING} ${HERMANITA_BODY}`;
+}
+function patataDialogueText() {
+  return talkedTo.has('hermana') ? PATATA_BODY : `${HERMANITA_GREETING} ${PATATA_BODY}`;
+}
+
 // RECUERDOS (se consiguen interactuando con objetos y con los perros; las
 // personas NO dan recuerdos, dan pistas). Los que no tienen "sprite" solo
 // muestran el brillo hasta que tengan arte propio.
@@ -375,7 +391,7 @@ const OBJECT_MEMORIES = [
   // es Hermanita quien salta, se acerca y habla; luego vuelve a su sitio.
   { id: 'patata', col: 5, row: 20, label: 'Bicho de la patata',
     showcase: 'bicho_title', speaker: 'hermana',
-    text: '¡Hermana mira cuántos bichos de la patata he atrapado! Corre, coge los tuyos y vamos al camino a aplastarlos. ¿Te acuerdas de todos los que aplastamos de pequeñas?' },
+    dynamicText: patataDialogueText },
   { id: 'almendro', col: 9, row: 15, label: 'El almendro', showcase: 'almendra_title',
     text: 'El almendro de la parcela.\n«¡Almendras! Cogeré alguna para partirla con una piedra, ¡espero que no me siente muy mal!»' },
   { id: 'tomatera', col: 5, row: 24, label: 'La tomatera',
@@ -400,7 +416,7 @@ const HUMAN_CHARACTERS = [
     text: '¿Qué pasa chata? (procede a cogerte la nariz) estaba leyendo un poco el periódico. ¿Qué tal te va por Granada? Por cierto, Pablo me ha dicho que te quería regalar una tarde de spa, ¿cuándo os vais?',
     clue: 'Una tarde de spa.', clueInline: true, wheelLabel: 'Spa' },
   { id: 'hermana', col: 5, row: 18, sprite: 'hermana_down', label: 'Hermanita',
-    text: '¡Hermana! Como te echaba de menos, por fin llegas, papá se ha puesto ya con la barbacoa y Nuka no para de mordisquear piedras... ¡Pasa pasa, que luego jugamos al Voley! Por cierto, Pablo me ha contado algo de tu regalo, creo que te va a gustar, creo que era algo como de un viaje a... ¿Canadá?',
+    dynamicText: hermanaDialogueText,
     clue: 'Un viaje a Canadá.', clueInline: true, wheelLabel: 'Canadá' },
   { id: 'abuela1', col: 7, row: 13, sprite: 'abuela1_down', label: 'Abuela Encarna',
     text: '¡Alba! Te tengo preparado el bocata de fuet. Tu padre me había dicho de hacerlo él, ¡pero sé que luego te pone poca cantidad! Por cierto, Pablo ha mencionado algo de que te iba a regalar ir a cenar en el restaurante de Jordi Cruz. ¿Es verdad?',
@@ -1479,7 +1495,7 @@ function handleTalk(obj) {
 
   if (obj.speaker) { runSpeakerScene(obj); return; }
 
-  let text = obj.text;
+  let text = obj.dynamicText ? obj.dynamicText() : obj.text;
   if (obj.clue) {
     // Persona: cuenta para "Pistas", no para "Recuerdos"
     if (isNew) collectedClues.push({ text: obj.clue, isKarolG: !!obj.isKarolG, label: obj.wheelLabel || obj.label });
@@ -1592,7 +1608,7 @@ function runSpeakerScene(obj) {
       inputLocked = false;
       zoomCameraTo(goal);
       pendingOverlayAction = () => returnSpeakerHome(speakerEl, goal, origin, free);
-      openOverlay(obj.text, 'Cerrar', speaker.label, obj.showcase);
+      openOverlay(obj.dynamicText ? obj.dynamicText() : obj.text, 'Cerrar', speaker.label, obj.showcase);
     };
     if (best && best.path.length) walkElement(speakerEl, best.path, arrive);
     else arrive();
