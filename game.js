@@ -14,6 +14,10 @@ const SFX_FILES = {
   music: 'game/sfx/musica.m4a',
   // Mismo tema, sin recortar, para el menú y los créditos.
   menuMusic: 'game/sfx/prologo.m4a',
+  // Falta el archivo de verdad (el que subiste llegó vacío, 0 bytes) —
+  // en cuanto vuelvas a añadir game/sfx/karolg.mp3 sonará solo, sin tocar
+  // nada más. Suena una vez, desde el segundo 58, en la revelación.
+  karolg: 'game/sfx/karolg.mp3',
 };
 const SFX = {};
 Object.entries(SFX_FILES).forEach(([key, src]) => {
@@ -29,6 +33,21 @@ SFX.talk.volume = 0.38;
 const MUSIC_TARGET_VOLUME = 0.1; // muy de fondo dentro de la parcela
 SFX.music.volume = 0;            // arranca en 0; startAmbient() la sube con un fade-in
 SFX.menuMusic.volume = 0.22;
+SFX.karolg.loop = false;
+SFX.karolg.volume = 0.55;
+// Las dos pistas largas no hace falta bajarlas enteras nada más cargar la
+// página (compiten con el resto de recursos al principio); con
+// "metadata" el navegador las trae de verdad en cuanto se reproducen.
+SFX.music.preload = 'metadata';
+SFX.menuMusic.preload = 'metadata';
+SFX.karolg.preload = 'metadata';
+
+function playKarolGSong() {
+  const a = SFX.karolg;
+  const start = () => { try { a.currentTime = 58; } catch (e) { /* aún sin metadata */ } safePlay(a); };
+  if (a.readyState >= 1) start();
+  else a.addEventListener('loadedmetadata', start, { once: true });
+}
 
 let musicFadeTimer = null;
 function fadeInMusic() {
@@ -180,8 +199,8 @@ function pauseAmbient() {
 // anterior (no 60s entre el inicio de uno y el otro). ----
 const PLANE_GAP_AFTER_END_MS = 60000;
 const PLANE_FIRST_DELAY_MS = 25000; // el primero tarda un poco en aparecer
-const PLANE_SHADOW_DELAY_MS = 9200; // lo que tarda el sonido en hacerse fuerte
-const PLANE_SHADOW_DURATION_S = 11; // duración de esa parte fuerte
+const PLANE_SHADOW_DELAY_MS = 5000;  // desde que empieza a notarse el sonido
+const PLANE_SHADOW_DURATION_S = 28;  // cruce lento, acorde con todo el tramo audible
 let planeTimer = null;
 let planeShadowFlying = false;
 
@@ -350,7 +369,7 @@ function playBarkSound(id) {
 // muestran el brillo hasta que tengan arte propio.
 const OBJECT_MEMORIES = [
   { id: 'madrono', col: 8, row: 9, sprite: 'madroño_title', tree: true, label: 'El madroño',
-    text: 'El madroño de la parcela, justo donde más fruta cae al suelo.\n«¡Otra vez se me ha pegado uno en la suela! Este suelo es un peligro en cuanto maduran los madroños.»' },
+    text: 'El madroño de la parcela, justo donde más fruta cae al suelo.\n«¡Otra vez tengo la suela de la zapatilla pegajosa! Este suelo es un peligro en cuanto maduran los madroños.»' },
   // La mata de patata frente a Hermanita (el bicho NO se ve en el mapa: sale
   // en pantalla, sobre el cuadro de diálogo, mientras se habla). Al tocarla,
   // es Hermanita quien salta, se acerca y habla; luego vuelve a su sitio.
@@ -358,7 +377,7 @@ const OBJECT_MEMORIES = [
     showcase: 'bicho_title', speaker: 'hermana',
     text: '¡Hermana mira cuántos bichos de la patata he atrapado! Corre, coge los tuyos y vamos al camino a aplastarlos. ¿Te acuerdas de todos los que aplastamos de pequeñas?' },
   { id: 'almendro', col: 9, row: 15, label: 'El almendro', showcase: 'almendra_title',
-    text: 'El almendro donde tantas tardes pasabais recogiendo almendras.\n«Nos sentábamos en el suelo a golpearlas con una piedra hasta abrirlas, con los dedos manchados y el crujido de las cáscaras al romperse. Pocas cosas sabían tan bien como esas almendras recién partidas.»' },
+    text: 'El almendro de la parcela.\n«¡Almendras! Cogeré alguna para partirla con una piedra, ¡espero que no me siente muy mal!»' },
   { id: 'tomatera', col: 5, row: 24, label: 'La tomatera',
     text: 'Una tomatera del huerto de siempre.\n«Estos son, sin duda, los mejores tomates que he comido en mi vida — los mismos que plantaba mi abuelo. Ojalá poder volver a probarlos tal y como sabían entonces.»' },
 ];
@@ -392,7 +411,7 @@ const HUMAN_CHARACTERS = [
 // "pista" cuenta igual para desbloquear la casa.
 const GREENHOUSE_ABUELO = {
   id: 'abuelo', label: 'Abuelo Manolo', sprite: 'abuelo1_down',
-  text: '¡Albuchi! ¿Cómo va todo? Cómo me alegro de verte. Me pregunto quién te cogerá el dedo gordo del pie y lo estrujará tan fuerte como hacía yo... ¿Sigues siendo tan fan del ajo como lo era yo? ¡Sé que eso te viene de mí! Por cierto, he oído que Pablo te iba a regalar algo que tenía algo que ver con música... o un concierto.',
+  text: '¡Albuchi! ¿Cómo va todo? Cómo me alegro de verte. Me pregunto quién te cogerá el dedo gordo del pie y lo estrujará tan fuerte como hacía yo... ¿Sigues comiendo tanto ajo como comía yo? ¡Sé que eso te viene de mí! Por cierto, he oído que Pablo te iba a regalar algo que tenía algo que ver con música... o un concierto.',
   clue: 'Un concierto.', clueInline: true, wheelLabel: 'Concierto',
   isKarolG: true,
 };
@@ -441,7 +460,23 @@ function showScene(id) {
   // Música del menú/créditos, aparte de la de la parcela
   if (id === 'scene-menu' || id === 'scene-credits') { if (SFX.menuMusic.paused) safePlay(SFX.menuMusic); }
   else { SFX.menuMusic.pause(); }
+  // La canción de Karol G solo suena en la revelación
+  if (id !== 'scene-reveal') SFX.karolg.pause();
 }
+
+// El navegador bloquea el primer play() de audio hasta que hay un gesto
+// real del usuario. Como la pantalla de carga pasa sola al menú (sin
+// clic), la música del menú se quedaba callada hasta el primer clic en
+// Configuración/Créditos. Con esto arranca ya en el primerísimo toque o
+// tecla en cualquier sitio de la página, sea cual sea.
+function unlockMenuMusicOnce() {
+  const activeScene = document.querySelector('.scene.active');
+  if (activeScene && (activeScene.id === 'scene-menu' || activeScene.id === 'scene-credits') && SFX.menuMusic.paused) {
+    safePlay(SFX.menuMusic);
+  }
+}
+document.addEventListener('pointerdown', unlockMenuMusicOnce, { once: true });
+document.addEventListener('keydown', unlockMenuMusicOnce, { once: true });
 
 // Jugar: fundido a negro, tarjeta de título y fundido de vuelta al mapa,
 // como la pantalla de inicio de un juego (en vez de que todo aparezca de golpe).
@@ -877,6 +912,7 @@ let currentTarget = null;
 let pendingOverlayAction = null;
 
 let collectedClues = []; // { text, isKarolG }
+let houseWasUnlocked = false; // para no reconstruir la casa/parras salvo cuando de verdad cambie
 const talkedTo = new Set();
 const memoriesFound = new Set(); // recuerdos (objetos y perros), no personas
 let inputLocked = false;      // durante escenas guiadas (p. ej. la de la patata)
@@ -1071,6 +1107,21 @@ function renderPlayerPosition() {
 ['down', 'up', 'left'].forEach(f => {
   ['', '_walk1', '_walk2'].forEach(s => { new Image().src = `game/cropped/player_${f}${s}.png`; });
 });
+
+// Precarga el resto de imágenes reales del juego (personajes, edificios,
+// árboles con colisión, lo que aparece sobre el cuadro de diálogo...).
+// Sin esto, la primera vez que hacía falta una imagen (p. ej. la casa
+// abierta, la primera vez que se desbloqueaba) se desmontaba la anterior
+// antes de que la nueva terminase de cargar, y la casa "desaparecía" un
+// instante. Se listan a mano porque muchas se referencian con plantillas
+// (`${obj.sprite}`), no como texto literal que se pueda buscar solo.
+[
+  'abuela1_down', 'abuela2_down', 'abuelo1_down', 'abuelo2_down', 'hermana_down',
+  'madre_down', 'nuka_down', 'pablo_down', 'padre_down', 'sando_down', 'turka_down',
+  'madroño_title', 'almendra_title', 'bicho_title',
+  'casa', 'casa_abierta', 'caseta_title', 'invernadero_title', 'pool_title', 'puerta_title',
+  'parra_title', 'almendro_title', 'olivo_title', 'tomatera_title', 'patatas_title', 'esparraguera_title',
+].forEach(name => { new Image().src = `game/cropped/${name}.png`; });
 
 // walkFrame: 0 = quieta; 1/2 = fotogramas de andar (un pie por delante y luego el otro)
 function renderPlayerSprite() {
@@ -1426,7 +1477,13 @@ function handleTalk(obj) {
     if (isNew) collectedClues.push({ text: obj.clue, isKarolG: !!obj.isKarolG, label: obj.wheelLabel || obj.label });
     if (!obj.clueInline) text += `\n\n"${obj.clue}"`;
     document.getElementById('hud-clues').textContent = collectedClues.length;
-    if (currentArea === 'main') renderStructures();
+    // Solo se reconstruyen los ~25 elementos del mapa (casa, parras,
+    // invernadero...) cuando de verdad cambia algo visible (la casa se
+    // abre), no en cada conversación — evita tirones y el parpadeo que
+    // daba al desmontar la imagen de la casa antes de que cargase la nueva.
+    const unlockedNow = houseUnlocked();
+    if (currentArea === 'main' && unlockedNow !== houseWasUnlocked) renderStructures();
+    houseWasUnlocked = unlockedNow;
   }
   reactToTalk(obj);
   openOverlay(text, 'Cerrar', obj.label, obj.showcase, obj.bark);
@@ -1484,10 +1541,16 @@ function walkElement(el, path, done) {
 
 function hopElement(el) {
   if (!el || el.classList.contains('tree')) return;
+  // Si se retriggerea antes de que termine el salto anterior, quitar la
+  // clase a medias cancela esa animación sin disparar 'animationend', y
+  // el listener { once:true } de esa vez se quedaría colgado para
+  // siempre. Se guarda y se retira a mano para no acumularlos.
+  if (el._hopEndHandler) el.removeEventListener('animationend', el._hopEndHandler);
   el.classList.remove('hop');
   void el.offsetWidth;
   el.classList.add('hop');
-  el.addEventListener('animationend', () => el.classList.remove('hop'), { once: true });
+  el._hopEndHandler = () => el.classList.remove('hop');
+  el.addEventListener('animationend', el._hopEndHandler, { once: true });
 }
 
 function runSpeakerScene(obj) {
@@ -1772,6 +1835,7 @@ function resetOverworld() {
   collectedClues = [];
   talkedTo.clear();
   memoriesFound.clear();
+  houseWasUnlocked = false;
   houseInterceptDone = false;
   houseInterceptRunning = false;
   pendingPabloHouseReveal = false;
@@ -1785,11 +1849,18 @@ function resetOverworld() {
   updateProximity();
 }
 
+// Sin agrupar, un simple giro de móvil dispara varios "resize" seguidos
+// (barra de direcciones, teclado...) y cada uno reconstruía la rejilla
+// entera (300+ casillas) — se nota como un tirón justo al girar.
+let overworldResizeTimer = null;
 window.addEventListener('resize', () => {
-  computeTileSize();
-  buildMapDOM();
-  renderObjects();
-  renderPlayerPosition();
+  clearTimeout(overworldResizeTimer);
+  overworldResizeTimer = setTimeout(() => {
+    computeTileSize();
+    buildMapDOM();
+    renderObjects();
+    renderPlayerPosition();
+  }, 150);
 });
 
 // ============================================================
@@ -1985,6 +2056,7 @@ function resolveWheelSpin() {
         launchConfetti();
         closeWheelOverlay();
         showScene('scene-reveal');
+        playKarolGSong();
       }, 500);
     }
   };

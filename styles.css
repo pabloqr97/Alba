@@ -513,24 +513,19 @@ html, body {
   pointer-events: none;
   z-index: 6;
 }
-/* Silueta de avión (fuselaje + alas + cola) en vez de una mancha sin forma */
+/* Sombra alargada y difuminada (sin forma geométrica concreta): más realista */
 .plane-shadow::before {
   content: '';
   position: absolute;
   left: 50%;
   top: 50%;
-  width: clamp(130px, 22vmin, 240px);
-  height: clamp(190px, 32vmin, 340px);
-  margin: calc(clamp(190px, 32vmin, 340px) / -2) 0 0 calc(clamp(130px, 22vmin, 240px) / -2);
-  background: rgba(8, 10, 6, 0.5);
-  filter: blur(5px);
+  width: clamp(220px, 36vmin, 420px);
+  height: clamp(78px, 13vmin, 150px);
+  margin: calc(clamp(78px, 13vmin, 150px) / -2) 0 0 calc(clamp(220px, 36vmin, 420px) / -2);
+  background: radial-gradient(ellipse at center, rgba(8, 10, 6, 0.5) 0%, rgba(8, 10, 6, 0.3) 45%, rgba(8, 10, 6, 0) 76%);
+  filter: blur(9px);
   mix-blend-mode: multiply;
-  transform: rotate(-116deg);
-  clip-path: polygon(
-    50% 0%, 61% 15%, 61% 38%, 93% 53%, 93% 61%, 62% 52%,
-    62% 78%, 78% 88%, 78% 95%, 50% 87%, 22% 95%, 22% 88%,
-    38% 78%, 38% 52%, 7% 61%, 7% 53%, 39% 38%, 39% 15%
-  );
+  transform: rotate(-28deg);
 }
 
 .map-camera {
@@ -541,6 +536,7 @@ html, body {
   height: calc(var(--tile-size) * var(--map-rows));
   transition: transform var(--step-ms, 300ms) linear;
   transform-origin: 0 0;
+  will-change: transform; /* se mueve/escala constantemente: que el navegador lo prepare */
 }
 .map-camera.zoom { transition: transform 0.55s cubic-bezier(.22,.8,.3,1); }
 .map-grid {
