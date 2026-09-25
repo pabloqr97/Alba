@@ -450,6 +450,11 @@ const GREENHOUSE_DOOR_COL = 9;
 const IS_TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 const BACKDROP_SCENES = ['scene-menu', 'scene-settings', 'scene-credits', 'scene-reveal'];
 
+// Si se entra a créditos justo desde "Ver créditos" de la revelación, la
+// canción de Karol G sigue sonando de fondo en vez de cortarse para meter
+// la música del menú encima.
+let creditsFollowsReveal = false;
+
 function showScene(id) {
   document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(id);
@@ -457,11 +462,14 @@ function showScene(id) {
   document.getElementById('app').classList.toggle('with-backdrop', BACKDROP_SCENES.includes(id));
   if (id === 'scene-overworld') { updateCamera(); }
   else { pauseAmbient(); stopFootsteps(); }
+  const keepKarolG = id === 'scene-credits' && creditsFollowsReveal;
+  creditsFollowsReveal = false; // se consume aquí, aplique o no
   // Música del menú/créditos, aparte de la de la parcela
-  if (id === 'scene-menu' || id === 'scene-credits') { if (SFX.menuMusic.paused) safePlay(SFX.menuMusic); }
+  if (id === 'scene-menu' || id === 'scene-credits') { if (!keepKarolG && SFX.menuMusic.paused) safePlay(SFX.menuMusic); }
   else { SFX.menuMusic.pause(); }
-  // La canción de Karol G solo suena en la revelación
-  if (id !== 'scene-reveal') SFX.karolg.pause();
+  // La canción de Karol G solo suena en la revelación (y, si viene de
+  // ahí, también mientras se ven los créditos)
+  if (id !== 'scene-reveal' && !keepKarolG) SFX.karolg.pause();
 }
 
 // El navegador bloquea el primer play() de audio hasta que hay un gesto
@@ -2089,6 +2097,7 @@ function launchConfetti() {
 }
 
 document.getElementById('reveal-credits').addEventListener('click', () => {
+  creditsFollowsReveal = true;
   showScene('scene-credits');
 });
 
